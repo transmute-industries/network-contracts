@@ -1,0 +1,17 @@
+{
+  "name": "framework-example",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "truffle migrate --reset && truffle test ./test/Simulation.spec.js "
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "transmute-framework": "^0.2.0-alpha.2"
+  },
+  "devDependencies": {
+    "faker": "^4.1.0"
+  }
+}
