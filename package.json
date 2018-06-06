@@ -4,12 +4,13 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "truffle migrate --reset && truffle test ./test/Simulation.spec.js "
+    "test": "truffle migrate --reset && truffle test ./test/TestTransmuteToken.js "
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "transmute-framework": "^0.2.0-alpha.2"
+    "transmute-framework": "^0.2.0-alpha.2",
+    "zeppelin-solidity": "1.10.0"
   },
   "devDependencies": {
     "faker": "^4.1.0"
