@@ -7,6 +7,8 @@ const EventStore = artifacts.require(
 
 const Warden = artifacts.require('./Warden.sol');
 
+const TST = artifacts.require('./TransmuteToken.sol');
+
 module.exports = deployer => {
   deployer.deploy(EventStoreLib);
   deployer.link(EventStoreLib, EventStore);
@@ -15,4 +17,6 @@ module.exports = deployer => {
   deployer.link(EventStoreLib, Warden);
   deployer.link(EventStore, Warden);
   deployer.deploy(Warden);
+
+  deployer.deploy(TST);
 };
