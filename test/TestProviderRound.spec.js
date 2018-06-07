@@ -1,4 +1,6 @@
 const ProviderRound = artifacts.require('./ProviderRound.sol');
+const utils = require('./utils.js');
+const assertFail = utils.assertFail;
 
 contract('ProviderRound', accounts => {
 
@@ -25,23 +27,14 @@ contract('ProviderRound', accounts => {
   });
 
   it('providers cannot register invalid parameters', async() => {
-    try {
-      await providerRound.provider(22, 10, -1, 25, {from: accounts[0]});
-      assert(false);
-    } catch(e) {
-      if (e.name == 'AssertionError') {
-        assert(false, 'provider should not be able to have a negative blockRewardCut');
-      }
-    }
-
-    try {
-      await providerRound.provider(22, 10, 1, 125, {from: accounts[0]});
-      assert(false);
-    } catch(e) {
-      if (e.name == 'AssertionError') {
-        assert(false, 'provider should not be able to have more than 100% feeShare');
-      }
-    }
+    await assertFail(
+      providerRound.provider(22, 10, -1, 25, {from: accounts[0]}),
+      'provider should not be able to have a negative blockRewardCut'
+    );
+    await assertFail(
+      providerRound.provider(22, 10, 1, 125, {from: accounts[0]}),
+      'provider should not be able to have more than 100% feeShare'
+    );
   });
 
 });
