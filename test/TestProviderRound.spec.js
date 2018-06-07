@@ -23,5 +23,26 @@ contract('ProviderRound', accounts => {
       && secondProvider[4].toNumber() == 35
     );
   });
+
+  it('providers cannot register invalid parameters', async() => {
+    try {
+      await providerRound.provider(22, 10, -1, 25, {from: accounts[0]});
+      assert(false);
+    } catch(e) {
+      if (e.name == 'AssertionError') {
+        assert(false, 'provider should not be able to have a negative blockRewardCut');
+      }
+    }
+
+    try {
+      await providerRound.provider(22, 10, 1, 125, {from: accounts[0]});
+      assert(false);
+    } catch(e) {
+      if (e.name == 'AssertionError') {
+        assert(false, 'provider should not be able to have more than 100% feeShare');
+      }
+    }
+  });
+
 });
 
