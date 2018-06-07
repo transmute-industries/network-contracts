@@ -1,4 +1,6 @@
 const TST = artifacts.require('./TransmuteToken.sol');
+const utils = require('./utils.js');
+const assertFail = utils.assertFail;
 
 contract('TST', accounts => {
   let owner, tst;
@@ -20,14 +22,10 @@ contract('TST', accounts => {
   });
 
   it('only owner can mint new tokens', async() => {
-    try {
-      await tst.mint(owner, tokenAmount, {from: accounts[1]});
-      assert(false);
-    } catch(e) {
-      if (e.name == 'AssertionError') {
-        assert(false, 'this account should not be able to mint tokens');
-      }
-    }
+    await assertFail(
+      tst.mint(owner, tokenAmount, {from: accounts[1]}),
+      'this account should not be able to mint tokens'
+    );
   });
 
   it('can transfer tokens with approval', async () => {
@@ -40,40 +38,27 @@ contract('TST', accounts => {
   });
 
   it('cannot transfer tokens without approval', async () => {
-    try {
-      await tst.transferFrom(owner, accounts[2], tokenAmount / 10, {from: owner});
-      assert(false);
-    } catch(e) {
-      if (e.name == 'AssertionError') {
-        assert(false, 'should not be able to transfer tokens without approval');
-      }
-    }
+    await assertFail(
+      tst.transferFrom(owner, accounts[2], tokenAmount / 10, {from: owner}),
+      'should not be able to transfer tokens without approval'
+    );
   });
 
   it('cannot transfer more tokens than approved', async () => {
     let approvedAmount = tokenAmount / 20;
     assert(approvedAmount <= (await tst.balanceOf(accounts[2])).toNumber());
     await tst.approve(accounts[4], approvedAmount, {from: accounts[2]});
-    try {
-      await tst.transferFrom(accounts[2], accounts[3], approvedAmount + 1 , {from: accounts[4]});
-      console.log('coucou');
-      assert(false);
-    } catch(e) {
-      if (e.name == 'AssertionError') {
-        assert(false, 'should not be able to transfer more tokens than what was approved');
-      }
-    }
+    await assertFail(
+      tst.transferFrom(accounts[2], accounts[3], approvedAmount + 1 , {from: accounts[4]}),
+      'should not be able to transfer more tokens than what was approved'
+    );
   });
 
   it('owner cannot mint new token after finishMinting is called', async() => {
     await tst.finishMinting({from: owner});
-    try {
-      await tst.mint(owner, tokenAmount, {from: owner});
-      assert(false);
-    } catch(e) {
-      if (e.name == 'AssertionError') {
-        assert(false, 'owner should not be able to mint token after finishMinting is called');
-      }
-    }
+    await assertFail(
+      tst.mint(owner, tokenAmount, {from: owner}),
+      'owner should not be able to mint token after finishMinting is called'
+    );
   });
 });

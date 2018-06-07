@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "truffle migrate --reset && truffle test ./test/TestTransmuteToken.js "
+    "test": "truffle migrate --reset && truffle test"
   },
   "author": "",
   "license": "ISC",
