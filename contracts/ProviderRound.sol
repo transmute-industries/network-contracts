@@ -2,7 +2,7 @@ pragma solidity ^0.4.24;
 
 import "./TransmuteToken.sol";
 
-contract ProviderRound {
+contract ProviderRound is TransmuteToken {
 
   struct ProviderParameters {
     address providerAddress;
