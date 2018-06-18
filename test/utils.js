@@ -4,7 +4,10 @@ module.exports.assertFail = async (promise, message) => {
     assert(false);
   } catch(e) {
     if (e.name == 'AssertionError') {
-      assert(false, message);
+      if (message)
+        assert(false, message);
+      else
+        assert(false);
     }
   }
 }

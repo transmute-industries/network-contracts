@@ -5,13 +5,12 @@ import "./TransmuteToken.sol";
 contract ProviderRound is TransmuteToken {
 
   struct Delegator {
-    address delegatorAddress;
     address delegateAddress;
     uint amountBonded;
   }
 
   uint public numberOfDelegators;
-  mapping(uint => Delegator) public delegators;
+  mapping(address => Delegator) public delegators;
 
   struct Provider {
     address providerAddress;
@@ -34,8 +33,11 @@ contract ProviderRound is TransmuteToken {
 
   function bond(uint _providerCandidateId, uint _amount) public {
     Provider storage providerCandidate = providerCandidates[_providerCandidateId];
-    uint delegatorId = numberOfDelegators++;
-    delegators[delegatorId] = Delegator(msg.sender, providerCandidate.providerAddress, _amount);
+    // Check if _providerCandidateId is valid
+    require(providerCandidate.providerAddress != address(0));
+    // Check if delegator have not already bonded to some address
+    require(delegators[msg.sender].delegateAddress == address(0));
+    delegators[msg.sender] = Delegator(providerCandidate.providerAddress, _amount);
     providerCandidate.totalAmountBonded += _amount;
   }
 }
