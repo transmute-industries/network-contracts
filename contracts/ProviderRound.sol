@@ -25,9 +25,10 @@ contract ProviderRound is TransmuteToken {
   mapping(uint => Provider) public providerCandidates;
 
   function provider(uint _pricePerStorageMineral, uint _pricePerComputeMineral, uint _blockRewardCut, uint _feeShare) external {
-    require(0 <= _blockRewardCut && _blockRewardCut <= 100);
-    require(0 <= _feeShare && _feeShare <= 100);
-    uint providerCandidateId = numberOfProviderCandidates++;
+    require(_blockRewardCut <= 100);
+    require(_feeShare <= 100);
+    uint providerCandidateId = numberOfProviderCandidates;
+    numberOfProviderCandidates = numberOfProviderCandidates.add(1);
     providerCandidates[providerCandidateId] = Provider(msg.sender, _pricePerStorageMineral, _pricePerComputeMineral, _blockRewardCut, _feeShare, 0);
   }
 
@@ -39,12 +40,12 @@ contract ProviderRound is TransmuteToken {
     require(delegators[msg.sender].delegateAddress == address(0));
     deductBondedTokens(msg.sender, _amount);
     delegators[msg.sender] = Delegator(providerCandidate.providerAddress, _amount);
-    providerCandidate.totalAmountBonded += _amount;
+    providerCandidate.totalAmountBonded = providerCandidate.totalAmountBonded.add(_amount);
   }
 
   function deductBondedTokens(address _target, uint _amount) internal {
     // Check if delegator has enough TST
     require(balanceOf(_target) >= _amount);
-    balances[_target] -= _amount;
+    balances[_target] = balances[_target].sub(_amount);
   }
 }
