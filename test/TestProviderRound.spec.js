@@ -48,8 +48,11 @@ contract('ProviderRound', accounts => {
 
   describe('bond', () => {
 
+    let contractAddress;
+
     before(async () => {
       providerRound = await ProviderRound.new({from: accounts[0]});
+      contractAddress = providerRound.address;
       for(let i = 5; i < 10; i++) {
         await providerRound.mint(accounts[i], 1000, {from: accounts[0]});
       }
@@ -57,7 +60,14 @@ contract('ProviderRound', accounts => {
       await providerRound.provider(10, 20, 2, 35, {from: accounts[1]});
     });
 
+    it('should fail if the delegator does not approve to transfer at least the bonded amount', async () => {
+      await assertFail( providerRound.bond(0, 10, {from: accounts[5]}) );
+      await providerRound.approve(contractAddress, 9, {from: accounts[5]});
+      await assertFail( providerRound.bond(0, 10, {from: accounts[5]}) );
+    });
+
     it('should add a delegator to the delegators list', async () => {
+      await providerRound.approve(contractAddress, 10, {from: accounts[5]});
       await providerRound.bond(0, 10, {from: accounts[5]});
       const firstDelegator = await providerRound.delegators.call(accounts[5]);
       assert.equal(accounts[0], firstDelegator[0]);
@@ -68,7 +78,9 @@ contract('ProviderRound', accounts => {
       let firstProvider = await providerRound.providerCandidates.call(0);
       assert.equal(10, firstProvider[5]);
 
+      await providerRound.approve(contractAddress, 20, {from: accounts[6]});
       await providerRound.bond(1, 20, {from: accounts[6]});
+      await providerRound.approve(contractAddress, 50, {from: accounts[7]});
       await providerRound.bond(1, 50, {from: accounts[7]});
       firstProvider = await providerRound.providerCandidates.call(0);
       const secondProvider = await providerRound.providerCandidates.call(1);
@@ -81,11 +93,13 @@ contract('ProviderRound', accounts => {
     });
 
     it('should fail if called twice by the same delegator', async () => {
+      await providerRound.approve(contractAddress, 40, {from: accounts[8]});
       await providerRound.bond(1, 40, {from: accounts[8]});
       await assertFail( providerRound.bond(1, 40, {from: accounts[8]}) );
     });
 
     it('should fail if TST balance is less than bonded amount', async () => {
+      await providerRound.approve(contractAddress, 1001, {from: accounts[9]});
       await assertFail( providerRound.bond(1, 1001, {from: accounts[9]}) )
       assert.equal(110, (await providerRound.providerCandidates(1))[5]);
     });
@@ -93,6 +107,7 @@ contract('ProviderRound', accounts => {
     it("should transfer amount from the delegator's balance to the contract's balance", async () => {
       const contractBalance = (await providerRound.balanceOf(providerRound.address)).toNumber();
       assert.equal(1000, await providerRound.balanceOf(accounts[9]));
+      await providerRound.approve(contractAddress, 300, {from: accounts[9]});
       await providerRound.bond(1, 300, {from: accounts[9]});
       assert.equal(700, await providerRound.balanceOf(accounts[9]));
       assert.equal(contractBalance + 300, await providerRound.balanceOf(providerRound.address));

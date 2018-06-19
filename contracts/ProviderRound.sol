@@ -38,15 +38,8 @@ contract ProviderRound is TransmuteToken {
     require(providerCandidate.providerAddress != address(0));
     // Check if delegator has not already bonded to some address
     require(delegators[msg.sender].delegateAddress == address(0));
-    deductBondedTokens(msg.sender, _amount);
+    this.transferFrom(msg.sender, this, _amount);
     delegators[msg.sender] = Delegator(providerCandidate.providerAddress, _amount);
     providerCandidate.totalAmountBonded = providerCandidate.totalAmountBonded.add(_amount);
-  }
-
-  function deductBondedTokens(address _target, uint _amount) internal {
-    // Check if delegator has enough TST
-    require(balanceOf(_target) >= _amount);
-    balances[_target] = balances[_target].sub(_amount);
-    balances[this] = balances[this].add(_amount);
   }
 }
