@@ -48,6 +48,15 @@ contract('ProviderRound', accounts => {
 
   describe('bond', () => {
 
+    before(async () => {
+      providerRound = await ProviderRound.new({from: accounts[0]});
+      for(let i = 5; i < 10; i++) {
+        await providerRound.mint(accounts[i], 1000, {from: accounts[0]});
+      }
+      await providerRound.provider(22, 10, 1, 25, {from: accounts[0]});
+      await providerRound.provider(10, 20, 2, 35, {from: accounts[1]});
+    });
+
     it('should add a delegator to the delegators list', async () => {
       await providerRound.bond(0, 10, {from: accounts[5]});
       const firstDelegator = await providerRound.delegators.call(accounts[5]);
@@ -72,11 +81,20 @@ contract('ProviderRound', accounts => {
     });
 
     it('should fail if called twice by the same delegator', async () => {
-      await providerRound.bond(1, 100, {from: accounts[8]});
-      await assertFail( providerRound.bond(1, 100, {from: accounts[8]}) );
+      await providerRound.bond(1, 40, {from: accounts[8]});
+      await assertFail( providerRound.bond(1, 40, {from: accounts[8]}) );
     });
 
-    it('should fail if tst balance is less than bonded amount');
+    it('should fail if TST balance is less than bonded amount', async () => {
+      await assertFail( providerRound.bond(1, 1001, {from: accounts[9]}) )
+      assert.equal(110, (await providerRound.providerCandidates(1))[5]);
+    });
+
+    it('should deduct amount from the delegator balance', async () => {
+      assert.equal(1000, await providerRound.balanceOf(accounts[9]));
+      await providerRound.bond(1, 300, {from: accounts[9]});
+      assert.equal(700, await providerRound.balanceOf(accounts[9]));
+    });
   });
 });
 
