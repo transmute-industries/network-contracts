@@ -76,7 +76,7 @@ contract('ProviderRound', accounts => {
       assert.equal(70, secondProvider[5]);
     });
 
-    it('should fail if providerCandidateId is not valid', async () => {
+    it('should fail if no providerCandidate is associated with the given providerCandidateId', async () => {
       await assertFail( providerRound.bond(2, 15, {from: accounts[5]}) );
     });
 

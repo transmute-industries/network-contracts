@@ -34,7 +34,7 @@ contract ProviderRound is TransmuteToken {
 
   function bond(uint _providerCandidateId, uint _amount) external {
     Provider storage providerCandidate = providerCandidates[_providerCandidateId];
-    // Check if _providerCandidateId is valid
+    // Check if _providerCandidateId is associated with an existing providerCandidate
     require(providerCandidate.providerAddress != address(0));
     // Check if delegator has not already bonded to some address
     require(delegators[msg.sender].delegateAddress == address(0));
