@@ -30,11 +30,11 @@ contract('ProviderRound', accounts => {
 
     it('should fail with invalid parameters', async() => {
       await assertFail(
-        providerRound.provider(22, 10, -1, 25, {from: accounts[0]}),
+        providerRound.provider(22, 10, -1, 25, {from: accounts[2]}),
         'provider should not be able to have a negative blockRewardCut'
       );
       await assertFail(
-        providerRound.provider(22, 10, 1, 125, {from: accounts[0]}),
+        providerRound.provider(22, 10, 1, 125, {from: accounts[2]}),
         'provider should not be able to have more than 100% feeShare'
       );
     });
