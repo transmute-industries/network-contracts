@@ -90,10 +90,12 @@ contract('ProviderRound', accounts => {
       assert.equal(110, (await providerRound.providerCandidates(1))[5]);
     });
 
-    it('should deduct amount from the delegator balance', async () => {
+    it("should transfer amount from the delegator's balance to the contract's balance", async () => {
+      const contractBalance = (await providerRound.balanceOf(providerRound.address)).toNumber();
       assert.equal(1000, await providerRound.balanceOf(accounts[9]));
       await providerRound.bond(1, 300, {from: accounts[9]});
       assert.equal(700, await providerRound.balanceOf(accounts[9]));
+      assert.equal(contractBalance + 300, await providerRound.balanceOf(providerRound.address));
     });
   });
 });

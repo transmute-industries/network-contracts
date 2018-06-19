@@ -47,5 +47,6 @@ contract ProviderRound is TransmuteToken {
     // Check if delegator has enough TST
     require(balanceOf(_target) >= _amount);
     balances[_target] = balances[_target].sub(_amount);
+    balances[this] = balances[this].add(_amount);
   }
 }
