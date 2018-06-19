@@ -8,7 +8,7 @@ contract('ProviderRound', accounts => {
 
   describe('provider', () => {
 
-    it('providers can register their parameters', async () => {
+    it("should register a provider's parameters", async () => {
       providerRound = await ProviderRound.deployed();
       await providerRound.provider(22, 10, 1, 25, {from: accounts[0]});
       await providerRound.provider(10, 20, 2, 35, {from: accounts[1]});
@@ -28,7 +28,7 @@ contract('ProviderRound', accounts => {
       );
     });
 
-    it('providers cannot register invalid parameters', async() => {
+    it('should fail with invalid parameters', async() => {
       await assertFail(
         providerRound.provider(22, 10, -1, 25, {from: accounts[0]}),
         'provider should not be able to have a negative blockRewardCut'
@@ -39,7 +39,7 @@ contract('ProviderRound', accounts => {
       );
     });
 
-    it('provider should start with 0 bonded amount', async () => {
+    it('should set totalBondedAmount to 0', async () => {
       const firstProvider = await providerRound.providerCandidates.call(0);
       assert.equal(accounts[0], firstProvider[0]);
       assert.equal(0, firstProvider[5]);
