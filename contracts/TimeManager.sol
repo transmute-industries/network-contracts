@@ -8,11 +8,9 @@ contract TimeManager is Ownable {
 
   uint public lastRound;
   uint public roundLength;
-  uint public rateLockDeadline;
 
   constructor() {
     roundLength = 15;
-    rateLockDeadline = 5;
   }
 
   function initializeRound() external {
