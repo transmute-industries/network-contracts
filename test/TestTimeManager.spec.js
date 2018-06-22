@@ -10,7 +10,7 @@ contract('TimeManager', accounts => {
     before(async () => {
       tm = await TimeManager.deployed();
       roundLength = await tm.roundLength.call();
-      await blockMiner.init();
+      await blockMiner.init(web3);
     });
 
     beforeEach(async () => {
