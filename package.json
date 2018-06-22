@@ -9,10 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "transmute-framework": "^0.2.0-alpha.2",
+    "truffle-contract": "^3.0.6",
     "zeppelin-solidity": "1.10.0"
-  },
-  "devDependencies": {
-    "faker": "^4.1.0"
   }
 }
