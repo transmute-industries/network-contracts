@@ -18,6 +18,7 @@ contract TimeManager is Ownable {
   function initializeRound() external {
     uint blockNumber = block.number;
     uint currentRound = blockNumber.div(roundLength);
+    // lastRound == currentRound when two function call happen within the same round.
     require(lastRound < currentRound);
     lastRound = currentRound;
   }
