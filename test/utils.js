@@ -1,13 +1,9 @@
-const BlockMinerContract = artifacts.require("./BlockMiner.sol");
-
 class BlockMiner {
-  async init() {
-    this.blockMiner = await BlockMinerContract.deployed();
-  }
-
   async mine(numberOfBlocks) {
     for(let i = 0; i < numberOfBlocks; i++) {
-      await this.blockMiner.mine();
+      await new Promise((resolve, _) => {
+        web3.currentProvider.sendAsync({ method: "evm_mine", id: i }, resolve);
+      });
     }
   }
 
