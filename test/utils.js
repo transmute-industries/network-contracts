@@ -1,9 +1,8 @@
 const BlockMinerContract = artifacts.require("./BlockMiner.sol");
 
 class BlockMiner {
-  async init(web3) {
+  async init() {
     this.blockMiner = await BlockMinerContract.deployed();
-    this.web3 = web3;
   }
 
   async mine(numberOfBlocks) {
@@ -13,7 +12,7 @@ class BlockMiner {
   }
 
   async mineUntilBeginningOfNextRound(roundLength) {
-    const currentBlockNumber = this.web3.eth.blockNumber;
+    const currentBlockNumber = web3.eth.blockNumber;
     const padding = roundLength - currentBlockNumber % roundLength - 1;
     await this.mine(padding);
   }
