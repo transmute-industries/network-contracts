@@ -2,7 +2,7 @@ pragma solidity ^0.4.24;
 
 import "zeppelin-solidity/contracts/math/SafeMath.sol";
 
-contract TimeManager {
+contract RoundManager {
   using SafeMath for uint;
 
   uint public lastRound;

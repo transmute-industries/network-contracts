@@ -1,14 +1,14 @@
-const TimeManager = artifacts.require('./TimeManager.sol');
+const RoundManager = artifacts.require('./RoundManager.sol');
 const { blockMiner, assertFail } = require('./utils.js');
 
-contract('TimeManager', accounts => {
+contract('RoundManager', accounts => {
 
   let tm, roundLength;
 
   describe('initializeRound', () => {
 
     before(async () => {
-      tm = await TimeManager.deployed();
+      tm = await RoundManager.deployed();
       roundLength = await tm.roundLength.call();
     });
 
