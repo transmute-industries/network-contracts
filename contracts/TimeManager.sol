@@ -1,9 +1,8 @@
 pragma solidity ^0.4.24;
 
-import "zeppelin-solidity/contracts/ownership/Ownable.sol";
 import "zeppelin-solidity/contracts/math/SafeMath.sol";
 
-contract TimeManager is Ownable {
+contract TimeManager {
   using SafeMath for uint;
 
   uint public lastRound;
