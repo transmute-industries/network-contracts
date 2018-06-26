@@ -1,8 +1,9 @@
 pragma solidity ^0.4.24;
 
 import "./TransmuteToken.sol";
+import "./RoundManager.sol";
 
-contract ProviderRound is TransmuteToken {
+contract ProviderRound is TransmuteToken, RoundManager {
 
   struct Delegator {
     address delegateAddress;
@@ -24,7 +25,7 @@ contract ProviderRound is TransmuteToken {
   uint public numberOfProviderCandidates;
   mapping(uint => Provider) public providerCandidates;
 
-  function provider(uint _pricePerStorageMineral, uint _pricePerComputeMineral, uint _blockRewardCut, uint _feeShare) external {
+  function provider(uint _pricePerStorageMineral, uint _pricePerComputeMineral, uint _blockRewardCut, uint _feeShare) external onlyDuringCandidatePeriod {
     require(_blockRewardCut <= 100);
     require(_feeShare <= 100);
     uint providerCandidateId = numberOfProviderCandidates;
