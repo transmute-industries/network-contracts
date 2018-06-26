@@ -23,7 +23,7 @@ contract RoundManager {
     return block.number.sub(startOfLastRound);
   }
 
-  modifier onlyDuringCandidatePeriod() {
+  modifier onlyBeforeRoundLock() {
     require(timeSinceBeginningOfLastRound() < roundLength.sub(rateLockDealine));
     _;
   }
