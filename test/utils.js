@@ -16,7 +16,7 @@ class BlockMiner {
 
   async mineUntilLastBlockBeforeLockPeriod(roundManager) {
     const roundLength = await roundManager.roundLength.call();
-    const rateLockDeadline = await roundManager.rateLockDealine.call();
+    const rateLockDeadline = await roundManager.rateLockDeadline.call();
     const currentBlockNumber = web3.eth.blockNumber;
     const padding = roundLength - rateLockDeadline - 1 - currentBlockNumber % roundLength - 1;
     await this.mine(padding);
