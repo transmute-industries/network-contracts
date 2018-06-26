@@ -8,7 +8,7 @@ contract RoundManager {
   // Round number of the last round
   uint public lastRound;
   // Block number of the start of the last round
-  // N.B: not necessarily the block at which initializeRound() was called
+  // Note: not necessarily the block at which initializeRound() was called
   uint public startOfLastRound;
 
   uint public roundLength;
