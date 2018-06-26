@@ -7,7 +7,8 @@ class BlockMiner {
     }
   }
 
-  async mineUntilBeginningOfNextRound(roundLength) {
+  async mineUntilBeginningOfNextRound(roundManager) {
+    const roundLength = await roundManager.roundLength.call();
     const currentBlockNumber = web3.eth.blockNumber;
     const padding = roundLength - currentBlockNumber % roundLength - 1;
     await this.mine(padding);

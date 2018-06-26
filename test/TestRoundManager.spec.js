@@ -15,7 +15,7 @@ contract('RoundManager', accounts => {
     beforeEach(async () => {
       // Adds block so that the next block is the beginning of a next round 
       // ie adds blocks so that (blockNumber + 1) % roundLength === 0
-      await blockMiner.mineUntilBeginningOfNextRound(roundLength);
+      await blockMiner.mineUntilBeginningOfNextRound(tm);
       assert.equal(0, (web3.eth.blockNumber + 1) % roundLength);
       await tm.initializeRound();
     });
