@@ -14,6 +14,11 @@ contract RoundManager {
   uint public roundLength;
   uint public rateLockDeadline;
 
+  modifier onlyBeforeActiveRoundIsLocked() {
+    require(timeSinceBeginningOfLastRound() < roundLength.sub(rateLockDeadline));
+    _;
+  }
+
   constructor() {
     roundLength = 20;
     rateLockDeadline = 5;
@@ -21,11 +26,6 @@ contract RoundManager {
 
   function timeSinceBeginningOfLastRound() internal view returns (uint) {
     return block.number.sub(startOfLastRound);
-  }
-
-  modifier onlyBeforeActiveRoundIsLocked() {
-    require(timeSinceBeginningOfLastRound() < roundLength.sub(rateLockDeadline));
-    _;
   }
 
   function initializeRound() external {
