@@ -19,7 +19,7 @@ contract RoundManager {
     rateLockDealine = 5;
   }
 
-  function timeSinceBeginningOfLastRound() internal returns (uint) {
+  function timeSinceBeginningOfLastRound() internal view returns (uint) {
     return block.number.sub(startOfLastRound);
   }
 
