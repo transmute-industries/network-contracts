@@ -28,12 +28,6 @@ contract RoundManager {
     _;
   }
 
-  modifier onlyDuringElectionPeriod() {
-    require(timeSinceBeginningOfLastRound() < roundLength);
-    require(timeSinceBeginningOfLastRound() >= roundLength.sub(rateLockDealine));
-    _;
-  }
-
   function initializeRound() external {
     uint blockNumber = block.number;
     uint currentRound = blockNumber.div(roundLength);
