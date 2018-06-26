@@ -25,7 +25,9 @@ contract ProviderRound is TransmuteToken, RoundManager {
   uint public numberOfProviderCandidates;
   mapping(uint => Provider) public providerCandidates;
 
-  function provider(uint _pricePerStorageMineral, uint _pricePerComputeMineral, uint _blockRewardCut, uint _feeShare) external onlyBeforeRoundLock {
+  function provider(uint _pricePerStorageMineral, uint _pricePerComputeMineral, uint _blockRewardCut, uint _feeShare)
+    external onlyBeforeActiveRoundIsLocked
+  {
     require(_blockRewardCut <= 100);
     require(_feeShare <= 100);
     uint providerCandidateId = numberOfProviderCandidates;
