@@ -53,20 +53,16 @@ contract('ProviderRound', accounts => {
     });
 
     it('should fail if not called during an active round', async () => {
-      // Mine until round is no longer active
-      const roundLength = await providerRound.roundLength.call();
       await blockMiner.mineUntilBeginningOfNextRound(providerRound);
       await assertFail( providerRound.provider(22, 10, 1, 25) );
     });
 
     it('should register parameters before the lock period of an active round', async () => {
-      const roundLength = await providerRound.roundLength.call();
       await blockMiner.mineUntilLastBlockBeforeLockPeriod(providerRound);
       await providerRound.provider(22, 10, 1, 25);
     });
 
     it('should fail during the lock period of an active round', async () => {
-      const roundLength = await providerRound.roundLength.call();
       await blockMiner.mineUntilLastBlockBeforeLockPeriod(providerRound);
       // Enter lock period
       await blockMiner.mine(1);
