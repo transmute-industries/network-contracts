@@ -13,8 +13,10 @@ contract ProviderRound is TransmuteToken, RoundManager {
   uint public numberOfDelegators;
   mapping(address => Delegator) public delegators;
 
+  enum ProviderStatus { Null, Registered }
+
   struct Provider {
-    address providerAddress;
+    ProviderStatus status;
     uint pricePerStorageMineral;
     uint pricePerComputeMineral;
     uint blockRewardCut;
@@ -23,7 +25,7 @@ contract ProviderRound is TransmuteToken, RoundManager {
   }
 
   uint public numberOfProviderCandidates;
-  mapping(uint => Provider) public providerCandidates;
+  mapping(address => Provider) public providerCandidates;
 
   function provider(uint _pricePerStorageMineral, uint _pricePerComputeMineral, uint _blockRewardCut, uint _feeShare)
     external onlyBeforeActiveRoundIsLocked
@@ -32,17 +34,17 @@ contract ProviderRound is TransmuteToken, RoundManager {
     require(_feeShare <= 100);
     uint providerCandidateId = numberOfProviderCandidates;
     numberOfProviderCandidates = numberOfProviderCandidates.add(1);
-    providerCandidates[providerCandidateId] = Provider(msg.sender, _pricePerStorageMineral, _pricePerComputeMineral, _blockRewardCut, _feeShare, 0);
+    providerCandidates[msg.sender] = Provider(ProviderStatus.Registered, _pricePerStorageMineral, _pricePerComputeMineral, _blockRewardCut, _feeShare, 0);
   }
 
-  function bond(uint _providerCandidateId, uint _amount) external {
-    Provider storage providerCandidate = providerCandidates[_providerCandidateId];
-    // Check if _providerCandidateId is associated with an existing providerCandidate
-    require(providerCandidate.providerAddress != address(0));
+  function bond(address _providerAddress, uint _amount) external {
+    Provider storage provider = providerCandidates[_providerAddress];
+    // Check if _providerAddress is associated with an existing provider
+    require(provider.status != ProviderStatus.Null);
     // Check if delegator has not already bonded to some address
     require(delegators[msg.sender].delegateAddress == address(0));
     this.transferFrom(msg.sender, this, _amount);
-    delegators[msg.sender] = Delegator(providerCandidate.providerAddress, _amount);
-    providerCandidate.totalAmountBonded = providerCandidate.totalAmountBonded.add(_amount);
+    delegators[msg.sender] = Delegator(_providerAddress, _amount);
+    provider.totalAmountBonded = provider.totalAmountBonded.add(_amount);
   }
 }
