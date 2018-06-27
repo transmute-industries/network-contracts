@@ -24,21 +24,20 @@ contract ProviderRound is TransmuteToken, RoundManager {
     uint totalAmountBonded;
   }
 
-  uint public numberOfProviderCandidates;
-  mapping(address => Provider) public providerCandidates;
+  uint public numberOfProviders;
+  mapping(address => Provider) public providers;
 
   function provider(uint _pricePerStorageMineral, uint _pricePerComputeMineral, uint _blockRewardCut, uint _feeShare)
     external onlyBeforeActiveRoundIsLocked
   {
     require(_blockRewardCut <= 100);
     require(_feeShare <= 100);
-    uint providerCandidateId = numberOfProviderCandidates;
-    numberOfProviderCandidates = numberOfProviderCandidates.add(1);
-    providerCandidates[msg.sender] = Provider(ProviderStatus.Registered, _pricePerStorageMineral, _pricePerComputeMineral, _blockRewardCut, _feeShare, 0);
+    numberOfProviders = numberOfProviders.add(1);
+    providers[msg.sender] = Provider(ProviderStatus.Registered, _pricePerStorageMineral, _pricePerComputeMineral, _blockRewardCut, _feeShare, 0);
   }
 
   function bond(address _providerAddress, uint _amount) external {
-    Provider storage provider = providerCandidates[_providerAddress];
+    Provider storage provider = providers[_providerAddress];
     // Check if _providerAddress is associated with an existing provider
     require(provider.status != ProviderStatus.Null);
     // Check if delegator has not already bonded to some address
