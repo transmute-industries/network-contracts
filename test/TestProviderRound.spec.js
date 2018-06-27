@@ -12,7 +12,7 @@ contract('ProviderRound', accounts => {
     });
 
     beforeEach(async () => {
-      await blockMiner.mineUntilBeginningOfNextRound(providerRound);
+      await blockMiner.mineUntilEndOfElectionPeriod(providerRound);
       await providerRound.initializeRound();
     });
 
@@ -53,7 +53,7 @@ contract('ProviderRound', accounts => {
     });
 
     it('should fail if not called during an active round', async () => {
-      await blockMiner.mineUntilBeginningOfNextRound(providerRound);
+      await blockMiner.mineUntilEndOfElectionPeriod(providerRound);
       await assertFail( providerRound.provider(22, 10, 1, 25) );
     });
 
@@ -80,7 +80,7 @@ contract('ProviderRound', accounts => {
       for(let i = 5; i < 10; i++) {
         await providerRound.mint(accounts[i], 1000, {from: accounts[0]});
       }
-      await blockMiner.mineUntilBeginningOfNextRound(providerRound);
+      await blockMiner.mineUntilEndOfElectionPeriod(providerRound);
       await providerRound.initializeRound();
       await providerRound.provider(22, 10, 1, 25, {from: accounts[0]});
       await providerRound.provider(10, 20, 2, 35, {from: accounts[1]});

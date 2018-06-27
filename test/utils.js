@@ -7,7 +7,7 @@ class BlockMiner {
     }
   }
 
-  async mineUntilBeginningOfNextRound(roundManager) {
+  async mineUntilEndOfElectionPeriod(roundManager) {
     const electionPeriodLength = await roundManager.electionPeriodLength.call();
     const currentBlockNumber = web3.eth.blockNumber;
     const padding = electionPeriodLength - currentBlockNumber % electionPeriodLength - 1;
