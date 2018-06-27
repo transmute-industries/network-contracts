@@ -6,34 +6,26 @@ contract RoundManager {
   using SafeMath for uint;
 
   // Round number of the last round
-  uint public lastRound;
+  uint public roundNumber;
   // Block number of the start of the last round
-  // Note: not necessarily the block at which initializeRound() was called
-  uint public startOfLastRound;
+  uint public startOfCurrentRound;
 
-  uint public roundLength;
+  uint public electionPeriodLength;
   uint public rateLockDeadline;
 
   modifier onlyBeforeActiveRoundIsLocked() {
-    require(timeSinceBeginningOfLastRound() < roundLength.sub(rateLockDeadline));
+    require(block.number.sub(startOfCurrentRound) < electionPeriodLength.sub(rateLockDeadline));
     _;
   }
 
   constructor() {
-    roundLength = 20;
+    electionPeriodLength = 20;
     rateLockDeadline = 5;
   }
 
-  function timeSinceBeginningOfLastRound() internal view returns (uint) {
-    return block.number.sub(startOfLastRound);
-  }
-
   function initializeRound() external {
-    uint blockNumber = block.number;
-    uint currentRound = blockNumber.div(roundLength);
-    // lastRound == currentRound when two function calls happen within the same round.
-    require(lastRound < currentRound);
-    lastRound = currentRound;
-    startOfLastRound = lastRound.mul(roundLength);
+    require(block.number.sub(startOfCurrentRound) >= electionPeriodLength);
+    roundNumber = roundNumber.add(1);
+    startOfCurrentRound = block.number;
   }
 }
