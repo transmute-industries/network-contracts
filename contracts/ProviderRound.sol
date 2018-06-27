@@ -5,6 +5,22 @@ import "./RoundManager.sol";
 
 contract ProviderRound is TransmuteToken, RoundManager {
 
+  event ProviderAdded (
+    address indexed _providerAddress,
+    uint _pricePerStorageMineral,
+    uint _pricePerComputeMineral,
+    uint _blockRewardCut,
+    uint _feeShare
+  );
+
+  event ProviderUpdated (
+    address indexed _providerAddress,
+    uint _pricePerStorageMineral,
+    uint _pricePerComputeMineral,
+    uint _blockRewardCut,
+    uint _feeShare
+  );
+
   struct Delegator {
     address delegateAddress;
     uint amountBonded;
@@ -32,8 +48,18 @@ contract ProviderRound is TransmuteToken, RoundManager {
   {
     require(_blockRewardCut <= 100);
     require(_feeShare <= 100);
-    numberOfProviders = numberOfProviders.add(1);
-    providers[msg.sender] = Provider(ProviderStatus.Registered, _pricePerStorageMineral, _pricePerComputeMineral, _blockRewardCut, _feeShare, 0);
+    Provider storage provider = providers[msg.sender];
+    if (provider.status == ProviderStatus.Null) {
+      numberOfProviders = numberOfProviders.add(1);
+      ProviderAdded(msg.sender, _pricePerStorageMineral, _pricePerComputeMineral, _blockRewardCut, _feeShare);
+    } else {
+      ProviderUpdated(msg.sender, _pricePerStorageMineral, _pricePerComputeMineral, _blockRewardCut, _feeShare);
+    }
+    provider.status = ProviderStatus.Registered;
+    provider.pricePerStorageMineral = _pricePerStorageMineral;
+    provider.pricePerComputeMineral = _pricePerComputeMineral;
+    provider.blockRewardCut = _blockRewardCut;
+    provider.feeShare = _feeShare;
   }
 
   function bond(address _providerAddress, uint _amount) external {
