@@ -21,13 +21,13 @@ contract('ProviderRound', accounts => {
     it("should register a provider's parameters", async () => {
       await providerRound.provider(22, 10, 1, 25, {from: accounts[0]});
       await providerRound.provider(10, 20, 2, 35, {from: accounts[1]});
-      let firstProvider = await providerRound.providers.call(accounts[0]);
+      const firstProvider = await providerRound.providers.call(accounts[0]);
       assert.equal(firstProvider[0], PROVIDER_REGISTERED);
       assert.equal(firstProvider[1].toNumber(), 22);
       assert.equal(firstProvider[2].toNumber(), 10);
       assert.equal(firstProvider[3].toNumber(), 1);
       assert.equal(firstProvider[4].toNumber(), 25);
-      let secondProvider = await providerRound.providers.call(accounts[1]);
+      const secondProvider = await providerRound.providers.call(accounts[1]);
       assert.equal(secondProvider[0], PROVIDER_REGISTERED);
       assert.equal(secondProvider[1].toNumber(), 10);
       assert.equal(secondProvider[2].toNumber(), 20);
@@ -69,7 +69,7 @@ contract('ProviderRound', accounts => {
     });
 
     it('should send a ProviderAdded event for a new provider', async () => {
-      let result = await providerRound.provider(22, 10, 1, 25, {from: accounts[3]});
+      const result = await providerRound.provider(22, 10, 1, 25, {from: accounts[3]});
       assert.web3Event(result, {
         event: 'ProviderAdded',
         args: {
@@ -83,7 +83,7 @@ contract('ProviderRound', accounts => {
     });
 
     it('should send a ProviderUpdated event for an existing provider', async () => {
-      let result = await providerRound.provider(21, 11, 2, 24, {from: accounts[3]});
+      const result = await providerRound.provider(21, 11, 2, 24, {from: accounts[3]});
       assert.web3Event(result, {
         event: 'ProviderUpdated',
         args: {
@@ -108,10 +108,10 @@ contract('ProviderRound', accounts => {
 
     it('should remove a provider from the provider mapping', async () => {
       await providerRound.provider(22, 10, 1, 25, {from: accounts[0]});
-      let registeredProvider = await providerRound.providers.call(accounts[0]);
+      const registeredProvider = await providerRound.providers.call(accounts[0]);
       assert.equal(PROVIDER_REGISTERED, registeredProvider[0])
       await providerRound.resignAsProvider({from: accounts[0]});
-      let resignedProvider = await providerRound.providers.call(accounts[0]);
+      const resignedProvider = await providerRound.providers.call(accounts[0]);
       for(param of resignedProvider) {
         assert.equal(0, param);
       }
@@ -119,7 +119,7 @@ contract('ProviderRound', accounts => {
 
     it('should send a ProviderResigned event', async () => {
       await providerRound.provider(22, 10, 1, 25, {from: accounts[1]});
-      let result = await providerRound.resignAsProvider({from: accounts[1]});
+      const result = await providerRound.resignAsProvider({from: accounts[1]});
       assert.web3Event(result, {
         event: 'ProviderResigned',
         args: {
@@ -166,7 +166,6 @@ contract('ProviderRound', accounts => {
     it('should increase the totalAmountBonded of the provider', async () => {
       let firstProvider = await providerRound.providers.call(accounts[0]);
       assert.equal(10, firstProvider[5]);
-
       await providerRound.approve(contractAddress, 20, {from: accounts[6]});
       await providerRound.bond(accounts[1], 20, {from: accounts[6]});
       await providerRound.approve(contractAddress, 50, {from: accounts[7]});
