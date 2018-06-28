@@ -62,6 +62,11 @@ contract ProviderRound is TransmuteToken, RoundManager {
     provider.feeShare = _feeShare;
   }
 
+  function resignAsProvider() public {
+    require(providers[msg.sender].status != ProviderStatus.Null);
+    delete providers[msg.sender];
+  }
+
   function bond(address _providerAddress, uint _amount) external {
     Provider storage provider = providers[_providerAddress];
     // Check if _providerAddress is associated with an existing provider
