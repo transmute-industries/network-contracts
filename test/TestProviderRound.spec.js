@@ -22,19 +22,17 @@ contract('ProviderRound', accounts => {
       await providerRound.provider(22, 10, 1, 25, {from: accounts[0]});
       await providerRound.provider(10, 20, 2, 35, {from: accounts[1]});
       let firstProvider = await providerRound.providers.call(accounts[0]);
+      assert.equal(firstProvider[0], PROVIDER_REGISTERED);
+      assert.equal(firstProvider[1].toNumber(), 22);
+      assert.equal(firstProvider[2].toNumber(), 10);
+      assert.equal(firstProvider[3].toNumber(), 1);
+      assert.equal(firstProvider[4].toNumber(), 25);
       let secondProvider = await providerRound.providers.call(accounts[1]);
-      assert(firstProvider[0] == PROVIDER_REGISTERED
-        && firstProvider[1].toNumber() == 22
-        && firstProvider[2].toNumber() == 10
-        && firstProvider[3].toNumber() == 1
-        && firstProvider[4].toNumber() == 25
-      );
-      assert(secondProvider[0] == PROVIDER_REGISTERED
-        && secondProvider[1].toNumber() == 10
-        && secondProvider[2].toNumber() == 20
-        && secondProvider[3].toNumber() == 2
-        && secondProvider[4].toNumber() == 35
-      );
+      assert.equal(secondProvider[0], PROVIDER_REGISTERED);
+      assert.equal(secondProvider[1].toNumber(), 10);
+      assert.equal(secondProvider[2].toNumber(), 20);
+      assert.equal(secondProvider[3].toNumber(), 2);
+      assert.equal(secondProvider[4].toNumber(), 35);
     });
 
     it('should fail with invalid parameters', async() => {
