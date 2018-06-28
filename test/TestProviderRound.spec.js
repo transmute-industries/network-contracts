@@ -117,6 +117,17 @@ contract('ProviderRound', accounts => {
       }
     });
 
+    it('should send a ProviderResigned event', async () => {
+      await providerRound.provider(22, 10, 1, 25, {from: accounts[1]});
+      let result = await providerRound.resignAsProvider({from: accounts[1]});
+      assert.web3Event(result, {
+        event: 'ProviderResigned',
+        args: {
+          _providerAddress: accounts[1],
+        }
+      });
+    });
+
     it("should fail if the transaction's sender is not a provider", async () => {
       await assertFail( providerRound.resignAsProvider({from: accounts[1]}) );
     });

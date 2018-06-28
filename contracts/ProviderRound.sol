@@ -21,6 +21,10 @@ contract ProviderRound is TransmuteToken, RoundManager {
     uint _feeShare
   );
 
+  event ProviderResigned (
+    address indexed _providerAddress
+  );
+
   struct Delegator {
     address delegateAddress;
     uint amountBonded;
@@ -65,6 +69,7 @@ contract ProviderRound is TransmuteToken, RoundManager {
   function resignAsProvider() public {
     require(providers[msg.sender].status != ProviderStatus.Null);
     delete providers[msg.sender];
+    ProviderResigned(msg.sender);
   }
 
   function bond(address _providerAddress, uint _amount) external {
