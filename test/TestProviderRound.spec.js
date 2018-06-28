@@ -1,5 +1,6 @@
 const ProviderRound = artifacts.require('./ProviderRound.sol');
 const { blockMiner, assertFail } = require('./utils.js');
+require('truffle-test-utils').init();
 
 contract('ProviderRound', accounts => {
 
@@ -68,6 +69,35 @@ contract('ProviderRound', accounts => {
       await blockMiner.mine(1);
       await assertFail( providerRound.provider(22, 10, 1, 25) );
     });
+
+    it('should send a ProviderAdded event for a new provider', async () => {
+      let result = await providerRound.provider(22, 10, 1, 25, {from: accounts[3]});
+      assert.web3Event(result, {
+        event: 'ProviderAdded',
+        args: {
+          _providerAddress: accounts[3],
+          _pricePerStorageMineral: 22,
+          _pricePerComputeMineral: 10,
+          _blockRewardCut: 1,
+          _feeShare: 25,
+        }
+      });
+    });
+
+    it('should send a ProviderUpdated event for an existing provider', async () => {
+      let result = await providerRound.provider(21, 11, 2, 24, {from: accounts[3]});
+      assert.web3Event(result, {
+        event: 'ProviderUpdated',
+        args: {
+          _providerAddress: accounts[3],
+          _pricePerStorageMineral: 21,
+          _pricePerComputeMineral: 11,
+          _blockRewardCut: 2,
+          _feeShare: 24,
+        }
+      });
+    });
+
   });
 
   describe('bond', () => {
