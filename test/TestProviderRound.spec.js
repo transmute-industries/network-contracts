@@ -1,6 +1,5 @@
 const ProviderRound = artifacts.require('./ProviderRound.sol');
-const utils = require('./utils.js');
-const assertFail = utils.assertFail;
+const { blockMiner, assertFail } = require('./utils.js');
 
 contract('ProviderRound', accounts => {
 
@@ -8,8 +7,16 @@ contract('ProviderRound', accounts => {
 
   describe('provider', () => {
 
-    it("should register a provider's parameters", async () => {
+    before(async () => {
       providerRound = await ProviderRound.deployed();
+    });
+
+    beforeEach(async () => {
+      await blockMiner.mineUntilEndOfElectionPeriod(providerRound);
+      await providerRound.initializeRound();
+    });
+
+    it("should register a provider's parameters", async () => {
       await providerRound.provider(22, 10, 1, 25, {from: accounts[0]});
       await providerRound.provider(10, 20, 2, 35, {from: accounts[1]});
       let firstProvider = await providerRound.providerCandidates.call(0);
@@ -44,6 +51,23 @@ contract('ProviderRound', accounts => {
       assert.equal(accounts[0], firstProvider[0]);
       assert.equal(0, firstProvider[5]);
     });
+
+    it('should fail if not called during an active round', async () => {
+      await blockMiner.mineUntilEndOfElectionPeriod(providerRound);
+      await assertFail( providerRound.provider(22, 10, 1, 25) );
+    });
+
+    it('should register parameters before the lock period of an active round', async () => {
+      await blockMiner.mineUntilLastBlockBeforeLockPeriod(providerRound);
+      await providerRound.provider(22, 10, 1, 25);
+    });
+
+    it('should fail during the lock period of an active round', async () => {
+      await blockMiner.mineUntilLastBlockBeforeLockPeriod(providerRound);
+      // Enter lock period
+      await blockMiner.mine(1);
+      await assertFail( providerRound.provider(22, 10, 1, 25) );
+    });
   });
 
   describe('bond', () => {
@@ -56,6 +80,8 @@ contract('ProviderRound', accounts => {
       for(let i = 5; i < 10; i++) {
         await providerRound.mint(accounts[i], 1000, {from: accounts[0]});
       }
+      await blockMiner.mineUntilEndOfElectionPeriod(providerRound);
+      await providerRound.initializeRound();
       await providerRound.provider(22, 10, 1, 25, {from: accounts[0]});
       await providerRound.provider(10, 20, 2, 35, {from: accounts[1]});
     });
