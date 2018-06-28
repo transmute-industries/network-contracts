@@ -5,6 +5,22 @@ import "./RoundManager.sol";
 
 contract ProviderRound is TransmuteToken, RoundManager {
 
+  event ProviderAdded (
+    address indexed _providerAddress,
+    uint _pricePerStorageMineral,
+    uint _pricePerComputeMineral,
+    uint _blockRewardCut,
+    uint _feeShare
+  );
+
+  event ProviderUpdated (
+    address indexed _providerAddress,
+    uint _pricePerStorageMineral,
+    uint _pricePerComputeMineral,
+    uint _blockRewardCut,
+    uint _feeShare
+  );
+
   struct Delegator {
     address delegateAddress;
     uint amountBonded;
@@ -13,8 +29,10 @@ contract ProviderRound is TransmuteToken, RoundManager {
   uint public numberOfDelegators;
   mapping(address => Delegator) public delegators;
 
+  enum ProviderStatus { Null, Registered }
+
   struct Provider {
-    address providerAddress;
+    ProviderStatus status;
     uint pricePerStorageMineral;
     uint pricePerComputeMineral;
     uint blockRewardCut;
@@ -22,27 +40,36 @@ contract ProviderRound is TransmuteToken, RoundManager {
     uint totalAmountBonded;
   }
 
-  uint public numberOfProviderCandidates;
-  mapping(uint => Provider) public providerCandidates;
+  uint public numberOfProviders;
+  mapping(address => Provider) public providers;
 
   function provider(uint _pricePerStorageMineral, uint _pricePerComputeMineral, uint _blockRewardCut, uint _feeShare)
     external onlyBeforeActiveRoundIsLocked
   {
     require(_blockRewardCut <= 100);
     require(_feeShare <= 100);
-    uint providerCandidateId = numberOfProviderCandidates;
-    numberOfProviderCandidates = numberOfProviderCandidates.add(1);
-    providerCandidates[providerCandidateId] = Provider(msg.sender, _pricePerStorageMineral, _pricePerComputeMineral, _blockRewardCut, _feeShare, 0);
+    Provider storage provider = providers[msg.sender];
+    if (provider.status == ProviderStatus.Null) {
+      numberOfProviders = numberOfProviders.add(1);
+      ProviderAdded(msg.sender, _pricePerStorageMineral, _pricePerComputeMineral, _blockRewardCut, _feeShare);
+    } else {
+      ProviderUpdated(msg.sender, _pricePerStorageMineral, _pricePerComputeMineral, _blockRewardCut, _feeShare);
+    }
+    provider.status = ProviderStatus.Registered;
+    provider.pricePerStorageMineral = _pricePerStorageMineral;
+    provider.pricePerComputeMineral = _pricePerComputeMineral;
+    provider.blockRewardCut = _blockRewardCut;
+    provider.feeShare = _feeShare;
   }
 
-  function bond(uint _providerCandidateId, uint _amount) external {
-    Provider storage providerCandidate = providerCandidates[_providerCandidateId];
-    // Check if _providerCandidateId is associated with an existing providerCandidate
-    require(providerCandidate.providerAddress != address(0));
+  function bond(address _providerAddress, uint _amount) external {
+    Provider storage provider = providers[_providerAddress];
+    // Check if _providerAddress is associated with an existing provider
+    require(provider.status != ProviderStatus.Null);
     // Check if delegator has not already bonded to some address
     require(delegators[msg.sender].delegateAddress == address(0));
     this.transferFrom(msg.sender, this, _amount);
-    delegators[msg.sender] = Delegator(providerCandidate.providerAddress, _amount);
-    providerCandidate.totalAmountBonded = providerCandidate.totalAmountBonded.add(_amount);
+    delegators[msg.sender] = Delegator(_providerAddress, _amount);
+    provider.totalAmountBonded = provider.totalAmountBonded.add(_amount);
   }
 }
