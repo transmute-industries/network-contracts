@@ -98,6 +98,30 @@ contract('ProviderRound', accounts => {
 
   });
 
+  describe('resignAsProvider', () => {
+
+    before(async () => {
+      providerRound = await ProviderRound.new();
+      await blockMiner.mineUntilEndOfElectionPeriod(providerRound);
+      await providerRound.initializeRound();
+    });
+
+    it('should remove a provider from the provider mapping', async () => {
+      await providerRound.provider(22, 10, 1, 25, {from: accounts[0]});
+      let registeredProvider = await providerRound.providers.call(accounts[0]);
+      assert.equal(PROVIDER_REGISTERED, registeredProvider[0])
+      await providerRound.resignAsProvider({from: accounts[0]});
+      let resignedProvider = await providerRound.providers.call(accounts[0]);
+      for(param of resignedProvider) {
+        assert.equal(0, param);
+      }
+    });
+
+    it("should fail if the transaction's sender is not a provider", async () => {
+      await assertFail( providerRound.resignAsProvider({from: accounts[1]}) );
+    });
+  });
+
   describe('bond', () => {
 
     let contractAddress;
