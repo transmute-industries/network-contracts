@@ -1,11 +1,10 @@
-# framework-example
+# Transmute Network Contracts
 
 [![Build Status](https://travis-ci.org/transmute-industries/network-contracts.svg?branch=master)](https://travis-ci.org/transmute-industries/network-contracts)
 
-This is a javascript package built with truffle and the transmute-framework.
+This repo contains smart contracts that are under development.
 
 ```
 npm i
-ganache-cli
 npm run test
 ```
