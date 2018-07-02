@@ -71,13 +71,20 @@ contract('ProviderPool', accounts => {
       await assertProvidersAreSortedByBondedAmount();
       await pp.publicAddProvider(accounts[5], 8);
       await assertProvidersAreSortedByBondedAmount();
-      await pp.publicAddProvider(accounts[6], 15);
+      await pp.publicAddProvider(accounts[6], 8);
       await assertProvidersAreSortedByBondedAmount();
     });
 
-    it('should fail if pool size exceeds maxSize', async () => {
+    it('should fail if the same address is added twice', async () => {
+      await assertFail( pp.publicAddProvider(accounts[6], 15) );
+    });
 
-    })
+    it('should fail if pool size exceeds maxSize', async () => {
+      // Max size is 7, the 7th account should make it
+      await pp.publicAddProvider(accounts[7], 15);
+      // And the 8th should fail
+      await assertFail( pp.publicAddProvider(accounts[8], 15) );
+    });
   });
 });
 
