@@ -3,7 +3,7 @@ pragma solidity ^0.4.24;
 import "../contracts/ProviderPool.sol";
 
 contract TestProviderPool is ProviderPool {
-  // @dev convenience method to access the mapping inside SortedDoublyLL.Data from web3js
+  // @dev convenience method to access from web3js the 'nodes' mapping that lives inside SortedDoublyLL.Data
   function get(address _provider) returns (uint, address, address) {
     return (providerPool.nodes[_provider].key, providerPool.nodes[_provider].nextId, providerPool.nodes[_provider].prevId);
   }
