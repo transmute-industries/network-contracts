@@ -30,6 +30,16 @@ contract('ProviderRound', accounts => {
       await providerRound.initializeRound();
     });
 
+    it('should fail if the provider does not bond some tokens on himself first', async () => {
+      await assertFail( providerRound.provider(22, 10, 1, 25, {from: accounts[0]}) );
+    });
+
+    it('should set totalBondedAmount to the amount bonded', async () => {
+      await approveBondProvider(22, 10, 1, 25, 42, accounts[0]);
+      const provider = await providerRound.providers.call(accounts[0]);
+      assert.equal(42, provider[5]); // [5] is totalBondedAmount
+    });
+
     it("should register a provider's parameters", async () => {
       await approveBondProvider(10, 20, 2, 35, 1, accounts[1]);
       const provider = await providerRound.providers.call(accounts[1]);
@@ -169,32 +179,32 @@ contract('ProviderRound', accounts => {
     });
 
     it('should increase the totalAmountBonded of the provider', async () => {
-      let firstProvider = await providerRound.providers.call(accounts[0]);
-      assert.equal(11, firstProvider[5]);
       await providerRound.approve(contractAddress, 20, {from: accounts[6]});
-      await providerRound.bond(accounts[1], 20, {from: accounts[6]});
-      await providerRound.approve(contractAddress, 50, {from: accounts[7]});
-      await providerRound.bond(accounts[1], 50, {from: accounts[7]});
-      firstProvider = await providerRound.providers.call(accounts[0]);
-      const secondProvider = await providerRound.providers.call(accounts[1]);
-      assert.equal(11, firstProvider[5]); // [5] is totalAmountBonded
-      assert.equal(71, secondProvider[5]); // [5] is totalAmountBonded
+      await providerRound.bond(accounts[0], 20, {from: accounts[6]});
+      const provider = await providerRound.providers.call(accounts[0]);
+      assert.equal(31, provider[5].toNumber()); // [5] is totalAmountBonded
     });
 
-    it('should fail if no providerCandidate is associated with the given providerCandidateId', async () => {
-      await assertFail( providerRound.bond(accounts[2], 15, {from: accounts[5]}) );
+    it('should fail if the address is not a registered provider address', async () => {
+      await providerRound.approve(contractAddress, 15, {from: accounts[7]})
+      await assertFail( providerRound.bond(accounts[2], 15, {from: accounts[7]}) );
+    });
+
+    it('should work if the address is not a registered provider address but the address is the sender address', async () => {
+      await providerRound.approve(contractAddress, 15, {from: accounts[3]})
+      await providerRound.bond(accounts[3], 15, {from: accounts[3]});
     });
 
     it('should fail if called twice by the same delegator', async () => {
       await providerRound.approve(contractAddress, 40, {from: accounts[8]});
-      await providerRound.bond(accounts[1], 40, {from: accounts[8]});
-      await assertFail( providerRound.bond(accounts[1], 40, {from: accounts[8]}) );
+      await providerRound.bond(accounts[1], 20, {from: accounts[8]});
+      await assertFail( providerRound.bond(accounts[1], 20, {from: accounts[8]}) );
     });
 
     it('should fail if TST balance is less than bonded amount', async () => {
       await providerRound.approve(contractAddress, 1001, {from: accounts[9]});
       await assertFail( providerRound.bond(accounts[1], 1001, {from: accounts[9]}) )
-      assert.equal(111, (await providerRound.providers(accounts[1]))[5]);
+      assert.equal(21, (await providerRound.providers(accounts[1]))[5]);
     });
 
     it("should transfer amount from the delegator's balance to the contract's balance", async () => {
