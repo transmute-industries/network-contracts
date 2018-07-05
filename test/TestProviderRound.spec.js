@@ -6,8 +6,10 @@ contract('ProviderRound', accounts => {
 
   let providerRound;
   let contractAddress;
+  const PROVIDER_POOL_SIZE = 10;
   const PROVIDER_NULL = 0;
   const PROVIDER_REGISTERED = 1;
+
 
   async function approveBondProvider(pricePerStorageMineral, pricePerComputeMineral, blockRewardCut, feeShare, amountBonded, providerAddress) {
       await providerRound.approve(contractAddress, amountBonded, {from: providerAddress});
@@ -23,6 +25,7 @@ contract('ProviderRound', accounts => {
       for(let i = 0; i < 5; i++) {
         await providerRound.mint(accounts[i], 1000, {from: accounts[0]});
       }
+      await providerRound.setMaxNumberOfProviders(PROVIDER_POOL_SIZE);
     });
 
     beforeEach(async () => {
@@ -116,6 +119,7 @@ contract('ProviderRound', accounts => {
       for(let i = 0; i < 5; i++) {
         await providerRound.mint(accounts[i], 1000, {from: accounts[0]});
       }
+      await providerRound.setMaxNumberOfProviders(PROVIDER_POOL_SIZE);
       await blockMiner.mineUntilEndOfElectionPeriod(providerRound);
       await providerRound.initializeRound();
       await approveBondProvider(22, 10, 1, 25, 1, accounts[0]);
@@ -158,6 +162,7 @@ contract('ProviderRound', accounts => {
       for(let i = 0; i < 10; i++) {
         await providerRound.mint(accounts[i], 1000, {from: accounts[0]});
       }
+      await providerRound.setMaxNumberOfProviders(PROVIDER_POOL_SIZE);
       await blockMiner.mineUntilEndOfElectionPeriod(providerRound);
       await providerRound.initializeRound();
       await approveBondProvider(22, 10, 1, 25, 1, accounts[0]);

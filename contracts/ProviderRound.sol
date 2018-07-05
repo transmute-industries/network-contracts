@@ -60,7 +60,7 @@ contract ProviderRound is TransmuteToken, RoundManager, ProviderPool {
     require(delegator.amountBonded > 0);
     if (provider.status == ProviderStatus.Null) {
       numberOfProviders = numberOfProviders.add(1);
-      //addProvider(msg.sender, 0);
+      addProvider(msg.sender, provider.totalAmountBonded);
       ProviderAdded(msg.sender, _pricePerStorageMineral, _pricePerComputeMineral, _blockRewardCut, _feeShare);
     } else {
       ProviderUpdated(msg.sender, _pricePerStorageMineral, _pricePerComputeMineral, _blockRewardCut, _feeShare);
