@@ -2,8 +2,10 @@ pragma solidity ^0.4.24;
 
 import "./TransmuteToken.sol";
 import "./RoundManager.sol";
+import "./ProviderPool.sol";
 
-contract ProviderRound is TransmuteToken, RoundManager {
+// TODO Change name
+contract ProviderRound is TransmuteToken, RoundManager, ProviderPool {
 
   event ProviderAdded (
     address indexed _providerAddress,
@@ -53,8 +55,12 @@ contract ProviderRound is TransmuteToken, RoundManager {
     require(_blockRewardCut <= 100);
     require(_feeShare <= 100);
     Provider storage provider = providers[msg.sender];
+    Delegator storage delegator = delegators[msg.sender];
+    require(delegator.delegateAddress == msg.sender);
+    require(delegator.amountBonded > 0);
     if (provider.status == ProviderStatus.Null) {
       numberOfProviders = numberOfProviders.add(1);
+      //addProvider(msg.sender, 0);
       ProviderAdded(msg.sender, _pricePerStorageMineral, _pricePerComputeMineral, _blockRewardCut, _feeShare);
     } else {
       ProviderUpdated(msg.sender, _pricePerStorageMineral, _pricePerComputeMineral, _blockRewardCut, _feeShare);
@@ -74,8 +80,9 @@ contract ProviderRound is TransmuteToken, RoundManager {
 
   function bond(address _providerAddress, uint _amount) external {
     Provider storage provider = providers[_providerAddress];
-    // Check if _providerAddress is associated with an existing provider
-    require(provider.status != ProviderStatus.Null);
+    // A delegator is only allowed to bond to an Unregistered provider if the provider is himself
+    // otherwise _providerAddress has to be associated with a Registered provider
+    require(_providerAddress == msg.sender || provider.status != ProviderStatus.Null);
     // Check if delegator has not already bonded to some address
     require(delegators[msg.sender].delegateAddress == address(0));
     this.transferFrom(msg.sender, this, _amount);

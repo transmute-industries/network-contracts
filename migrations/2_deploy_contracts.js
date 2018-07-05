@@ -6,9 +6,10 @@ const TestProviderPool = artifacts.require('./TestProviderPool.sol');
 
 module.exports = deployer => {
   deployer.deploy(TST);
+  deployer.deploy(SortedDoublyLL);
+  deployer.link(SortedDoublyLL, ProviderRound);
   deployer.deploy(ProviderRound);
   deployer.deploy(RoundManager);
-  deployer.deploy(SortedDoublyLL);
   deployer.link(SortedDoublyLL, TestProviderPool);
   deployer.deploy(TestProviderPool);
 };
