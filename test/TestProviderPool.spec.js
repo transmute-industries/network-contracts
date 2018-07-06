@@ -51,14 +51,14 @@ contract('ProviderPool', accounts => {
         let previousAddress = 0;
         let providerPool = await pp.providerPool.call();
         let currentAddress = providerPool[0];
-        let node = await pp.get.call(currentAddress);
+        let node = await pp.getProvider.call(currentAddress);
         let end = providerPool[1];
         do {
           assert(node[0] <= bondedAmountOfPreviousAddress); //
           assert.equal(node[2], previousAddress);
           previousAddress = currentAddress;
           currentAddress = node[1];
-          node = await pp.get.call(currentAddress);
+          node = await pp.getProvider.call(currentAddress);
         }
         while(currentAddress != end)
       }
