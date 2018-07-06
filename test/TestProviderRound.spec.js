@@ -37,7 +37,7 @@ contract('ProviderRound', accounts => {
       await assertFail( providerRound.provider(22, 10, 1, 25, {from: accounts[0]}) );
     });
 
-    it('should set totalBondedAmount to the amount bonded', async () => {
+    it('should initially set totalBondedAmount to the amount the provider bonded to himself', async () => {
       await approveBondProvider(22, 10, 1, 25, 42, accounts[0]);
       const provider = await providerRound.providers.call(accounts[0]);
       assert.equal(42, provider[5]); // [5] is totalBondedAmount
@@ -107,6 +107,25 @@ contract('ProviderRound', accounts => {
           _feeShare: 24,
         }
       });
+    });
+
+    // TODO add limitation
+    // TODO: Doc about providers, pool and active pool
+    it('should add the provider to the pool if he is new and size < maxSize', async () => {
+      // Check that provider isn't registered yet
+      let provider = await providerRound.getProvider(accounts[3]);
+      // If totalBondedAmount is 0, the provider isn't in the pool
+      // because a provider is required to bond some tokens to himself
+      assert.equal(0, provider[0]) // [0] is key (ie totalBondedAmount)
+      // Check the size of the pool increases by 1
+      let providerPool = await providerRound.providerPool.call();
+      const previousSize = providerPool[3].toNumber(); // [3] is current size of the pool
+      await approveBondProvider(21, 13, 3, 26, 1, accounts[3]);
+      providerPool = await providerRound.providerPool.call();
+      assert.equal(previousSize + 1, providerPool[3]);
+      // Check that the provider is registered in the pool now
+      provider = await providerRound.getProvider(accounts[3]);
+      assert.equal(1, provider[0]) // [0] is key (ie totalBondedAmount)
     });
 
   });

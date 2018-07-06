@@ -8,7 +8,7 @@ contract ProviderPool is Ownable {
   SortedDoublyLL.Data public providerPool;
 
   // @dev convenience method to access the 'nodes' mapping that lives inside providerPool
-  function getProvider(address _provider) public view returns (uint, address, address) {
+  function getProvider(address _provider) external view returns (uint, address, address) {
     SortedDoublyLL.Node memory node = providerPool.nodes[_provider];
     return (node.key, node.nextId, node.prevId);
   }
