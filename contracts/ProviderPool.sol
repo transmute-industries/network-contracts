@@ -13,6 +13,11 @@ contract ProviderPool is Ownable {
     return (node.key, node.nextId, node.prevId);
   }
 
+  function containsProvider(address _provider) external view returns (bool) {
+    return providerPool.contains(_provider);
+  }
+
+  // TODO: Add default value in the main constructor
   function setMaxNumberOfProviders(uint _maxNumber) external onlyOwner {
     providerPool.setMaxSize(_maxNumber);
   }

@@ -113,10 +113,7 @@ contract('ProviderRound', accounts => {
     // TODO: Doc about providers, pool and active pool
     it('should add the provider to the pool if he is new and size < maxSize', async () => {
       // Check that provider isn't registered yet
-      let provider = await providerRound.getProvider(accounts[3]);
-      // If totalBondedAmount is 0, the provider isn't in the pool
-      // because a provider is required to bond some tokens to himself
-      assert.equal(0, provider[0]) // [0] is key (ie totalBondedAmount)
+      assert.equal(false, await providerRound.containsProvider(accounts[3]));
       // Check the size of the pool increases by 1
       let providerPool = await providerRound.providerPool.call();
       const previousSize = providerPool[3].toNumber(); // [3] is current size of the pool
@@ -124,8 +121,7 @@ contract('ProviderRound', accounts => {
       providerPool = await providerRound.providerPool.call();
       assert.equal(previousSize + 1, providerPool[3]);
       // Check that the provider is registered in the pool now
-      provider = await providerRound.getProvider(accounts[3]);
-      assert.equal(1, provider[0]) // [0] is key (ie totalBondedAmount)
+      assert.equal(true, await providerRound.containsProvider(accounts[3]));
     });
 
   });

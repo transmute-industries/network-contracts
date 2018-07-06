@@ -86,5 +86,22 @@ contract('ProviderPool', accounts => {
       await assertFail( pp.publicAddProvider(accounts[8], 15) );
     });
   });
+
+  describe('containsProvider', () => {
+
+    before(async () => {
+      pp = await ProviderPool.new();
+      await pp.setMaxNumberOfProviders(10, {from: accounts[0]});
+    });
+
+    it('should return false if provider is not in the pool', async () => {
+      assert.equal(false, await pp.containsProvider(accounts[0]));
+    });
+
+    it('should return true if provider is in the pool', async () => {
+      await pp.publicAddProvider(accounts[0], 1);
+      assert.equal(true, await pp.containsProvider(accounts[0]));
+    });
+  });
 });
 
