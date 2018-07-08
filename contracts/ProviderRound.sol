@@ -4,7 +4,7 @@ import "./TransmuteToken.sol";
 import "./RoundManager.sol";
 import "./ProviderPool.sol";
 
-// TODO Change name
+// TODO Change name to TransmuteDPOS
 contract ProviderRound is TransmuteToken, RoundManager, ProviderPool {
 
   event ProviderAdded (
@@ -35,6 +35,7 @@ contract ProviderRound is TransmuteToken, RoundManager, ProviderPool {
   uint public numberOfDelegators;
   mapping(address => Delegator) public delegators;
 
+  // TODO: Change name to Unregistered
   enum ProviderStatus { Null, Registered }
 
   struct Provider {
@@ -61,8 +62,10 @@ contract ProviderRound is TransmuteToken, RoundManager, ProviderPool {
     if (provider.status == ProviderStatus.Null) {
       numberOfProviders = numberOfProviders.add(1);
       addProvider(msg.sender, provider.totalAmountBonded);
+      // TODO: Fix warning
       ProviderAdded(msg.sender, _pricePerStorageMineral, _pricePerComputeMineral, _blockRewardCut, _feeShare);
     } else {
+      updateProvider(msg.sender, provider.totalAmountBonded);
       ProviderUpdated(msg.sender, _pricePerStorageMineral, _pricePerComputeMineral, _blockRewardCut, _feeShare);
     }
     provider.status = ProviderStatus.Registered;

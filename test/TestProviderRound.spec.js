@@ -111,7 +111,7 @@ contract('ProviderRound', accounts => {
 
     // TODO add limitation
     // TODO: Doc about providers, pool and active pool
-    it('should add the provider to the pool if he is new and size < maxSize', async () => {
+    it('should add the provider to the pool if he is Unregistered and size < maxSize', async () => {
       // Check that provider isn't registered yet
       assert.equal(false, await providerRound.containsProvider(accounts[3]));
       // Check the size of the pool increases by 1
@@ -124,6 +124,24 @@ contract('ProviderRound', accounts => {
       assert.equal(true, await providerRound.containsProvider(accounts[3]));
     });
 
+    it('should fail if provider is Unregistered and size == maxSize', async () => {
+
+    });
+
+    it('should update the value of totalBondedAmount in the providerPool if the provider is Registered and size < maxSize', async () => {
+      // Check that provider is Registered
+      assert.equal(true, await providerRound.containsProvider(accounts[3]));
+      // Check the size of the pool stays the same
+      let providerPool = await providerRound.providerPool.call();
+      const previousSize = providerPool[3].toNumber(); // [3] is current size of the pool
+      await providerRound.provider(19, 10, 2, 20, {from: accounts[3]});
+      providerPool = await providerRound.providerPool.call();
+      assert.equal(previousSize, providerPool[3]);
+    });
+
+    it('should work if provider is Registered and size == maxSize', async () => {
+
+    });
   });
 
   describe('resignAsProvider', () => {
