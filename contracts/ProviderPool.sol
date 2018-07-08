@@ -22,7 +22,12 @@ contract ProviderPool is Ownable {
     providerPool.setMaxSize(_maxNumber);
   }
 
+  // TODO: Replace _providerAddress
   function addProvider(address _providerAddress, uint _bondedAmount) internal {
     providerPool.insert(_providerAddress, _bondedAmount, 0, 0);
+  }
+
+  function updateProvider(address _providerAddress, uint _newBondedAmount) internal {
+    providerPool.updateKey(_providerAddress, _newBondedAmount, 0, 0);
   }
 }

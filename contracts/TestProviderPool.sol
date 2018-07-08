@@ -8,5 +8,10 @@ contract TestProviderPool is ProviderPool {
   function publicAddProvider(address _providerAddress, uint _bondedAmount) public {
     addProvider(_providerAddress, _bondedAmount);
   }
+
+  // @dev convenience method to be able to call updateProvider from web3js (it has internal visibility)
+  function publicUpdateProvider(address _providerAddress, uint _bondedAmount) public {
+    updateProvider(_providerAddress, _bondedAmount);
+  }
 }
 
