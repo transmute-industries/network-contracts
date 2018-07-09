@@ -4,7 +4,7 @@ import "./TransmuteToken.sol";
 import "./RoundManager.sol";
 import "./ProviderPool.sol";
 
-// TODO Change name to TransmuteDPOS
+// TODO: Change name to TransmuteDPOS
 contract ProviderRound is TransmuteToken, RoundManager, ProviderPool {
 
   event ProviderAdded (
@@ -35,8 +35,7 @@ contract ProviderRound is TransmuteToken, RoundManager, ProviderPool {
   uint public numberOfDelegators;
   mapping(address => Delegator) public delegators;
 
-  // TODO: Change name to Unregistered
-  enum ProviderStatus { Null, Registered }
+  enum ProviderStatus { Unregistered, Registered }
 
   struct Provider {
     ProviderStatus status;
@@ -59,7 +58,7 @@ contract ProviderRound is TransmuteToken, RoundManager, ProviderPool {
     Delegator storage delegator = delegators[msg.sender];
     require(delegator.delegateAddress == msg.sender);
     require(delegator.amountBonded > 0);
-    if (provider.status == ProviderStatus.Null) {
+    if (provider.status == ProviderStatus.Unregistered) {
       numberOfProviders = numberOfProviders.add(1);
       addProvider(msg.sender, provider.totalAmountBonded);
       // TODO: Fix warning
@@ -76,7 +75,7 @@ contract ProviderRound is TransmuteToken, RoundManager, ProviderPool {
   }
 
   function resignAsProvider() public {
-    require(providers[msg.sender].status != ProviderStatus.Null);
+    require(providers[msg.sender].status != ProviderStatus.Unregistered);
     delete providers[msg.sender];
     ProviderResigned(msg.sender);
   }
@@ -85,7 +84,7 @@ contract ProviderRound is TransmuteToken, RoundManager, ProviderPool {
     Provider storage provider = providers[_providerAddress];
     // A delegator is only allowed to bond to an Unregistered provider if the provider is himself
     // otherwise _providerAddress has to be associated with a Registered provider
-    require(_providerAddress == msg.sender || provider.status != ProviderStatus.Null);
+    require(_providerAddress == msg.sender || provider.status != ProviderStatus.Unregistered);
     // Check if delegator has not already bonded to some address
     require(delegators[msg.sender].delegateAddress == address(0));
     this.transferFrom(msg.sender, this, _amount);

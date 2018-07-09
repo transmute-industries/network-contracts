@@ -7,7 +7,7 @@ contract('ProviderRound', accounts => {
   let providerRound;
   let contractAddress;
   const PROVIDER_POOL_SIZE = 5;
-  const PROVIDER_NULL = 0;
+  const PROVIDER_UNREGISTERED = 0;
   const PROVIDER_REGISTERED = 1;
 
   async function approveBondProvider(pricePerStorageMineral, pricePerComputeMineral, blockRewardCut, feeShare, amountBonded, providerAddress) {
@@ -163,7 +163,7 @@ contract('ProviderRound', accounts => {
       assert.equal(PROVIDER_REGISTERED, registeredProvider[0]); // [0] is providerStatus
       await providerRound.resignAsProvider({from: accounts[0]});
       const resignedProvider = await providerRound.providers.call(accounts[0]);
-      assert.equal(PROVIDER_NULL, resignedProvider[0]); // [0] is providerStatus
+      assert.equal(PROVIDER_UNREGISTERED, resignedProvider[0]); // [0] is providerStatus
       assert.equal(0, resignedProvider[1]); // [1] is pricePerStorageMineral
       assert.equal(0, resignedProvider[2]); // [2] is pricePerComputeMineral
       assert.equal(0, resignedProvider[3]); // [3] is blockRewardCut
