@@ -61,11 +61,10 @@ contract ProviderRound is TransmuteToken, RoundManager, ProviderPool {
     if (provider.status == ProviderStatus.Unregistered) {
       numberOfProviders = numberOfProviders.add(1);
       addProvider(msg.sender, provider.totalAmountBonded);
-      // TODO: Fix warning
-      ProviderAdded(msg.sender, _pricePerStorageMineral, _pricePerComputeMineral, _blockRewardCut, _feeShare);
+      emit ProviderAdded(msg.sender, _pricePerStorageMineral, _pricePerComputeMineral, _blockRewardCut, _feeShare);
     } else {
       updateProvider(msg.sender, provider.totalAmountBonded);
-      ProviderUpdated(msg.sender, _pricePerStorageMineral, _pricePerComputeMineral, _blockRewardCut, _feeShare);
+      emit ProviderUpdated(msg.sender, _pricePerStorageMineral, _pricePerComputeMineral, _blockRewardCut, _feeShare);
     }
     provider.status = ProviderStatus.Registered;
     provider.pricePerStorageMineral = _pricePerStorageMineral;
@@ -77,7 +76,7 @@ contract ProviderRound is TransmuteToken, RoundManager, ProviderPool {
   function resignAsProvider() public {
     require(providers[msg.sender].status != ProviderStatus.Unregistered);
     delete providers[msg.sender];
-    ProviderResigned(msg.sender);
+    emit ProviderResigned(msg.sender);
   }
 
   function bond(address _providerAddress, uint _amount) external {
