@@ -6,10 +6,9 @@ contract('ProviderRound', accounts => {
 
   let providerRound;
   let contractAddress;
-  const PROVIDER_POOL_SIZE = 10;
+  const PROVIDER_POOL_SIZE = 5;
   const PROVIDER_NULL = 0;
   const PROVIDER_REGISTERED = 1;
-
 
   async function approveBondProvider(pricePerStorageMineral, pricePerComputeMineral, blockRewardCut, feeShare, amountBonded, providerAddress) {
       await providerRound.approve(contractAddress, amountBonded, {from: providerAddress});
@@ -109,7 +108,6 @@ contract('ProviderRound', accounts => {
       });
     });
 
-    // TODO add limitation
     // TODO: Doc about providers, pool and active pool
     it('should add the provider to the pool if he is Unregistered and size < maxSize', async () => {
       // Check that provider isn't registered yet
@@ -125,7 +123,8 @@ contract('ProviderRound', accounts => {
     });
 
     it('should fail if provider is Unregistered and size == maxSize', async () => {
-
+      await approveBondProvider(20 ,10, 2, 25, 1, accounts[4]);
+      await assertFail( approveBondProvider(20 ,10, 2, 25, 1, accounts[5]) );
     });
 
     it('should update the value of totalBondedAmount in the providerPool if the provider is Registered and size < maxSize', async () => {
@@ -140,7 +139,7 @@ contract('ProviderRound', accounts => {
     });
 
     it('should work if provider is Registered and size == maxSize', async () => {
-
+      await providerRound.provider(21 ,10, 2, 25, {from: accounts[4]});
     });
   });
 
