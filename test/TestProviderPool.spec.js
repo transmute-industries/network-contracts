@@ -14,15 +14,15 @@ contract('ProviderPool', accounts => {
     let bondedAmountOfPreviousAddress = Number.POSITIVE_INFINITY;
     let previousAddress = 0;
     let providerPool = await pp.providerPool.call();
-    let currentAddress = providerPool[0];
+    let currentAddress = providerPool[0]; // [0] is head of the list
     let node = await pp.getProvider.call(currentAddress);
-    let end = providerPool[1];
+    let end = providerPool[1]; // [1] is tail of the list
     do {
-      assert(bondedAmountOfPreviousAddress >= node[0]);
-      assert.equal(node[2], previousAddress);
+      assert(bondedAmountOfPreviousAddress >= node[0]); // [0] is the bondedAmount
+      assert.equal(node[2], previousAddress); // [2] is previous address in the list
       bondedAmountOfPreviousAddress = node[0].toNumber();
       previousAddress = currentAddress;
-      currentAddress = node[1];
+      currentAddress = node[1]; // [1] is next address in the list
       node = await pp.getProvider.call(currentAddress);
     }
     while(currentAddress != end)
