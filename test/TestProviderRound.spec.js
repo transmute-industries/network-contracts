@@ -5,13 +5,31 @@ require('truffle-test-utils').init();
 contract('ProviderRound', accounts => {
 
   let providerRound;
-  const PROVIDER_NULL = 0;
+  let contractAddress;
+  const PROVIDER_POOL_SIZE = 5;
+  const PROVIDER_UNREGISTERED = 0;
   const PROVIDER_REGISTERED = 1;
+
+  // This is a convenience function for the process of registering a new provider.
+  // Step 1: Approve the transfer of amountBonded tokens (ERC20 spec)
+  // Step 2: Bond the amount to the provider
+  // Step 3: Registering parameters with provider()
+  async function approveBondProvider(pricePerStorageMineral, pricePerComputeMineral, blockRewardCut, feeShare, amountBonded, providerAddress) {
+      // This approve function comes from the ERC20 Transmute Token contract
+      await providerRound.approve(contractAddress, amountBonded, {from: providerAddress});
+      await providerRound.bond(providerAddress, amountBonded, {from: providerAddress});
+      await providerRound.provider(pricePerStorageMineral, pricePerComputeMineral, blockRewardCut, feeShare, {from: providerAddress});
+  }
 
   describe('provider', () => {
 
     before(async () => {
       providerRound = await ProviderRound.deployed();
+      contractAddress = providerRound.address;
+      for(let i = 0; i < 5; i++) {
+        await providerRound.mint(accounts[i], 1000, {from: accounts[0]});
+      }
+      await providerRound.setMaxNumberOfProviders(PROVIDER_POOL_SIZE);
     });
 
     beforeEach(async () => {
@@ -19,26 +37,29 @@ contract('ProviderRound', accounts => {
       await providerRound.initializeRound();
     });
 
+    it('should fail if the provider does not bond some tokens on himself first', async () => {
+      await assertFail( providerRound.provider(22, 10, 1, 25, {from: accounts[0]}) );
+    });
+
+    it('should initially set totalBondedAmount to the amount the provider bonded to himself', async () => {
+      await approveBondProvider(22, 10, 1, 25, 42, accounts[0]);
+      const provider = await providerRound.providers.call(accounts[0]);
+      assert.equal(42, provider[5]); // [5] is totalBondedAmount
+    });
+
     it("should register a provider's parameters", async () => {
-      await providerRound.provider(22, 10, 1, 25, {from: accounts[0]});
-      await providerRound.provider(10, 20, 2, 35, {from: accounts[1]});
-      const firstProvider = await providerRound.providers.call(accounts[0]);
-      assert.equal(firstProvider[0], PROVIDER_REGISTERED); // [0] is providerStatus
-      assert.equal(firstProvider[1].toNumber(), 22); // [1] is pricePerStorageMineral
-      assert.equal(firstProvider[2].toNumber(), 10); // [2] is pricePerComputeMineral
-      assert.equal(firstProvider[3].toNumber(), 1);  // [3] is blockRewardCut
-      assert.equal(firstProvider[4].toNumber(), 25); // [4] is feeShare
-      const secondProvider = await providerRound.providers.call(accounts[1]);
-      assert.equal(secondProvider[0], PROVIDER_REGISTERED); // [0] is providerStatus
-      assert.equal(secondProvider[1].toNumber(), 10); // [1] is pricePerStorageMineral
-      assert.equal(secondProvider[2].toNumber(), 20); // [2] is pricePerComputeMineral
-      assert.equal(secondProvider[3].toNumber(), 2);  // [3] is blockRewardCut
-      assert.equal(secondProvider[4].toNumber(), 35); // [4] is feeShare
+      await approveBondProvider(10, 20, 2, 35, 1, accounts[1]);
+      const provider = await providerRound.providers.call(accounts[1]);
+      assert.equal(provider[0], PROVIDER_REGISTERED); // [0] is providerStatus
+      assert.equal(provider[1].toNumber(), 10); // [1] is pricePerStorageMineral
+      assert.equal(provider[2].toNumber(), 20); // [2] is pricePerComputeMineral
+      assert.equal(provider[3].toNumber(), 2);  // [3] is blockRewardCut
+      assert.equal(provider[4].toNumber(), 35); // [4] is feeShare
     });
 
     it('should fail with invalid parameters', async() => {
       await assertFail(
-        providerRound.provider(22, 10, -1, 25, {from: accounts[2]}),
+        approveBondProvider(22, 10, -1, 25, 1, accounts[2]),
         'provider should not be able to have a negative blockRewardCut'
       );
       await assertFail(
@@ -47,34 +68,31 @@ contract('ProviderRound', accounts => {
       );
     });
 
-    it('should set totalBondedAmount to 0', async () => {
-      const firstProvider = await providerRound.providers.call(accounts[0]);
-      assert.equal(0, firstProvider[5]); // [5] is totalBondedAmount
-    });
-
     it('should fail if not called during an active round', async () => {
       await blockMiner.mineUntilEndOfElectionPeriod(providerRound);
-      await assertFail( providerRound.provider(22, 10, 1, 25) );
+      await assertFail( providerRound.provider(22, 10, 1, 25, {from: accounts[0]}) );
     });
 
-    it('should register parameters before the lock period of an active round', async () => {
+    it('should work if called before the lock period of an active round', async () => {
       await blockMiner.mineUntilLastBlockBeforeLockPeriod(providerRound);
-      await providerRound.provider(22, 10, 1, 25);
+      await providerRound.provider(23, 10, 1, 25, {from: accounts[0]});
+      const provider = await providerRound.providers(accounts[0]);
+      assert.equal(23, provider[1]); // [1] is pricePerStorageMineral
     });
 
     it('should fail during the lock period of an active round', async () => {
       await blockMiner.mineUntilLastBlockBeforeLockPeriod(providerRound);
       // Enter lock period
       await blockMiner.mine(1);
-      await assertFail( providerRound.provider(22, 10, 1, 25) );
+      await assertFail( providerRound.provider(22, 10, 1, 25, {from: accounts[0]}) );
     });
 
     it('should send a ProviderAdded event for a new provider', async () => {
-      const result = await providerRound.provider(22, 10, 1, 25, {from: accounts[3]});
+      const result = await providerRound.provider(22, 10, 1, 25, {from: accounts[2]});
       assert.web3Event(result, {
         event: 'ProviderAdded',
         args: {
-          _providerAddress: accounts[3],
+          _providerAddress: accounts[2],
           _pricePerStorageMineral: 22,
           _pricePerComputeMineral: 10,
           _blockRewardCut: 1,
@@ -84,11 +102,11 @@ contract('ProviderRound', accounts => {
     });
 
     it('should send a ProviderUpdated event for an existing provider', async () => {
-      const result = await providerRound.provider(21, 11, 2, 24, {from: accounts[3]});
+      const result = await providerRound.provider(21, 11, 2, 24, {from: accounts[2]});
       assert.web3Event(result, {
         event: 'ProviderUpdated',
         args: {
-          _providerAddress: accounts[3],
+          _providerAddress: accounts[2],
           _pricePerStorageMineral: 21,
           _pricePerComputeMineral: 11,
           _blockRewardCut: 2,
@@ -97,23 +115,69 @@ contract('ProviderRound', accounts => {
       });
     });
 
+    // TODO: Doc about providers, pool and active pool
+    it('should add the provider to the pool if he is Unregistered and size < maxSize', async () => {
+      // Check that provider isn't registered yet
+      assert.equal(false, await providerRound.containsProvider(accounts[3]));
+      // Check the size of the pool increases by 1
+      let providerPool = await providerRound.providerPool.call();
+      const previousSize = providerPool[3].toNumber(); // [3] is current size of the pool
+      await approveBondProvider(21, 13, 3, 26, 1, accounts[3]);
+      providerPool = await providerRound.providerPool.call();
+      assert.equal(previousSize + 1, providerPool[3]);
+      // Check that the provider is registered in the pool now
+      assert.equal(true, await providerRound.containsProvider(accounts[3]));
+    });
+
+    it('should fail if provider is Unregistered and size == maxSize', async () => {
+      let providerPool = await providerRound.providerPool.call();
+      const maxSize = providerPool[2].toNumber(); // [2] is maxSize
+      let currentSize = providerPool[3]; // [3] is current size
+      assert.isAbove(maxSize, currentSize.toNumber());
+      await approveBondProvider(20 ,10, 2, 25, 1, accounts[4]);
+      providerPool = await providerRound.providerPool.call();
+      currentSize = providerPool[3];
+      assert.equal(maxSize, currentSize);
+      await assertFail( approveBondProvider(20 ,10, 2, 25, 1, accounts[5]) );
+    });
+
+    it('should update the value of totalBondedAmount in the providerPool if the provider is Registered and size < maxSize', async () => {
+      // Check that provider is Registered
+      assert.equal(true, await providerRound.containsProvider(accounts[3]));
+      // Check the size of the pool stays the same
+      let providerPool = await providerRound.providerPool.call();
+      const previousSize = providerPool[3]; // [3] is current size of the pool
+      await providerRound.provider(19, 10, 2, 20, {from: accounts[3]});
+      providerPool = await providerRound.providerPool.call();
+      assert.deepEqual(previousSize, providerPool[3]);
+    });
+
+    it('should work if provider is Registered and size == maxSize', async () => {
+      await providerRound.provider(21 ,10, 2, 25, {from: accounts[4]});
+    });
   });
 
   describe('resignAsProvider', () => {
 
     before(async () => {
       providerRound = await ProviderRound.new();
+      contractAddress = providerRound.address;
+      for(let i = 0; i < 5; i++) {
+        await providerRound.mint(accounts[i], 1000, {from: accounts[0]});
+      }
+      await providerRound.setMaxNumberOfProviders(PROVIDER_POOL_SIZE);
       await blockMiner.mineUntilEndOfElectionPeriod(providerRound);
       await providerRound.initializeRound();
+      await approveBondProvider(22, 10, 1, 25, 1, accounts[0]);
+      await approveBondProvider(22, 10, 1, 25, 1, accounts[1]);
     });
 
     it('should remove a provider from the provider mapping', async () => {
-      await providerRound.provider(22, 10, 1, 25, {from: accounts[0]});
       const registeredProvider = await providerRound.providers.call(accounts[0]);
       assert.equal(PROVIDER_REGISTERED, registeredProvider[0]); // [0] is providerStatus
       await providerRound.resignAsProvider({from: accounts[0]});
       const resignedProvider = await providerRound.providers.call(accounts[0]);
-      assert.equal(PROVIDER_NULL, resignedProvider[0]); // [0] is providerStatus
+      assert.equal(PROVIDER_UNREGISTERED, resignedProvider[0]); // [0] is providerStatus
       assert.equal(0, resignedProvider[1]); // [1] is pricePerStorageMineral
       assert.equal(0, resignedProvider[2]); // [2] is pricePerComputeMineral
       assert.equal(0, resignedProvider[3]); // [3] is blockRewardCut
@@ -122,7 +186,6 @@ contract('ProviderRound', accounts => {
     });
 
     it('should send a ProviderResigned event', async () => {
-      await providerRound.provider(22, 10, 1, 25, {from: accounts[1]});
       const result = await providerRound.resignAsProvider({from: accounts[1]});
       assert.web3Event(result, {
         event: 'ProviderResigned',
@@ -133,24 +196,23 @@ contract('ProviderRound', accounts => {
     });
 
     it("should fail if the transaction's sender is not a provider", async () => {
-      await assertFail( providerRound.resignAsProvider({from: accounts[1]}) );
+      await assertFail( providerRound.resignAsProvider({from: accounts[2]}) );
     });
   });
 
   describe('bond', () => {
 
-    let contractAddress;
-
     before(async () => {
-      providerRound = await ProviderRound.new({from: accounts[0]});
+      providerRound = await ProviderRound.new();
       contractAddress = providerRound.address;
-      for(let i = 5; i < 10; i++) {
+      for(let i = 0; i < 10; i++) {
         await providerRound.mint(accounts[i], 1000, {from: accounts[0]});
       }
+      await providerRound.setMaxNumberOfProviders(PROVIDER_POOL_SIZE);
       await blockMiner.mineUntilEndOfElectionPeriod(providerRound);
       await providerRound.initializeRound();
-      await providerRound.provider(22, 10, 1, 25, {from: accounts[0]});
-      await providerRound.provider(10, 20, 2, 35, {from: accounts[1]});
+      await approveBondProvider(22, 10, 1, 25, 1, accounts[0]);
+      await approveBondProvider(10, 20, 2, 35, 1, accounts[1]);
     });
 
     it('should fail if the delegator does not approve to transfer at least the bonded amount', async () => {
@@ -168,32 +230,32 @@ contract('ProviderRound', accounts => {
     });
 
     it('should increase the totalAmountBonded of the provider', async () => {
-      let firstProvider = await providerRound.providers.call(accounts[0]);
-      assert.equal(10, firstProvider[5]);
       await providerRound.approve(contractAddress, 20, {from: accounts[6]});
-      await providerRound.bond(accounts[1], 20, {from: accounts[6]});
-      await providerRound.approve(contractAddress, 50, {from: accounts[7]});
-      await providerRound.bond(accounts[1], 50, {from: accounts[7]});
-      firstProvider = await providerRound.providers.call(accounts[0]);
-      const secondProvider = await providerRound.providers.call(accounts[1]);
-      assert.equal(10, firstProvider[5]); // [5] is totalAmountBonded
-      assert.equal(70, secondProvider[5]); // [5] is totalAmountBonded
+      await providerRound.bond(accounts[0], 20, {from: accounts[6]});
+      const provider = await providerRound.providers.call(accounts[0]);
+      assert.equal(31, provider[5].toNumber()); // [5] is totalAmountBonded
     });
 
-    it('should fail if no providerCandidate is associated with the given providerCandidateId', async () => {
-      await assertFail( providerRound.bond(accounts[2], 15, {from: accounts[5]}) );
+    it('should fail if the address is not a registered provider address', async () => {
+      await providerRound.approve(contractAddress, 15, {from: accounts[7]})
+      await assertFail( providerRound.bond(accounts[2], 15, {from: accounts[7]}) );
+    });
+
+    it('should work if the address is not a registered provider address but the address is the sender address', async () => {
+      await providerRound.approve(contractAddress, 15, {from: accounts[3]})
+      await providerRound.bond(accounts[3], 15, {from: accounts[3]});
     });
 
     it('should fail if called twice by the same delegator', async () => {
       await providerRound.approve(contractAddress, 40, {from: accounts[8]});
-      await providerRound.bond(accounts[1], 40, {from: accounts[8]});
-      await assertFail( providerRound.bond(accounts[1], 40, {from: accounts[8]}) );
+      await providerRound.bond(accounts[1], 20, {from: accounts[8]});
+      await assertFail( providerRound.bond(accounts[1], 20, {from: accounts[8]}) );
     });
 
     it('should fail if TST balance is less than bonded amount', async () => {
       await providerRound.approve(contractAddress, 1001, {from: accounts[9]});
       await assertFail( providerRound.bond(accounts[1], 1001, {from: accounts[9]}) )
-      assert.equal(110, (await providerRound.providers(accounts[1]))[5]);
+      assert(1001 >= (await providerRound.providers(accounts[1]))[5]);
     });
 
     it("should transfer amount from the delegator's balance to the contract's balance", async () => {
