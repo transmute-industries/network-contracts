@@ -123,7 +123,14 @@ contract('ProviderRound', accounts => {
     });
 
     it('should fail if provider is Unregistered and size == maxSize', async () => {
+      let providerPool = await providerRound.providerPool.call();
+      const maxSize = providerPool[2]; // [2] is maxSize
+      let currentSize = providerPool[3]; // [3] is current size
+      assert.isAbove(maxSize, currentSize);
       await approveBondProvider(20 ,10, 2, 25, 1, accounts[4]);
+      providerPool = await providerRound.providerPool.call();
+      currentSize = providerPool[3];
+      assert.deepEqual(maxSize, currentSize);
       await assertFail( approveBondProvider(20 ,10, 2, 25, 1, accounts[5]) );
     });
 
@@ -132,10 +139,10 @@ contract('ProviderRound', accounts => {
       assert.equal(true, await providerRound.containsProvider(accounts[3]));
       // Check the size of the pool stays the same
       let providerPool = await providerRound.providerPool.call();
-      const previousSize = providerPool[3].toNumber(); // [3] is current size of the pool
+      const previousSize = providerPool[3]; // [3] is current size of the pool
       await providerRound.provider(19, 10, 2, 20, {from: accounts[3]});
       providerPool = await providerRound.providerPool.call();
-      assert.equal(previousSize, providerPool[3]);
+      assert.deepEqual(previousSize, providerPool[3]);
     });
 
     it('should work if provider is Registered and size == maxSize', async () => {
