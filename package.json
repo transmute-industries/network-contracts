@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "truffle migrate --reset && truffle test"
+    "test": "truffle migrate --reset && truffle test",
+    "coverage": "./node_modules/.bin/solidity-coverage"
   },
   "author": "",
   "license": "ISC",
