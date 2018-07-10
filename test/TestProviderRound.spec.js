@@ -10,7 +10,12 @@ contract('ProviderRound', accounts => {
   const PROVIDER_UNREGISTERED = 0;
   const PROVIDER_REGISTERED = 1;
 
+  // This is a convenience function for the process of registering a new provider.
+  // Step 1: Approve the transfer of amountBonded tokens (ERC20 spec)
+  // Step 2: Bond the amount to the provider
+  // Step 3: Registering parameters with provider()
   async function approveBondProvider(pricePerStorageMineral, pricePerComputeMineral, blockRewardCut, feeShare, amountBonded, providerAddress) {
+      // This approve function comes from the ERC20 Transmute Token contract
       await providerRound.approve(contractAddress, amountBonded, {from: providerAddress});
       await providerRound.bond(providerAddress, amountBonded, {from: providerAddress});
       await providerRound.provider(pricePerStorageMineral, pricePerComputeMineral, blockRewardCut, feeShare, {from: providerAddress});
