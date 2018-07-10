@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "truffle migrate --reset && truffle test"
+    "test": "truffle migrate --reset && truffle test",
+    "coverage": "./node_modules/.bin/solidity-coverage"
   },
   "author": "",
   "license": "ISC",
@@ -12,5 +13,9 @@
     "truffle-contract": "^3.0.6",
     "truffle-test-utils": "^0.1.0",
     "zeppelin-solidity": "1.10.0"
+  },
+  "devDependencies": {
+    "coveralls": "^3.0.2",
+    "solidity-coverage": "^0.5.5"
   }
 }
