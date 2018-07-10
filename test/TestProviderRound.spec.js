@@ -131,13 +131,13 @@ contract('ProviderRound', accounts => {
 
     it('should fail if provider is Unregistered and size == maxSize', async () => {
       let providerPool = await providerRound.providerPool.call();
-      const maxSize = providerPool[2].toNumber(); // [2] is maxSize
+      const maxSize = providerPool[2]; // [2] is maxSize
       let currentSize = providerPool[3]; // [3] is current size
       assert.isAbove(maxSize, currentSize);
       await approveBondProvider(20 ,10, 2, 25, 1, accounts[4]);
       providerPool = await providerRound.providerPool.call();
       currentSize = providerPool[3];
-      assert.equal(maxSize, currentSize);
+      assert.deepEqual(maxSize, currentSize);
       await assertFail( approveBondProvider(20 ,10, 2, 25, 1, accounts[5]) );
     });
 
