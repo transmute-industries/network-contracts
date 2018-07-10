@@ -12,5 +12,8 @@
     "truffle-contract": "^3.0.6",
     "truffle-test-utils": "^0.1.0",
     "zeppelin-solidity": "1.10.0"
+  },
+  "devDependencies": {
+    "solidity-coverage": "^0.5.5"
   }
 }
