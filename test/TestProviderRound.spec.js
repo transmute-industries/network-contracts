@@ -133,7 +133,7 @@ contract('ProviderRound', accounts => {
       let providerPool = await providerRound.providerPool.call();
       const maxSize = providerPool[2]; // [2] is maxSize
       let currentSize = providerPool[3]; // [3] is current size
-      assert.isAbove(maxSize, currentSize);
+      assert.isAbove(maxSize, currentSize.toNumber());
       await approveBondProvider(20 ,10, 2, 25, 1, accounts[4]);
       providerPool = await providerRound.providerPool.call();
       currentSize = providerPool[3];
