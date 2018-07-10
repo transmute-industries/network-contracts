@@ -70,7 +70,9 @@ contract('ProviderRound', accounts => {
 
     it('should work if called before the lock period of an active round', async () => {
       await blockMiner.mineUntilLastBlockBeforeLockPeriod(providerRound);
-      await providerRound.provider(22, 10, 1, 25, {from: accounts[0]});
+      await providerRound.provider(23, 10, 1, 25, {from: accounts[0]});
+      const provider = await providerRound.providers(accounts[0]);
+      assert.equal(23, provider[1]); // [1] is pricePerStorageMineral
     });
 
     it('should fail during the lock period of an active round', async () => {
