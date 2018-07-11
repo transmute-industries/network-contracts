@@ -153,5 +153,35 @@ contract('ProviderPool', accounts => {
       await assertFail( pp.publicUpdateProvider(accounts[5], 1) );
     });
   });
+
+  describe('removeProvider', () => {
+
+    it('should remove the provider from the pool', async () => {
+      assert.equal(true, await pp.containsProvider(accounts[0]));
+      await pp.publicRemoveProvider(accounts[0]);
+      assert.equal(false, await pp.containsProvider(accounts[0]));
+    });
+
+    it('should decrease the size of the pool by one', async () => {
+      let providerPool = await pp.providerPool.call();
+      const previousSize = providerPool[3].toNumber(); // [3] is the current size of the pool
+      await pp.publicRemoveProvider(accounts[1]);
+      providerPool = await pp.providerPool.call();
+      assert.equal(previousSize - 1, providerPool[3]);
+    });
+
+    it('should keep the list in decreasing order of bonded amounts', async () => {
+      await assertProvidersAreSortedByBondedAmount();
+      await pp.publicRemoveProvider(accounts[3]);
+      await assertProvidersAreSortedByBondedAmount();
+      await pp.publicRemoveProvider(accounts[4]);
+      await assertProvidersAreSortedByBondedAmount();
+    });
+
+    it('should fail if provider is not in the pool', async () => {
+      assert.equal(false, await pp.containsProvider(accounts[0]));
+      await assertFail( pp.publicRemoveProvider(accounts[0]) );
+    });
+  });
 });
 
