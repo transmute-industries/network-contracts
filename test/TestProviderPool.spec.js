@@ -17,7 +17,7 @@ contract('ProviderPool', accounts => {
     let currentAddress = providerPool[0]; // [0] is head of the list
     let node = await pp.getProvider.call(currentAddress);
     let end = providerPool[1]; // [1] is tail of the list
-    do {
+    while(currentAddress != end) {
       assert(bondedAmountOfPreviousAddress >= node[0]); // [0] is the bondedAmount
       assert.equal(node[2], previousAddress); // [2] is previous address in the list
       bondedAmountOfPreviousAddress = node[0].toNumber();
@@ -25,7 +25,6 @@ contract('ProviderPool', accounts => {
       currentAddress = node[1]; // [1] is next address in the list
       node = await pp.getProvider.call(currentAddress);
     }
-    while(currentAddress != end)
   }
 
   describe('setMaxNumberOfProviders', () => {
@@ -152,6 +151,36 @@ contract('ProviderPool', accounts => {
 
     it('should fail if updated provider is not in the pool', async () => {
       await assertFail( pp.publicUpdateProvider(accounts[5], 1) );
+    });
+  });
+
+  describe('removeProvider', () => {
+
+    it('should remove the provider from the pool', async () => {
+      assert.equal(true, await pp.containsProvider(accounts[0]));
+      await pp.publicRemoveProvider(accounts[0]);
+      assert.equal(false, await pp.containsProvider(accounts[0]));
+    });
+
+    it('should decrease the size of the pool by one', async () => {
+      let providerPool = await pp.providerPool.call();
+      const previousSize = providerPool[3].toNumber(); // [3] is the current size of the pool
+      await pp.publicRemoveProvider(accounts[1]);
+      providerPool = await pp.providerPool.call();
+      assert.equal(previousSize - 1, providerPool[3]);
+    });
+
+    it('should keep the list in decreasing order of bonded amounts', async () => {
+      await assertProvidersAreSortedByBondedAmount();
+      await pp.publicRemoveProvider(accounts[3]);
+      await assertProvidersAreSortedByBondedAmount();
+      await pp.publicRemoveProvider(accounts[4]);
+      await assertProvidersAreSortedByBondedAmount();
+    });
+
+    it('should fail if provider is not in the pool', async () => {
+      assert.equal(false, await pp.containsProvider(accounts[0]));
+      await assertFail( pp.publicRemoveProvider(accounts[0]) );
     });
   });
 });
