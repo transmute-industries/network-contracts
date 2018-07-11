@@ -4,8 +4,7 @@ import "./TransmuteToken.sol";
 import "./RoundManager.sol";
 import "./ProviderPool.sol";
 
-// TODO: Change name to TransmuteDPOS
-contract ProviderRound is TransmuteToken, RoundManager, ProviderPool {
+contract TransmuteDPOS is TransmuteToken, RoundManager, ProviderPool {
 
   event ProviderAdded (
     address indexed _providerAddress,
