@@ -29,4 +29,8 @@ contract ProviderPool is Ownable {
   function updateProvider(address _provider, uint _newBondedAmount) internal {
     providerPool.updateKey(_provider, _newBondedAmount, 0, 0);
   }
+
+  function removeProvider(address _provider) internal {
+    providerPool.remove(_provider);
+  }
 }
