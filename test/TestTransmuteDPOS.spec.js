@@ -14,11 +14,11 @@ contract('TransmuteDPOS', accounts => {
   // Step 1: Approve the transfer of amountBonded tokens (ERC20 spec)
   // Step 2: Bond the amount to the provider
   // Step 3: Registering parameters with provider()
-  async function approveBondProvider(pricePerStorageMineral, pricePerComputeMineral, blockRewardCut, feeShare, amountBonded, providerAddress) {
+  async function approveBondProvider(pricePerStorageMineral, pricePerComputeMineral, blockRewardCut, feeShare, amountBonded, provider) {
       // This approve function comes from the ERC20 Transmute Token contract
-      await tdpos.approve(contractAddress, amountBonded, {from: providerAddress});
-      await tdpos.bond(providerAddress, amountBonded, {from: providerAddress});
-      await tdpos.provider(pricePerStorageMineral, pricePerComputeMineral, blockRewardCut, feeShare, {from: providerAddress});
+      await tdpos.approve(contractAddress, amountBonded, {from: provider});
+      await tdpos.bond(provider, amountBonded, {from: provider});
+      await tdpos.provider(pricePerStorageMineral, pricePerComputeMineral, blockRewardCut, feeShare, {from: provider});
   }
 
   describe('provider', () => {
@@ -92,7 +92,7 @@ contract('TransmuteDPOS', accounts => {
       assert.web3Event(result, {
         event: 'ProviderAdded',
         args: {
-          _providerAddress: accounts[2],
+          _provider: accounts[2],
           _pricePerStorageMineral: 22,
           _pricePerComputeMineral: 10,
           _blockRewardCut: 1,
@@ -106,7 +106,7 @@ contract('TransmuteDPOS', accounts => {
       assert.web3Event(result, {
         event: 'ProviderUpdated',
         args: {
-          _providerAddress: accounts[2],
+          _provider: accounts[2],
           _pricePerStorageMineral: 21,
           _pricePerComputeMineral: 11,
           _blockRewardCut: 2,
@@ -196,7 +196,7 @@ contract('TransmuteDPOS', accounts => {
       assert.web3Event(result, {
         event: 'ProviderResigned',
         args: {
-          _providerAddress: accounts[2],
+          _provider: accounts[2],
         }
       });
     });

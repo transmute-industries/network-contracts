@@ -7,7 +7,7 @@ import "./ProviderPool.sol";
 contract TransmuteDPOS is TransmuteToken, RoundManager, ProviderPool {
 
   event ProviderAdded (
-    address indexed _providerAddress,
+    address indexed _provider,
     uint _pricePerStorageMineral,
     uint _pricePerComputeMineral,
     uint _blockRewardCut,
@@ -15,7 +15,7 @@ contract TransmuteDPOS is TransmuteToken, RoundManager, ProviderPool {
   );
 
   event ProviderUpdated (
-    address indexed _providerAddress,
+    address indexed _provider,
     uint _pricePerStorageMineral,
     uint _pricePerComputeMineral,
     uint _blockRewardCut,
@@ -23,7 +23,7 @@ contract TransmuteDPOS is TransmuteToken, RoundManager, ProviderPool {
   );
 
   event ProviderResigned (
-    address indexed _providerAddress
+    address indexed _provider
   );
 
   struct Delegator {
@@ -79,15 +79,15 @@ contract TransmuteDPOS is TransmuteToken, RoundManager, ProviderPool {
     emit ProviderResigned(msg.sender);
   }
 
-  function bond(address _providerAddress, uint _amount) external {
-    Provider storage p = providers[_providerAddress];
+  function bond(address _provider, uint _amount) external {
+    Provider storage p = providers[_provider];
     // A delegator is only allowed to bond to an Unregistered provider if the provider is himself
-    // otherwise _providerAddress has to be associated with a Registered provider
-    require(_providerAddress == msg.sender || p.status != ProviderStatus.Unregistered);
+    // otherwise _provider has to be associated with a Registered provider
+    require(_provider == msg.sender || p.status != ProviderStatus.Unregistered);
     // Check if delegator has not already bonded to some address
     require(delegators[msg.sender].delegateAddress == address(0));
     this.transferFrom(msg.sender, this, _amount);
-    delegators[msg.sender] = Delegator(_providerAddress, _amount);
+    delegators[msg.sender] = Delegator(_provider, _amount);
     p.totalAmountBonded = p.totalAmountBonded.add(_amount);
   }
 }
