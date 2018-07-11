@@ -17,7 +17,7 @@ contract('ProviderPool', accounts => {
     let currentAddress = providerPool[0]; // [0] is head of the list
     let node = await pp.getProvider.call(currentAddress);
     let end = providerPool[1]; // [1] is tail of the list
-    do {
+    while(currentAddress != end) {
       assert(bondedAmountOfPreviousAddress >= node[0]); // [0] is the bondedAmount
       assert.equal(node[2], previousAddress); // [2] is previous address in the list
       bondedAmountOfPreviousAddress = node[0].toNumber();
@@ -25,7 +25,6 @@ contract('ProviderPool', accounts => {
       currentAddress = node[1]; // [1] is next address in the list
       node = await pp.getProvider.call(currentAddress);
     }
-    while(currentAddress != end)
   }
 
   describe('setMaxNumberOfProviders', () => {
