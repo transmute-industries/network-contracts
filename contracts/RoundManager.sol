@@ -18,7 +18,7 @@ contract RoundManager {
     _;
   }
 
-  constructor() {
+  constructor() public {
     electionPeriodLength = 20;
     rateLockDeadline = 5;
   }

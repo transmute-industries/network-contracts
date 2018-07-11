@@ -115,7 +115,6 @@ contract('TransmuteDPOS', accounts => {
       });
     });
 
-    // TODO: Doc about providers, pool and active pool
     it('should add the provider to the pool if he is Unregistered and size < maxSize', async () => {
       // Check that provider isn't registered yet
       assert.equal(false, await tdpos.containsProvider(accounts[3]));
