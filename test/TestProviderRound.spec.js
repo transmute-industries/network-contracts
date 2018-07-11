@@ -170,9 +170,10 @@ contract('ProviderRound', accounts => {
       await providerRound.initializeRound();
       await approveBondProvider(22, 10, 1, 25, 1, accounts[0]);
       await approveBondProvider(22, 10, 1, 25, 1, accounts[1]);
+      await approveBondProvider(22, 10, 1, 25, 1, accounts[2]);
     });
 
-    it('should remove a provider from the provider mapping', async () => {
+    it('should remove the provider from the provider mapping', async () => {
       const registeredProvider = await providerRound.providers.call(accounts[0]);
       assert.equal(PROVIDER_REGISTERED, registeredProvider[0]); // [0] is providerStatus
       await providerRound.resignAsProvider({from: accounts[0]});
@@ -185,18 +186,24 @@ contract('ProviderRound', accounts => {
       assert.equal(0, resignedProvider[5]); // [5] is totalAmountBonded
     });
 
+    it('should remove the provider from the providerPool', async () => {
+      assert.equal(true, await providerRound.containsProvider(accounts[1]));
+      await providerRound.resignAsProvider({from: accounts[1]});
+      assert.equal(false, await providerRound.containsProvider(accounts[1]));
+    });
+
     it('should send a ProviderResigned event', async () => {
-      const result = await providerRound.resignAsProvider({from: accounts[1]});
+      const result = await providerRound.resignAsProvider({from: accounts[2]});
       assert.web3Event(result, {
         event: 'ProviderResigned',
         args: {
-          _providerAddress: accounts[1],
+          _providerAddress: accounts[2],
         }
       });
     });
 
     it("should fail if the transaction's sender is not a provider", async () => {
-      await assertFail( providerRound.resignAsProvider({from: accounts[2]}) );
+      await assertFail( providerRound.resignAsProvider({from: accounts[3]}) );
     });
   });
 
