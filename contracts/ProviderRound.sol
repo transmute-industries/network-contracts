@@ -75,6 +75,7 @@ contract ProviderRound is TransmuteToken, RoundManager, ProviderPool {
 
   function resignAsProvider() public {
     require(providers[msg.sender].status != ProviderStatus.Unregistered);
+    removeProvider(msg.sender);
     delete providers[msg.sender];
     emit ProviderResigned(msg.sender);
   }
