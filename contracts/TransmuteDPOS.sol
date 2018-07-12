@@ -62,7 +62,6 @@ contract TransmuteDPOS is TransmuteToken, RoundManager, ProviderPool {
       addProvider(msg.sender, p.totalAmountBonded);
       emit ProviderAdded(msg.sender, _pricePerStorageMineral, _pricePerComputeMineral, _blockRewardCut, _feeShare);
     } else {
-      updateProvider(msg.sender, p.totalAmountBonded);
       emit ProviderUpdated(msg.sender, _pricePerStorageMineral, _pricePerComputeMineral, _blockRewardCut, _feeShare);
     }
     p.status = ProviderStatus.Registered;

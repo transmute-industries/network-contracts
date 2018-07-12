@@ -140,17 +140,6 @@ contract('TransmuteDPOS', accounts => {
       await assertFail( approveBondProvider(20 ,10, 2, 25, 1, accounts[5]) );
     });
 
-    it('should update the value of totalBondedAmount in the providerPool if the provider is Registered and size < maxSize', async () => {
-      // Check that provider is Registered
-      assert.equal(true, await tdpos.containsProvider(accounts[3]));
-      // Check the size of the pool stays the same
-      let providerPool = await tdpos.providerPool.call();
-      const previousSize = providerPool[3]; // [3] is current size of the pool
-      await tdpos.provider(19, 10, 2, 20, {from: accounts[3]});
-      providerPool = await tdpos.providerPool.call();
-      assert.deepEqual(previousSize, providerPool[3]);
-    });
-
     it('should work if provider is Registered and size == maxSize', async () => {
       await tdpos.provider(21 ,10, 2, 25, {from: accounts[4]});
     });
