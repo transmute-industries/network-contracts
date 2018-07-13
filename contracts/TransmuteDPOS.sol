@@ -82,12 +82,15 @@ contract TransmuteDPOS is TransmuteToken, RoundManager, ProviderPool {
     Provider storage p = providers[_provider];
     // A delegator is only allowed to bond to an Unregistered provider if the provider is himself
     // otherwise _provider has to be associated with a Registered provider
-    require(_provider == msg.sender || p.status != ProviderStatus.Unregistered);
+    require(_provider == msg.sender || p.status == ProviderStatus.Registered);
     // Check if delegator has not already bonded to some address
     require(delegators[msg.sender].delegateAddress == address(0));
     this.transferFrom(msg.sender, this, _amount);
     delegators[msg.sender] = Delegator(_provider, _amount);
     p.totalAmountBonded = p.totalAmountBonded.add(_amount);
-    updateProvider(_provider, p.totalAmountBonded);
+    // Update the bonded amount of the provider in the pool
+    if (p.status == ProviderStatus.Registered) {
+      updateProvider(_provider, p.totalAmountBonded);
+    }
   }
 }
