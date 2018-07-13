@@ -140,19 +140,12 @@ contract('TransmuteDPOS', accounts => {
       await assertFail( approveBondProvider(20 ,10, 2, 25, 1, accounts[5]) );
     });
 
-    it('should update the value of totalBondedAmount in the providerPool if the provider is Registered and size < maxSize', async () => {
-      // Check that provider is Registered
-      assert.equal(true, await tdpos.containsProvider(accounts[3]));
-      // Check the size of the pool stays the same
-      let providerPool = await tdpos.providerPool.call();
-      const previousSize = providerPool[3]; // [3] is current size of the pool
-      await tdpos.provider(19, 10, 2, 20, {from: accounts[3]});
-      providerPool = await tdpos.providerPool.call();
-      assert.deepEqual(previousSize, providerPool[3]);
-    });
-
     it('should work if provider is Registered and size == maxSize', async () => {
+      let provider = await tdpos.providers.call(accounts[4]);
+      assert.equal(20, provider[1]); // [1] is pricePerStorageMineral
       await tdpos.provider(21 ,10, 2, 25, {from: accounts[4]});
+      provider = await tdpos.providers.call(accounts[4]);
+      assert.equal(21, provider[1]);
     });
   });
 
@@ -267,10 +260,25 @@ contract('TransmuteDPOS', accounts => {
     it("should transfer amount from the delegator's balance to the contract's balance", async () => {
       const contractBalance = (await tdpos.balanceOf(tdpos.address)).toNumber();
       assert.equal(1000, await tdpos.balanceOf(accounts[9]));
-      await tdpos.approve(contractAddress, 300, {from: accounts[9]});
       await tdpos.bond(accounts[1], 300, {from: accounts[9]});
       assert.equal(700, await tdpos.balanceOf(accounts[9]));
       assert.equal(contractBalance + 300, await tdpos.balanceOf(tdpos.address));
+    });
+
+    it('should not affect the providerPool if provider is not registered', async() => {
+      assert.equal(false, await tdpos.containsProvider(accounts[2]));
+      await tdpos.approve(contractAddress, 300, {from: accounts[2]});
+      await tdpos.bond(accounts[2], 300, {from: accounts[2]});
+      assert.equal(false, await tdpos.containsProvider(accounts[2]));
+    });
+
+    it('should update the totalBondedAmount of the provider in the providerPool if he is already registered', async () => {
+      let provider = await tdpos.getProvider.call(accounts[0]);
+      let previousBondedAmount = provider[0].toNumber(); // [0] is bonded amount
+      await tdpos.approve(contractAddress, 300, {from: accounts[7]});
+      await tdpos.bond(accounts[0], 300, {from: accounts[7]});
+      provider = await tdpos.getProvider.call(accounts[0]);
+      assert.equal(300 + previousBondedAmount, provider[0]);
     });
   });
 });
