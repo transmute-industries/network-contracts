@@ -141,7 +141,11 @@ contract('TransmuteDPOS', accounts => {
     });
 
     it('should work if provider is Registered and size == maxSize', async () => {
+      let provider = await tdpos.providers.call(accounts[4]);
+      assert.equal(20, provider[1]); // [1] is pricePerStorageMineral
       await tdpos.provider(21 ,10, 2, 25, {from: accounts[4]});
+      provider = await tdpos.providers.call(accounts[4]);
+      assert.equal(21, provider[1]);
     });
   });
 
