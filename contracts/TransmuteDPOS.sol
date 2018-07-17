@@ -26,6 +26,9 @@ contract TransmuteDPOS is TransmuteToken, RoundManager, ProviderPool {
     address indexed _provider
   );
 
+  // TODO: Better name for the second state
+  enum DelegatorStatus { Unbonded, UnbondedWithTokensToWithdraw, Bonded }
+
   struct Delegator {
     address delegateAddress;
     uint amountBonded;
@@ -47,6 +50,17 @@ contract TransmuteDPOS is TransmuteToken, RoundManager, ProviderPool {
 
   uint public numberOfProviders;
   mapping(address => Provider) public providers;
+
+  // TODO: Add setter
+  // The time (in number of blocks) that a Delegator has to wait before he can withdraw() his tokens
+  uint public unbondingPeriod;
+  mapping (address => uint) withdrawBlocks;
+
+  constructor() public {
+    // TODO: Those are temporary values
+    // TODO: move all to here
+    unbondingPeriod = 10;
+  }
 
   function provider(uint _pricePerStorageMineral, uint _pricePerComputeMineral, uint _blockRewardCut, uint _feeShare)
     external onlyBeforeActiveRoundIsLocked
@@ -91,6 +105,42 @@ contract TransmuteDPOS is TransmuteToken, RoundManager, ProviderPool {
     // Update the bonded amount of the provider in the pool
     if (p.status == ProviderStatus.Registered) {
       updateProvider(_provider, p.totalAmountBonded);
+    }
+  }
+
+  function unbond() external {
+    // Only Bonded Delegators can call the function
+    require(delegatorStatus(msg.sender) == DelegatorStatus.Bonded);
+    // TODO: What if a Provider calls unbond() on himself ?
+    // Should he resign ?
+    // What about the tokens of the Delegators that bonded to him ?
+    // For now we prevent providers from calling this function
+    require(providers[msg.sender].status == ProviderStatus.Unregistered);
+
+    Delegator storage d = delegators[msg.sender];
+    Provider storage p = providers[d.delegateAddress];
+    // Sets the block number from which the Delegator will be able to withdraw() his tokens
+    withdrawBlocks[msg.sender] = block.number.add(unbondingPeriod);
+    // Decrease the totalAmountBonded parameter of the provider
+    p.totalAmountBonded = p.totalAmountBonded.sub(d.amountBonded);
+    updateProvider(d.delegateAddress, p.totalAmountBonded);
+    // Remove delegator from the list. He is no longer in the the Bonded State
+    delete delegators[msg.sender];
+    // TODO: Add Unbond event
+  }
+
+  // TODO: Create the same function for Providers
+  // This will remove the need for ProviderStatus inside the Provider Struct
+  function delegatorStatus(address _delegator) public view returns (DelegatorStatus) {
+    if (delegators[_delegator].amountBonded != 0) {
+      // If _delegator is in the mapping, he is Bonded
+      return DelegatorStatus.Bonded;
+    } else if (withdrawBlocks[_delegator] != 0) {
+      // Else if _delegator has a withdrawBlock, he just called unbond() and didn't withdraw() yet
+      return DelegatorStatus.UnbondedWithTokensToWithdraw;
+    } else {
+      // Else he is Unbonded: either he didn't call bond() or he called bond() unbond() and withdraw()
+      return DelegatorStatus.Unbonded;
     }
   }
 }
