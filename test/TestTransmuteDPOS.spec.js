@@ -281,5 +281,48 @@ contract('TransmuteDPOS', accounts => {
       assert.equal(300 + previousBondedAmount, provider[0]);
     });
   });
+
+  describe('delegatorStatus', () => {
+
+    const DELEGATOR_UNBONDED = 0;
+    const DELEGATOR_UNBONDED_WITH_TOKENS_TO_WITHDRAW = 1;
+    const DELEGATOR_BONDED = 2;
+
+    before(async () => {
+      tdpos = await TransmuteDPOS.new();
+      contractAddress = tdpos.address;
+      for(let i = 0; i < 10; i++) {
+        await tdpos.mint(accounts[i], 1000, {from: accounts[0]});
+      }
+      await tdpos.setMaxNumberOfProviders(PROVIDER_POOL_SIZE);
+      await blockMiner.mineUntilEndOfElectionPeriod(tdpos);
+      await tdpos.initializeRound();
+      await approveBondProvider(22, 10, 1, 25, 1, accounts[0]);
+    });
+
+    it('should return Unbonded if address in not a Delegator', async() => {
+      // Assert that address is not a delegator
+      const delegator = await tdpos.delegators.call(accounts[3]);
+      assert.equal(0,delegator[0]);
+      assert.equal(0,delegator[1]);
+      assert.equal(DELEGATOR_UNBONDED, await tdpos.delegatorStatus(accounts[3]));
+    });
+
+    it('should return Bonded if delegator has called bond()', async() => {
+      assert.equal(DELEGATOR_UNBONDED, await tdpos.delegatorStatus(accounts[4]));
+      await tdpos.approve(contractAddress, 300, {from: accounts[4]});
+      await tdpos.bond(accounts[0], 300, {from: accounts[4]});
+      assert.equal(DELEGATOR_BONDED, await tdpos.delegatorStatus(accounts[4]));
+    });
+
+    it('should return UnbondedWithTokensToWithdraw if Delegator has called unbond()', async() => {
+      assert.equal(DELEGATOR_BONDED, await tdpos.delegatorStatus(accounts[4]));
+      await tdpos.unbond({from: accounts[4]});
+      assert.equal(DELEGATOR_UNBONDED_WITH_TOKENS_TO_WITHDRAW, await tdpos.delegatorStatus(accounts[4]));
+    });
+
+    // TODO when withdraw is implemented
+    // it('should return Unbonded if Delegator has called unbond() and withdraw()');
+  });
 });
 
