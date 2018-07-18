@@ -7,8 +7,14 @@ contract('TransmuteDPOS', accounts => {
   let tdpos;
   let contractAddress;
   const PROVIDER_POOL_SIZE = 5;
+  // Provider states
   const PROVIDER_UNREGISTERED = 0;
   const PROVIDER_REGISTERED = 1;
+
+  // Delegator states
+  const DELEGATOR_UNBONDED = 0;
+  const DELEGATOR_UNBONDED_WITH_TOKENS_TO_WITHDRAW = 1;
+  const DELEGATOR_BONDED = 2;
 
   // This is a convenience function for the process of registering a new provider.
   // Step 1: Approve the transfer of amountBonded tokens (ERC20 spec)
@@ -282,11 +288,62 @@ contract('TransmuteDPOS', accounts => {
     });
   });
 
-  describe('delegatorStatus', () => {
+  describe('unbond', () => {
 
-    const DELEGATOR_UNBONDED = 0;
-    const DELEGATOR_UNBONDED_WITH_TOKENS_TO_WITHDRAW = 1;
-    const DELEGATOR_BONDED = 2;
+    before(async () => {
+      tdpos = await TransmuteDPOS.new();
+      contractAddress = tdpos.address;
+      for(let i = 0; i < 10; i++) {
+        await tdpos.mint(accounts[i], 1000, {from: accounts[0]});
+      }
+      await tdpos.setMaxNumberOfProviders(PROVIDER_POOL_SIZE);
+      await blockMiner.mineUntilEndOfElectionPeriod(tdpos);
+      await tdpos.initializeRound();
+      await approveBondProvider(22, 10, 1, 25, 1, accounts[0]);
+      await approveBondProvider(22, 10, 1, 25, 1, accounts[1]);
+      await tdpos.approve(contractAddress, 300, {from: accounts[2]});
+      await tdpos.bond(accounts[0], 300, {from: accounts[2]});
+      await tdpos.approve(contractAddress, 300, {from: accounts[3]});
+      await tdpos.bond(accounts[0], 300, {from: accounts[3]});
+      await tdpos.approve(contractAddress, 300, {from: accounts[4]});
+      await tdpos.bond(accounts[0], 300, {from: accounts[4]});
+    });
+
+    it('should fail if called by an address that is not a Delegator (no bonded amount)', async() => {
+      assert.equal(DELEGATOR_UNBONDED, await tdpos.delegatorStatus(accounts[9]));
+      //assertFail( await tdpos.unbond({from: accounts[9]}) );
+    });
+
+    it("should set withdrawBlock for the Delegator's address", async () => {
+      assert.equal(0, await tdpos.withdrawBlocks.call(accounts[2]));
+      await tdpos.unbond({from: accounts[2]});
+      const currentBlockNumber = web3.eth.blockNumber;
+      const unbondingPeriod = (await tdpos.unbondingPeriod.call()).toNumber();
+      const withdrawBlock = await tdpos.withdrawBlocks.call(accounts[2]);
+      assert.equal(currentBlockNumber + unbondingPeriod, withdrawBlock);
+    });
+
+    it('should decrease the totalBondedAmount of the Provider by the unbonded amount', async () => {
+      const totalBondedAmount = (await tdpos.providers(accounts[0]))[5].toNumber();
+      const bondedAmount = (await tdpos.delegators(accounts[3]))[1].toNumber();
+      const newAmount = totalBondedAmount - bondedAmount;
+      await tdpos.unbond({from: accounts[3]});
+      assert.equal(newAmount, (await tdpos.providers([accounts[0]]))[5].toNumber());
+      assert.equal(newAmount, (await tdpos.getProvider(accounts[0]))[0].toNumber());
+    });
+
+    it('should remove the Delegator from the mapping', async () => {
+      let delegator = await tdpos.delegators.call(accounts[4]);
+      assert.notEqual(0,delegator[0]);
+      assert.notEqual(0,delegator[1]);
+      await tdpos.unbond({from: accounts[4]});
+      delegator = await tdpos.delegators.call(accounts[4]);
+      assert.equal(0,delegator[0]);
+      assert.equal(0,delegator[1]);
+    });
+  });
+
+  describe('delegatorStatus', () => {
 
     before(async () => {
       tdpos = await TransmuteDPOS.new();

@@ -31,6 +31,7 @@ contract TransmuteDPOS is TransmuteToken, RoundManager, ProviderPool {
 
   struct Delegator {
     address delegateAddress;
+    // TODO: rename variable
     uint amountBonded;
   }
 
