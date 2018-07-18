@@ -55,7 +55,7 @@ contract TransmuteDPOS is TransmuteToken, RoundManager, ProviderPool {
   // TODO: Add setter
   // The time (in number of blocks) that a Delegator has to wait before he can withdraw() his tokens
   uint public unbondingPeriod;
-  mapping (address => uint) withdrawBlocks;
+  mapping (address => uint) public withdrawBlocks;
 
   constructor() public {
     // TODO: Those are temporary values
