@@ -6,6 +6,18 @@ import "./ProviderPool.sol";
 
 contract TransmuteDPOS is TransmuteToken, RoundManager, ProviderPool {
 
+  event DelegatorBonded(
+    address indexed _delegator,
+    address indexed _provider,
+    uint amount
+  );
+
+  event DelegatorUnbonded(
+    address indexed _delegator,
+    address indexed _provider,
+    uint amount
+  );
+
   event ProviderAdded (
     address indexed _provider,
     uint _pricePerStorageMineral,
@@ -26,7 +38,6 @@ contract TransmuteDPOS is TransmuteToken, RoundManager, ProviderPool {
     address indexed _provider
   );
 
-  // TODO: Better name for the second state
   enum DelegatorStatus { Unbonded, UnbondedWithTokensToWithdraw, Bonded }
 
   struct Delegator {
@@ -106,6 +117,7 @@ contract TransmuteDPOS is TransmuteToken, RoundManager, ProviderPool {
     if (p.status == ProviderStatus.Registered) {
       updateProvider(_provider, p.totalAmountBonded);
     }
+    emit DelegatorBonded(msg.sender, _provider, _amount);
   }
 
   function unbond() external {
@@ -126,7 +138,7 @@ contract TransmuteDPOS is TransmuteToken, RoundManager, ProviderPool {
     updateProvider(d.delegateAddress, p.totalAmountBonded);
     // Remove delegator from the list. He is no longer in the the Bonded State
     delete delegators[msg.sender];
-    // TODO: Add Unbond event
+    emit DelegatorUnbonded(msg.sender, d.delegateAddress, d.amountBonded);
   }
 
   // TODO: Create the same function for Providers
