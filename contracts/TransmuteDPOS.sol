@@ -52,14 +52,13 @@ contract TransmuteDPOS is TransmuteToken, RoundManager, ProviderPool {
   uint public numberOfProviders;
   mapping(address => Provider) public providers;
 
-  // TODO: Add setter
-  // The time (in number of blocks) that a Delegator has to wait before he can withdraw() his tokens
-  uint public unbondingPeriod;
   mapping (address => uint) public withdrawBlocks;
 
   constructor() public {
-    // TODO: Those are temporary values
-    // TODO: move all to here
+    // FIXME: Those are temporary values
+    // Set constants from RoundManager
+    electionPeriodLength = 20;
+    rateLockDeadline = 5;
     unbondingPeriod = 10;
   }
 

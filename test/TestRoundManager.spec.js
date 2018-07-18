@@ -3,13 +3,18 @@ const { blockMiner, assertFail } = require('./utils.js');
 
 contract('RoundManager', accounts => {
 
-  let rm, electionPeriodLength;
+  let rm;
+  const electionPeriodLength = 20;
+  const rateLockDeadline = 5;
+  const unbondingPeriod = 10;
 
   describe('initializeRound', () => {
 
     before(async () => {
       rm = await RoundManager.deployed();
-      electionPeriodLength = await rm.electionPeriodLength.call();
+      await rm.setElectionPeriodLength(electionPeriodLength);
+      await rm.setRateLockDeadline(rateLockDeadline);
+      await rm.setUnbondingPeriod(unbondingPeriod);
       await blockMiner.mineUntilEndOfElectionPeriod(rm);
       assert.equal(0, (web3.eth.blockNumber + 1) % electionPeriodLength);
     });
