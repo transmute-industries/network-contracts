@@ -286,6 +286,19 @@ contract('TransmuteDPOS', accounts => {
       provider = await tdpos.getProvider.call(accounts[0]);
       assert.equal(300 + previousBondedAmount, provider[0]);
     });
+
+    it('should emit the DelegateBonded event', async () => {
+      await tdpos.approve(contractAddress, 300, {from: accounts[4]});
+      const result = await tdpos.bond(accounts[0], 300, {from: accounts[4]});
+      assert.web3Event(result, {
+        event: 'DelegatorBonded',
+        args: {
+          _delegator: accounts[4],
+          _provider: accounts[0],
+          _amount: 300
+        }
+      });
+    });
   });
 
   describe('unbond', () => {
@@ -307,6 +320,8 @@ contract('TransmuteDPOS', accounts => {
       await tdpos.bond(accounts[0], 300, {from: accounts[3]});
       await tdpos.approve(contractAddress, 300, {from: accounts[4]});
       await tdpos.bond(accounts[0], 300, {from: accounts[4]});
+      await tdpos.approve(contractAddress, 300, {from: accounts[5]});
+      await tdpos.bond(accounts[0], 300, {from: accounts[5]});
     });
 
     it('should fail if called by an address that is not a Delegator (no bonded amount)', async() => {
@@ -340,6 +355,21 @@ contract('TransmuteDPOS', accounts => {
       delegator = await tdpos.delegators.call(accounts[4]);
       assert.equal(0,delegator[0]);
       assert.equal(0,delegator[1]);
+    });
+
+    it('should emit the DelegateUnbonded event', async () => {
+      const delegator = await tdpos.delegators.call(accounts[5]);
+      assert.equal(accounts[0], delegator[0]); // [0] is delegateAddress;
+      assert.equal(300, delegator[1]); // [1] is amountBonded;
+      const result = await tdpos.unbond({from: accounts[5]});
+      assert.web3Event(result, {
+        event: 'DelegatorUnbonded',
+        args: {
+          _delegator: accounts[5],
+          _provider: accounts[0],
+          _amount: 300
+        }
+      });
     });
   });
 
