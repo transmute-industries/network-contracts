@@ -311,7 +311,7 @@ contract('TransmuteDPOS', accounts => {
 
     it('should fail if called by an address that is not a Delegator (no bonded amount)', async() => {
       assert.equal(DELEGATOR_UNBONDED, await tdpos.delegatorStatus(accounts[9]));
-      //assertFail( await tdpos.unbond({from: accounts[9]}) );
+      await assertFail( tdpos.unbond({from: accounts[9]}) );
     });
 
     it("should set withdrawBlock for the Delegator's address", async () => {
