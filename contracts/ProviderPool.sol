@@ -17,7 +17,6 @@ contract ProviderPool is Ownable {
     return providerPool.contains(_provider);
   }
 
-  // TODO: Add default value in the main constructor
   function setMaxNumberOfProviders(uint _maxNumber) external onlyOwner {
     providerPool.setMaxSize(_maxNumber);
   }
