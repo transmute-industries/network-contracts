@@ -124,21 +124,22 @@ contract TransmuteDPOS is TransmuteToken, RoundManager, ProviderPool {
   function unbond() external {
     // Only Bonded Delegators can call the function
     require(delegatorStatus(msg.sender) == DelegatorStatus.Bonded);
-    // TODO: What if a Provider calls unbond() on himself ?
-    // Should he resign ?
-    // What about the tokens of the Delegators that bonded to him ?
-    // For now we prevent providers from calling this function
-    require(providers[msg.sender].status == ProviderStatus.Unregistered);
-
     Delegator storage d = delegators[msg.sender];
     Provider storage p = providers[d.delegateAddress];
     // Sets the block number from which the Delegator will be able to withdraw() his tokens
     withdrawBlocks[msg.sender] = block.number.add(unbondingPeriod);
     // Decrease the totalAmountBonded parameter of the provider
     p.totalAmountBonded = p.totalAmountBonded.sub(d.amountBonded);
-    updateProvider(d.delegateAddress, p.totalAmountBonded);
+    if (d.delegateAddress == msg.sender) {
+      // A Provider has to be a Delegator to himself
+      // Therefore if a Provider unbonds he should resign
+      resignAsProvider(msg.sender);
+    } else {
+      // Otherwise it should update the position of the Provider in the pool
+      updateProvider(d.delegateAddress, p.totalAmountBonded);
+    }
     emit DelegatorUnbonded(msg.sender, d.delegateAddress, d.amountBonded);
-    // Remove delegator from the list. He is no longer in the the Bonded State
+    // Remove delegator from the list. He is now no longer in the the Bonded State
     delete delegators[msg.sender];
   }
 
