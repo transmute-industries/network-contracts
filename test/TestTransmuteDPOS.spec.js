@@ -417,8 +417,73 @@ contract('TransmuteDPOS', accounts => {
       assert.equal(DELEGATOR_UNBONDED_WITH_TOKENS_TO_WITHDRAW, await tdpos.delegatorStatus(accounts[4]));
     });
 
-    // TODO when withdraw is implemented
-    // it('should return Unbonded if Delegator has called unbond() and withdraw()');
+    it('should return Unbonded if Delegator has called unbond() and withdraw()', async () => {
+      assert.equal(DELEGATOR_UNBONDED_WITH_TOKENS_TO_WITHDRAW, await tdpos.delegatorStatus(accounts[4]));
+      const withdrawInformation = await tdpos.withdrawInformations(accounts[4]);
+      const withdrawBlock = withdrawInformation[0];
+      await blockMiner.mineUntilBlock(withdrawBlock - 1);
+      await tdpos.withdraw({from: accounts[4]});
+      assert.equal(DELEGATOR_UNBONDED, await tdpos.delegatorStatus(accounts[4]));
+    });
+  });
+
+  describe('withdraw', () => {
+
+    before(async () => {
+      // TODO: refactor ?
+      tdpos = await TransmuteDPOS.new();
+      contractAddress = tdpos.address;
+      for(let i = 0; i < 10; i++) {
+        await tdpos.mint(accounts[i], 1000, {from: accounts[0]});
+      }
+      await tdpos.setMaxNumberOfProviders(PROVIDER_POOL_SIZE);
+      await blockMiner.mineUntilEndOfElectionPeriod(tdpos);
+      await tdpos.initializeRound();
+      await approveBondProvider(22, 10, 1, 25, 1, accounts[0]);
+      await approveBondProvider(22, 10, 1, 25, 1, accounts[1]);
+      await tdpos.approve(contractAddress, 300, {from: accounts[2]});
+      await tdpos.bond(accounts[0], 300, {from: accounts[2]});
+      await tdpos.approve(contractAddress, 300, {from: accounts[3]});
+      await tdpos.bond(accounts[0], 300, {from: accounts[3]});
+    });
+
+    it('should fail if withdrawBlock has not been reached', async () => {
+      await tdpos.unbond({from: accounts[2]});
+      assert.equal(DELEGATOR_UNBONDED_WITH_TOKENS_TO_WITHDRAW, await tdpos.delegatorStatus(accounts[2]));
+      const withdrawInformation = await tdpos.withdrawInformations(accounts[2]);
+      const withdrawBlock = withdrawInformation[0];
+      await blockMiner.mineUntilBlock(withdrawBlock - 2);
+      // At this point we are 1 block away from withdrawBlock
+      await assertFail( tdpos.withdraw({from: accounts[2]}) );
+      // At this point we reached withdrawBlock so it should work
+      await tdpos.withdraw({from: accounts[2]});
+      assert.equal(DELEGATOR_UNBONDED, await tdpos.delegatorStatus(accounts[2]));
+    });
+
+    it('should fail if Delegator is in Bonded state', async () => {
+      assert.equal(DELEGATOR_BONDED, await tdpos.delegatorStatus(accounts[3]));
+      await assertFail( tdpos.withdraw({from: accounts[3]}) );
+    });
+
+    it('should fail if Delegator is in Unbonded state', async () => {
+      assert.equal(DELEGATOR_UNBONDED, await tdpos.delegatorStatus(accounts[4]));
+      await assertFail( tdpos.withdraw({from: accounts[4]}) );
+    });
+
+    it('should transfer the right amount of tokens back to the Delegator', async () => {
+      const previousBalance = await tdpos.balanceOf(accounts[3]);
+      await tdpos.unbond({from: accounts[3]});
+      const withdrawInformation = await tdpos.withdrawInformations(accounts[3]);
+      const withdrawBlock = withdrawInformation[0];
+      await blockMiner.mineUntilBlock(withdrawBlock - 1);
+      await tdpos.withdraw({from: accounts[3]});
+      const newBalance = await tdpos.balanceOf(accounts[3]);
+      assert.equal(previousBalance.plus(300).toNumber(), await tdpos.balanceOf(accounts[3]));
+    });
+
+    it('should switch Delegator status to Unbonded', async() => {
+      assert.equal(DELEGATOR_UNBONDED, await tdpos.delegatorStatus(accounts[3]));
+    });
   });
 });
 
