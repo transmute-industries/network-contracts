@@ -339,18 +339,18 @@ contract('TransmuteDPOS', accounts => {
     });
 
     it('should decrease the totalBondedAmount of the Provider by the unbonded amount', async () => {
-      const totalBondedAmount = (await tdpos.providers(accounts[0]))[5].toNumber();
-      const bondedAmount = (await tdpos.delegators(accounts[3]))[1].toNumber();
+      const totalBondedAmount = (await tdpos.providers(accounts[0]))[5].toNumber(); // [5] is totalAmountBonded
+      const bondedAmount = (await tdpos.delegators(accounts[3]))[1].toNumber(); // [1] is amountBonded
       const newAmount = totalBondedAmount - bondedAmount;
       await tdpos.unbond({from: accounts[3]});
       assert.equal(newAmount, (await tdpos.providers([accounts[0]]))[5].toNumber());
-      assert.equal(newAmount, (await tdpos.getProvider(accounts[0]))[0].toNumber());
+      assert.equal(newAmount, (await tdpos.getProvider(accounts[0]))[0].toNumber()); // [0] is totalAmountBonded
     });
 
     it('should remove the Delegator from the mapping', async () => {
       let delegator = await tdpos.delegators.call(accounts[4]);
-      assert.notEqual(0,delegator[0]);
-      assert.notEqual(0,delegator[1]);
+      assert.notEqual(0,delegator[0]); // [0] is delegateAddress;
+      assert.notEqual(0,delegator[1]); // [1] is amountBonded;
       await tdpos.unbond({from: accounts[4]});
       delegator = await tdpos.delegators.call(accounts[4]);
       assert.equal(0,delegator[0]);
