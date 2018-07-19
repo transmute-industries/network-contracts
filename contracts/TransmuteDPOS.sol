@@ -63,7 +63,11 @@ contract TransmuteDPOS is TransmuteToken, RoundManager, ProviderPool {
   uint public numberOfProviders;
   mapping(address => Provider) public providers;
 
-  mapping (address => uint) public withdrawBlocks;
+  struct WithdrawInformation {
+    uint withdrawBlock;
+    uint amount;
+  }
+  mapping (address => WithdrawInformation) public withdrawInformations;
 
   // FIXME: Those are temporary values
   constructor() public {
@@ -127,9 +131,11 @@ contract TransmuteDPOS is TransmuteToken, RoundManager, ProviderPool {
     Delegator storage d = delegators[msg.sender];
     Provider storage p = providers[d.delegateAddress];
     // Sets the block number from which the Delegator will be able to withdraw() his tokens
-    withdrawBlocks[msg.sender] = block.number.add(unbondingPeriod);
+    uint withdrawBlock = block.number.add(unbondingPeriod);
+    uint amount = d.amountBonded;
+    withdrawInformations[msg.sender] = WithdrawInformation(withdrawBlock, amount);
     // Decrease the totalAmountBonded parameter of the provider
-    p.totalAmountBonded = p.totalAmountBonded.sub(d.amountBonded);
+    p.totalAmountBonded = p.totalAmountBonded.sub(amount);
     if (d.delegateAddress == msg.sender) {
       // A Provider has to be a Delegator to himself
       // Therefore if a Provider unbonds he should resign
@@ -138,7 +144,7 @@ contract TransmuteDPOS is TransmuteToken, RoundManager, ProviderPool {
       // Otherwise it should update the position of the Provider in the pool
       updateProvider(d.delegateAddress, p.totalAmountBonded);
     }
-    emit DelegatorUnbonded(msg.sender, d.delegateAddress, d.amountBonded);
+    emit DelegatorUnbonded(msg.sender, d.delegateAddress, amount);
     // Remove delegator from the list. He is now no longer in the the Bonded State
     delete delegators[msg.sender];
   }
@@ -149,8 +155,8 @@ contract TransmuteDPOS is TransmuteToken, RoundManager, ProviderPool {
     if (delegators[_delegator].amountBonded != 0) {
       // If _delegator is in the mapping, he is Bonded
       return DelegatorStatus.Bonded;
-    } else if (withdrawBlocks[_delegator] != 0) {
-      // Else if _delegator has a withdrawBlock, he just called unbond() and didn't withdraw() yet
+    } else if (withdrawInformations[_delegator].withdrawBlock != 0) {
+      // Else if _delegator has some withdrawInformation, he just called unbond() and didn't withdraw() yet
       return DelegatorStatus.UnbondedWithTokensToWithdraw;
     } else {
       // Else he is Unbonded: either he didn't call bond() or he called bond() unbond() and withdraw()
