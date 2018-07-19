@@ -100,7 +100,6 @@ contract TransmuteDPOS is TransmuteToken, RoundManager, ProviderPool {
     p.feeShare = _feeShare;
   }
 
-  // TODO: change name
   function resignAsProvider(address _provider) internal {
     require(providers[_provider].status != ProviderStatus.Unregistered);
     removeProvider(_provider);

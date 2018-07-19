@@ -27,6 +27,17 @@ contract('TransmuteDPOS', accounts => {
       await tdpos.provider(pricePerStorageMineral, pricePerComputeMineral, blockRewardCut, feeShare, {from: provider});
   }
 
+  async function initNew() {
+    tdpos = await TransmuteDPOS.new();
+    contractAddress = tdpos.address;
+    for(let i = 0; i < 10; i++) {
+      await tdpos.mint(accounts[i], 1000, {from: accounts[0]});
+    }
+    await tdpos.setMaxNumberOfProviders(PROVIDER_POOL_SIZE);
+    await blockMiner.mineUntilEndOfElectionPeriod(tdpos);
+    await tdpos.initializeRound();
+  }
+
   describe('provider', () => {
 
     before(async () => {
@@ -158,14 +169,7 @@ contract('TransmuteDPOS', accounts => {
   describe('resignAsProvider', () => {
 
     before(async () => {
-      tdpos = await TransmuteDPOS.new();
-      contractAddress = tdpos.address;
-      for(let i = 0; i < 5; i++) {
-        await tdpos.mint(accounts[i], 1000, {from: accounts[0]});
-      }
-      await tdpos.setMaxNumberOfProviders(PROVIDER_POOL_SIZE);
-      await blockMiner.mineUntilEndOfElectionPeriod(tdpos);
-      await tdpos.initializeRound();
+      await initNew();
       await approveBondProvider(22, 10, 1, 25, 1, accounts[0]);
       await approveBondProvider(22, 10, 1, 25, 1, accounts[1]);
       await approveBondProvider(22, 10, 1, 25, 1, accounts[2]);
@@ -208,14 +212,7 @@ contract('TransmuteDPOS', accounts => {
   describe('bond', () => {
 
     before(async () => {
-      tdpos = await TransmuteDPOS.new();
-      contractAddress = tdpos.address;
-      for(let i = 0; i < 10; i++) {
-        await tdpos.mint(accounts[i], 1000, {from: accounts[0]});
-      }
-      await tdpos.setMaxNumberOfProviders(PROVIDER_POOL_SIZE);
-      await blockMiner.mineUntilEndOfElectionPeriod(tdpos);
-      await tdpos.initializeRound();
+      await initNew();
       await approveBondProvider(22, 10, 1, 25, 1, accounts[0]);
       await approveBondProvider(10, 20, 2, 35, 1, accounts[1]);
     });
@@ -304,14 +301,7 @@ contract('TransmuteDPOS', accounts => {
   describe('unbond', () => {
 
     before(async () => {
-      tdpos = await TransmuteDPOS.new();
-      contractAddress = tdpos.address;
-      for(let i = 0; i < 10; i++) {
-        await tdpos.mint(accounts[i], 1000, {from: accounts[0]});
-      }
-      await tdpos.setMaxNumberOfProviders(PROVIDER_POOL_SIZE);
-      await blockMiner.mineUntilEndOfElectionPeriod(tdpos);
-      await tdpos.initializeRound();
+      await initNew();
       await approveBondProvider(22, 10, 1, 25, 1, accounts[0]);
       await approveBondProvider(22, 10, 1, 25, 1, accounts[1]);
       await tdpos.approve(contractAddress, 300, {from: accounts[2]});
@@ -385,14 +375,7 @@ contract('TransmuteDPOS', accounts => {
   describe('delegatorStatus', () => {
 
     before(async () => {
-      tdpos = await TransmuteDPOS.new();
-      contractAddress = tdpos.address;
-      for(let i = 0; i < 10; i++) {
-        await tdpos.mint(accounts[i], 1000, {from: accounts[0]});
-      }
-      await tdpos.setMaxNumberOfProviders(PROVIDER_POOL_SIZE);
-      await blockMiner.mineUntilEndOfElectionPeriod(tdpos);
-      await tdpos.initializeRound();
+      await initNew();
       await approveBondProvider(22, 10, 1, 25, 1, accounts[0]);
     });
 
@@ -430,15 +413,7 @@ contract('TransmuteDPOS', accounts => {
   describe('withdraw', () => {
 
     before(async () => {
-      // TODO: refactor ?
-      tdpos = await TransmuteDPOS.new();
-      contractAddress = tdpos.address;
-      for(let i = 0; i < 10; i++) {
-        await tdpos.mint(accounts[i], 1000, {from: accounts[0]});
-      }
-      await tdpos.setMaxNumberOfProviders(PROVIDER_POOL_SIZE);
-      await blockMiner.mineUntilEndOfElectionPeriod(tdpos);
-      await tdpos.initializeRound();
+      await initNew();
       await approveBondProvider(22, 10, 1, 25, 1, accounts[0]);
       await approveBondProvider(22, 10, 1, 25, 1, accounts[1]);
       await tdpos.approve(contractAddress, 300, {from: accounts[2]});
