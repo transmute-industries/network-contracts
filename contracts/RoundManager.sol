@@ -1,8 +1,9 @@
 pragma solidity ^0.4.24;
 
 import "zeppelin-solidity/contracts/math/SafeMath.sol";
+import "zeppelin-solidity/contracts/ownership/Ownable.sol";
 
-contract RoundManager {
+contract RoundManager is Ownable {
   using SafeMath for uint;
 
   // Round number of the last round
@@ -12,15 +13,24 @@ contract RoundManager {
 
   uint public electionPeriodLength;
   uint public rateLockDeadline;
+  // The time (in number of blocks) that a Delegator has to wait before he can withdraw() his tokens
+  uint public unbondingPeriod;
 
   modifier onlyBeforeActiveRoundIsLocked() {
     require(block.number.sub(startOfCurrentRound) < electionPeriodLength.sub(rateLockDeadline));
     _;
   }
 
-  constructor() public {
-    electionPeriodLength = 20;
-    rateLockDeadline = 5;
+  function setElectionPeriodLength(uint _electionPeriodLength) public onlyOwner {
+    electionPeriodLength = _electionPeriodLength;
+  }
+
+  function setRateLockDeadline(uint _rateLockDeadline) public onlyOwner {
+    rateLockDeadline = _rateLockDeadline;
+  }
+
+  function setUnbondingPeriod(uint _unbondingPeriod) public onlyOwner {
+    unbondingPeriod = _unbondingPeriod;
   }
 
   function initializeRound() external {
