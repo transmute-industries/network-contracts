@@ -231,8 +231,12 @@ contract('TransmuteDPOS', accounts => {
       assert.equal(10, firstDelegator[1]); // [1] is amountBonded
     });
 
-    it('should increase the totalAmountBonded of the Provider', async () => {
+    it('should fail if amount is zero', async () => {
       await tdpos.approve(contractAddress, 20, {from: accounts[6]});
+      await assertFail( tdpos.bond(accounts[0], 0, {from: accounts[6]}) );
+    });
+
+    it('should increase the totalAmountBonded of the Provider', async () => {
       await tdpos.bond(accounts[0], 20, {from: accounts[6]});
       const provider = await tdpos.providers.call(accounts[0]);
       assert.equal(31, provider[5].toNumber()); // [5] is totalAmountBonded
