@@ -347,6 +347,12 @@ contract('TransmuteDPOS', accounts => {
       assert.equal(newAmount, (await tdpos.getProvider(accounts[0]))[0].toNumber()); // [0] is totalAmountBonded
     });
 
+    it('should resign the Provider if a Provider calls the function', async () => {
+      assert.equal(true, await tdpos.containsProvider(accounts[1]));
+      await tdpos.unbond({from: accounts[1]});
+      assert.equal(false, await tdpos.containsProvider(accounts[1]));
+    });
+
     it('should remove the Delegator from the mapping', async () => {
       let delegator = await tdpos.delegators.call(accounts[4]);
       assert.notEqual(0,delegator[0]); // [0] is delegateAddress;
