@@ -149,6 +149,14 @@ contract TransmuteDPOS is TransmuteToken, RoundManager, ProviderPool {
     delete delegators[msg.sender];
   }
 
+  function withdraw() external {
+    WithdrawInformation storage withdrawInformation = withdrawInformations[msg.sender];
+    require(withdrawInformation.withdrawBlock <= block.number);
+    require(delegatorStatus(msg.sender) == DelegatorStatus.UnbondedWithTokensToWithdraw);
+    this.transfer(msg.sender, withdrawInformation.amount);
+    delete withdrawInformations[msg.sender];
+  }
+
   // TODO: Create the same function for Providers
   // This will remove the need for ProviderStatus inside the Provider Struct
   function delegatorStatus(address _delegator) public view returns (DelegatorStatus) {
