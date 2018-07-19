@@ -387,7 +387,7 @@ contract('TransmuteDPOS', accounts => {
       await approveBondProvider(22, 10, 1, 25, 1, accounts[0]);
     });
 
-    it('should return Unbonded if address in not a Delegator', async() => {
+    it('should return Unbonded if address is not a Delegator', async() => {
       // Assert that address is not a delegator
       const delegator = await tdpos.delegators.call(accounts[3]);
       assert.equal(0,delegator[0]);
