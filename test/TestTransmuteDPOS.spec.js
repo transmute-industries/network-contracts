@@ -329,12 +329,15 @@ contract('TransmuteDPOS', accounts => {
       await assertFail( tdpos.unbond({from: accounts[9]}) );
     });
 
-    it("should set withdrawBlock for the Delegator's address", async () => {
-      assert.equal(0, await tdpos.withdrawBlocks.call(accounts[2]));
+    it("should set withdrawInformation for the Delegator's address", async () => {
+      let withdrawInformation = await tdpos.withdrawInformations.call(accounts[2]);
+      let withdrawBlock = withdrawInformation[0];
+      assert.equal(0, withdrawBlock);
       await tdpos.unbond({from: accounts[2]});
       const currentBlockNumber = web3.eth.blockNumber;
       const unbondingPeriod = (await tdpos.unbondingPeriod.call()).toNumber();
-      const withdrawBlock = await tdpos.withdrawBlocks.call(accounts[2]);
+      withdrawInformation = await tdpos.withdrawInformations.call(accounts[2]);
+      withdrawBlock = withdrawInformation[0];
       assert.equal(currentBlockNumber + unbondingPeriod, withdrawBlock);
     });
 
