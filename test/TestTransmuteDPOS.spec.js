@@ -1,4 +1,4 @@
-const TransmuteDPOS = artifacts.require('./TransmuteDPOS.sol');
+const TransmuteDPOS = artifacts.require('./TestTransmuteDPOS.sol');
 const { blockMiner, assertFail } = require('./utils.js');
 require('truffle-test-utils').init();
 
@@ -174,7 +174,7 @@ contract('TransmuteDPOS', accounts => {
     it('should remove the Provider from the provider mapping', async () => {
       const registeredProvider = await tdpos.providers.call(accounts[0]);
       assert.equal(PROVIDER_REGISTERED, registeredProvider[0]); // [0] is providerStatus
-      await tdpos.resignAsProvider({from: accounts[0]});
+      await tdpos.publicResignAsProvider(accounts[0]);
       const resignedProvider = await tdpos.providers.call(accounts[0]);
       assert.equal(PROVIDER_UNREGISTERED, resignedProvider[0]); // [0] is providerStatus
       assert.equal(0, resignedProvider[1]); // [1] is pricePerStorageMineral
@@ -186,12 +186,12 @@ contract('TransmuteDPOS', accounts => {
 
     it('should remove the Provider from the providerPool', async () => {
       assert.equal(true, await tdpos.containsProvider(accounts[1]));
-      await tdpos.resignAsProvider({from: accounts[1]});
+      await tdpos.publicResignAsProvider(accounts[1]);
       assert.equal(false, await tdpos.containsProvider(accounts[1]));
     });
 
     it('should send a ProviderResigned event', async () => {
-      const result = await tdpos.resignAsProvider({from: accounts[2]});
+      const result = await tdpos.publicResignAsProvider(accounts[2]);
       assert.web3Event(result, {
         event: 'ProviderResigned',
         args: {
@@ -201,7 +201,7 @@ contract('TransmuteDPOS', accounts => {
     });
 
     it("should fail if the transaction's sender is not a Provider", async () => {
-      await assertFail( tdpos.resignAsProvider({from: accounts[3]}) );
+      await assertFail( tdpos.publicResignAsProvider(accounts[3]) );
     });
   });
 
