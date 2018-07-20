@@ -21,6 +21,11 @@ class BlockMiner {
     const padding = electionPeriodLength - rateLockDeadline - 1 - currentBlockNumber % electionPeriodLength - 1;
     await this.mine(padding);
   }
+
+  async mineUntilBlock(blockNumber) {
+    const padding = blockNumber - web3.eth.blockNumber;
+    await this.mine(padding);
+  }
 }
 
 module.exports.blockMiner = new BlockMiner();

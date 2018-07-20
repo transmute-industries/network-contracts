@@ -63,7 +63,11 @@ contract TransmuteDPOS is TransmuteToken, RoundManager, ProviderPool {
   uint public numberOfProviders;
   mapping(address => Provider) public providers;
 
-  mapping (address => uint) public withdrawBlocks;
+  struct WithdrawInformation {
+    uint withdrawBlock;
+    uint amount;
+  }
+  mapping (address => WithdrawInformation) public withdrawInformations;
 
   // FIXME: Those are temporary values
   constructor() public {
@@ -80,8 +84,8 @@ contract TransmuteDPOS is TransmuteToken, RoundManager, ProviderPool {
     require(_feeShare <= 100);
     Provider storage p = providers[msg.sender];
     Delegator storage d = delegators[msg.sender];
+    // Provider has to be a Delegator to himself
     require(d.delegateAddress == msg.sender);
-    require(d.amountBonded > 0);
     if (p.status == ProviderStatus.Unregistered) {
       numberOfProviders = numberOfProviders.add(1);
       addProvider(msg.sender, p.totalAmountBonded);
@@ -96,14 +100,15 @@ contract TransmuteDPOS is TransmuteToken, RoundManager, ProviderPool {
     p.feeShare = _feeShare;
   }
 
-  function resignAsProvider() external {
-    require(providers[msg.sender].status != ProviderStatus.Unregistered);
-    removeProvider(msg.sender);
-    delete providers[msg.sender];
-    emit ProviderResigned(msg.sender);
+  function resignAsProvider(address _provider) internal {
+    require(providers[_provider].status != ProviderStatus.Unregistered);
+    removeProvider(_provider);
+    delete providers[_provider];
+    emit ProviderResigned(_provider);
   }
 
   function bond(address _provider, uint _amount) external {
+    require(_amount > 0);
     Provider storage p = providers[_provider];
     // A delegator is only allowed to bond to an Unregistered provider if the provider is himself
     // otherwise _provider has to be associated with a Registered provider
@@ -123,22 +128,33 @@ contract TransmuteDPOS is TransmuteToken, RoundManager, ProviderPool {
   function unbond() external {
     // Only Bonded Delegators can call the function
     require(delegatorStatus(msg.sender) == DelegatorStatus.Bonded);
-    // TODO: What if a Provider calls unbond() on himself ?
-    // Should he resign ?
-    // What about the tokens of the Delegators that bonded to him ?
-    // For now we prevent providers from calling this function
-    require(providers[msg.sender].status == ProviderStatus.Unregistered);
-
     Delegator storage d = delegators[msg.sender];
     Provider storage p = providers[d.delegateAddress];
     // Sets the block number from which the Delegator will be able to withdraw() his tokens
-    withdrawBlocks[msg.sender] = block.number.add(unbondingPeriod);
+    uint withdrawBlock = block.number.add(unbondingPeriod);
+    uint amount = d.amountBonded;
+    withdrawInformations[msg.sender] = WithdrawInformation(withdrawBlock, amount);
     // Decrease the totalAmountBonded parameter of the provider
-    p.totalAmountBonded = p.totalAmountBonded.sub(d.amountBonded);
-    updateProvider(d.delegateAddress, p.totalAmountBonded);
-    emit DelegatorUnbonded(msg.sender, d.delegateAddress, d.amountBonded);
-    // Remove delegator from the list. He is no longer in the the Bonded State
+    p.totalAmountBonded = p.totalAmountBonded.sub(amount);
+    if (d.delegateAddress == msg.sender) {
+      // A Provider has to be a Delegator to himself
+      // Therefore if a Provider unbonds he should resign
+      resignAsProvider(msg.sender);
+    } else {
+      // Otherwise it should update the position of the Provider in the pool
+      updateProvider(d.delegateAddress, p.totalAmountBonded);
+    }
+    emit DelegatorUnbonded(msg.sender, d.delegateAddress, amount);
+    // Remove delegator from the list. He is now no longer in the the Bonded State
     delete delegators[msg.sender];
+  }
+
+  function withdraw() external {
+    WithdrawInformation storage withdrawInformation = withdrawInformations[msg.sender];
+    require(withdrawInformation.withdrawBlock <= block.number);
+    require(delegatorStatus(msg.sender) == DelegatorStatus.UnbondedWithTokensToWithdraw);
+    this.transfer(msg.sender, withdrawInformation.amount);
+    delete withdrawInformations[msg.sender];
   }
 
   // TODO: Create the same function for Providers
@@ -147,8 +163,8 @@ contract TransmuteDPOS is TransmuteToken, RoundManager, ProviderPool {
     if (delegators[_delegator].amountBonded != 0) {
       // If _delegator is in the mapping, he is Bonded
       return DelegatorStatus.Bonded;
-    } else if (withdrawBlocks[_delegator] != 0) {
-      // Else if _delegator has a withdrawBlock, he just called unbond() and didn't withdraw() yet
+    } else if (withdrawInformations[_delegator].withdrawBlock != 0) {
+      // Else if _delegator has some withdrawInformation, he just called unbond() and didn't withdraw() yet
       return DelegatorStatus.UnbondedWithTokensToWithdraw;
     } else {
       // Else he is Unbonded: either he didn't call bond() or he called bond() unbond() and withdraw()
