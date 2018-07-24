@@ -5,6 +5,8 @@ require('truffle-test-utils').init();
 contract('JobManager', accounts => {
 
   let jm;
+  const MINERAL_COMPUTE = 1;
+  const MINEARL_STORAGE = 2;
 
   describe('submitMineral', () => {
 
@@ -13,24 +15,26 @@ contract('JobManager', accounts => {
     });
 
     it('should store the Mineral in the minerals mapping', async () => {
-      await jm.submitMineral('multiplication');
+      await jm.submitMineral('multiplication', MINERAL_COMPUTE);
       const mineral = await jm.minerals.call(0);
-      assert.equal('multiplication', mineral);
+      let [name, category] = mineral;
+      assert.equal('multiplication', name);
     });
 
     it('should increment numberOfMinerals', async () => {
       const numberOfMinerals = await jm.numberOfMinerals.call();
-      await jm.submitMineral('addition');
+      await jm.submitMineral('addition', MINERAL_COMPUTE);
       assert.deepEqual(numberOfMinerals.add(1), await jm.numberOfMinerals.call())
     });
 
     it('should emit a MineralAdded event', async () => {
-      let result = await jm.submitMineral('division');
+      let result = await jm.submitMineral('division', MINERAL_COMPUTE);
       assert.web3Event(result, {
         event: 'MineralAdded',
         args: {
           id: 2,
           name: 'division',
+          category: MINERAL_COMPUTE,
         }
       });
     });
@@ -42,8 +46,8 @@ contract('JobManager', accounts => {
 
     before(async () => {
       jm = await JobManager.new();
-      await jm.submitMineral("multiplication");
-      await jm.submitMineral("addition");
+      await jm.submitMineral("multiplication", MINERAL_COMPUTE);
+      await jm.submitMineral("addition", MINERAL_COMPUTE);
     });
 
     it('should fail if mineralId is not the id of a valid Mineral', async () => {
