@@ -55,7 +55,7 @@ contract JobManager {
 
   function mineralIsValid(uint _mineralId) public view returns (bool) {
     Mineral memory m = minerals[_mineralId];
-    return bytes(m.name).length > 0;
+    return m.category != MineralCategory.Null;
   }
 
   function job(uint _mineralId, uint _minPricePerMineral, uint _expirationBlock) external {
