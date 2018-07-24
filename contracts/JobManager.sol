@@ -14,8 +14,8 @@ contract JobManager {
     string name;
   }
 
-  uint numberOfMinerals;
-  mapping(uint => Mineral) minerals;
+  uint public numberOfMinerals;
+  mapping(uint => Mineral) public minerals;
 
   function submitMineral(string _name) external {
     minerals[numberOfMinerals] = Mineral(_name);
