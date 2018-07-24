@@ -48,6 +48,14 @@ contract('JobManager', accounts => {
         }
       });
     });
+
+    it('should accept no name for Mineral', async () => {
+      const mineralId = (await jm.numberOfMinerals.call()).toNumber();
+      await jm.submitMineral("", MINERAL_COMPUTE);
+      const mineral = await jm.minerals.call(mineralId);
+      let [name, _] = mineral;
+      assert.equal("", name);
+    });
   });
 
   describe('job', () => {
