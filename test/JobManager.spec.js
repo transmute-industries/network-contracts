@@ -58,7 +58,7 @@ contract('JobManager', accounts => {
     });
   });
 
-  describe('job', () => {
+  describe('submitJob', () => {
 
     let expirationBlock = web3.eth.blockNumber + 1000;
 
@@ -69,22 +69,22 @@ contract('JobManager', accounts => {
     });
 
     it('should fail if mineralId is not the id of a valid Mineral', async () => {
-      await assertFail( jm.job(2, 10, expirationBlock) );
-      await jm.job(0, 10, expirationBlock);
+      await assertFail( jm.submitJob(2, 10, expirationBlock) );
+      await jm.submitJob(0, 10, expirationBlock);
     });
 
     it('should fail if expiration block is not in the future', async () => {
       const blockInThePast = web3.eth.blockNumber;
-      await assertFail( jm.job(0, 10, blockInThePast) );
+      await assertFail( jm.submitJob(0, 10, blockInThePast) );
       const presentBlock = web3.eth.blockNumber + 1;
-      await assertFail( jm.job(0, 10, presentBlock) );
+      await assertFail( jm.submitJob(0, 10, presentBlock) );
       const blockInTheFuture = web3.eth.blockNumber + 2;
-      await jm.job(0, 10, blockInTheFuture);
+      await jm.submitJob(0, 10, blockInTheFuture);
     });
 
     it('should store the Job parameters in the jobs mapping', async () => {
       const jobId = await jm.numberOfJobs.call();
-      await jm.job(1, 11, expirationBlock + 42);
+      await jm.submitJob(1, 11, expirationBlock + 42);
       const job = await jm.jobs.call(jobId);
       const [mineralId, minPricePerMineral, expBlock] = job;
       assert.equal(1, mineralId);
@@ -94,7 +94,7 @@ contract('JobManager', accounts => {
 
     it('should emit a JobAdded event', async () => {
       const jobId = await jm.numberOfJobs.call();
-      let result = await jm.job(1, 12, expirationBlock);
+      let result = await jm.submitJob(1, 12, expirationBlock);
       assert.web3Event(result, {
         event: 'JobAdded',
         args: {
@@ -108,7 +108,7 @@ contract('JobManager', accounts => {
 
     it('should increment numberOfJobs', async () => {
       const numberOfJobs = await jm.numberOfJobs.call();
-      await jm.job(1, 12, expirationBlock);
+      await jm.submitJob(1, 12, expirationBlock);
       assert.deepEqual(numberOfJobs.add(1), await jm.numberOfJobs.call())
     });
   });

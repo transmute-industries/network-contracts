@@ -57,7 +57,7 @@ contract JobManager {
     return m.category != MineralCategory.Null;
   }
 
-  function job(uint _mineralId, uint _minPricePerMineral, uint _expirationBlock) external {
+  function submitJob(uint _mineralId, uint _minPricePerMineral, uint _expirationBlock) external {
     // mineralId must correspond to an existing mineral
     require(mineralIsValid(_mineralId));
     // expirationBlock must be in the future
