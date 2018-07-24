@@ -111,7 +111,7 @@ contract TransmuteDPOS is TransmuteToken, RoundManager, ProviderPool {
     require(_amount > 0);
     Provider storage p = providers[_provider];
     // A delegator is only allowed to bond to himself (in which case he wants to be a Provider)
-    // or to a Registered provider
+    // or to a Registered Provider
     require(_provider == msg.sender || p.status == ProviderStatus.Registered);
     // Check if delegator has not already bonded to some address
     require(delegators[msg.sender].delegateAddress == address(0));
