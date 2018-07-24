@@ -14,11 +14,20 @@ contract('JobManager', accounts => {
       jm = await JobManager.deployed();
     });
 
+    it('should fail if category is not MINERAL_COMPUTE or MINERAL_STORAGE', async () => {
+      await assertFail( jm.submitMineral("test", 0) );
+      await jm.submitMineral("test", MINERAL_COMPUTE);
+      await jm.submitMineral("test", MINEARL_STORAGE);
+      await assertFail( jm.submitMineral("test", 3) );
+    });
+
     it('should store the Mineral in the minerals mapping', async () => {
+      const mineralId = (await jm.numberOfMinerals.call()).toNumber();
       await jm.submitMineral('multiplication', MINERAL_COMPUTE);
-      const mineral = await jm.minerals.call(0);
+      const mineral = await jm.minerals.call(mineralId);
       let [name, category] = mineral;
       assert.equal('multiplication', name);
+      assert.equal(MINERAL_COMPUTE, category);
     });
 
     it('should increment numberOfMinerals', async () => {
@@ -28,11 +37,12 @@ contract('JobManager', accounts => {
     });
 
     it('should emit a MineralAdded event', async () => {
+      const mineralId = (await jm.numberOfMinerals.call()).toNumber();
       let result = await jm.submitMineral('division', MINERAL_COMPUTE);
       assert.web3Event(result, {
         event: 'MineralAdded',
         args: {
-          id: 2,
+          id: mineralId,
           name: 'division',
           category: MINERAL_COMPUTE,
         }
