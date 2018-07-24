@@ -5,9 +5,12 @@ import "zeppelin-solidity/contracts/math/SafeMath.sol";
 contract JobManager {
   using SafeMath for uint;
 
+  enum MineralCategory { Null, Compute, Storage }
+
   event MineralAdded (
     uint id,
-    string name
+    string name,
+    MineralCategory category
   );
 
   event JobAdded (
@@ -19,6 +22,7 @@ contract JobManager {
 
   struct Mineral {
     string name;
+    MineralCategory category;
   }
 
   struct Job {
@@ -33,9 +37,19 @@ contract JobManager {
   uint public numberOfJobs;
   mapping(uint => Job) public jobs;
 
-  function submitMineral(string _name) external {
-    minerals[numberOfMinerals] = Mineral(_name);
-    emit MineralAdded(numberOfMinerals, _name);
+  function submitMineral(string _name, uint _category) external {
+    // TODO name must be non null
+    // Mineral has to be one of two categories: Compute or Storage
+    MineralCategory mc;
+    if(_category == uint(MineralCategory.Compute)) {
+      mc = MineralCategory.Compute;
+    } else if (_category == uint(MineralCategory.Storage)) {
+      mc = MineralCategory.Storage;
+    } else {
+      revert();
+    }
+    minerals[numberOfMinerals] = Mineral(_name, mc);
+    emit MineralAdded(numberOfMinerals, _name, mc);
     numberOfMinerals = numberOfMinerals.add(1);
   }
 
