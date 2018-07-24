@@ -18,7 +18,7 @@ contract('JobManager', accounts => {
       assert.equal('multiplication', mineral);
     });
 
-    it('should increase the value of numberOfMinerals', async () => {
+    it('should increment numberOfMinerals', async () => {
       const numberOfMinerals = await jm.numberOfMinerals.call();
       await jm.submitMineral('addition');
       assert.deepEqual(numberOfMinerals.add(1), await jm.numberOfMinerals.call())
