@@ -61,23 +61,24 @@ contract('TransmuteDPOS', accounts => {
     it('should initially set totalBondedAmount to the amount the Provider bonded to himself', async () => {
       await approveBondProvider(22, 10, 1, 25, 42, accounts[0]);
       const provider = await tdpos.providers.call(accounts[0]);
-      const totalBondedAmount = provider[5];
+      const totalBondedAmount = provider[4];
       assert.equal(42, totalBondedAmount);
     });
 
     it("should register a Provider's parameters", async () => {
+      assert.equal(PROVIDER_UNREGISTERED, await tdpos.providerStatus.call(accounts[1]));
       await approveBondProvider(10, 20, 2, 35, 1, accounts[1]);
       const provider = await tdpos.providers.call(accounts[1]);
-      let [providerStatus, pricePerStorageMineral, pricePerComputeMineral,
+      let [pricePerStorageMineral, pricePerComputeMineral,
         blockRewardCut, feeShare] = provider;
-      assert.equal(PROVIDER_REGISTERED, providerStatus);
+      assert.equal(PROVIDER_REGISTERED, await tdpos.providerStatus.call(accounts[1]));
       assert.equal(10, pricePerStorageMineral);
       assert.equal(20, pricePerComputeMineral);
       assert.equal(2, blockRewardCut);
       assert.equal(35, feeShare);
     });
 
-    it('should fail with invalid parameters', async() => {
+    it('should fail with invalid parameters', async () => {
       await assertFail(
         approveBondProvider(22, 10, -1, 25, 1, accounts[2]),
         'provider should not be able to have a negative blockRewardCut'
@@ -97,7 +98,7 @@ contract('TransmuteDPOS', accounts => {
       await blockMiner.mineUntilLastBlockBeforeLockPeriod(tdpos);
       await tdpos.provider(23, 10, 1, 25, {from: accounts[0]});
       const provider = await tdpos.providers(accounts[0]);
-      const pricePerStorageMineral = provider[1];
+      const pricePerStorageMineral = provider[0];
       assert.equal(23, pricePerStorageMineral);
     });
 
@@ -138,7 +139,7 @@ contract('TransmuteDPOS', accounts => {
 
     it('should add the Provider to the pool if he is Unregistered and size < maxSize', async () => {
       // Check that provider isn't registered yet
-      assert.equal(false, await tdpos.containsProvider(accounts[3]));
+      assert.equal(PROVIDER_UNREGISTERED, await tdpos.providerStatus.call(accounts[3]));
       // Check the size of the pool increases by 1
       let providerPool = await tdpos.providerPool.call();
       const previousSize = providerPool[3].toNumber();
@@ -163,11 +164,12 @@ contract('TransmuteDPOS', accounts => {
 
     it('should work if Provider is Registered and size == maxSize', async () => {
       let provider = await tdpos.providers.call(accounts[4]);
-      const pricePerStorageMineral = provider[1];
+      pricePerStorageMineral = provider[0];
       assert.equal(20, pricePerStorageMineral);
       await tdpos.provider(21 ,10, 2, 25, {from: accounts[4]});
       provider = await tdpos.providers.call(accounts[4]);
-      assert.equal(21, provider[1]);
+      pricePerStorageMineral = provider[0];
+      assert.equal(21, pricePerStorageMineral);
     });
   });
 
@@ -182,12 +184,13 @@ contract('TransmuteDPOS', accounts => {
 
     it('should remove the Provider from the provider mapping', async () => {
       const registeredProvider = await tdpos.providers.call(accounts[0]);
-      let status = registeredProvider[0];
-      assert.equal(PROVIDER_REGISTERED, status);
+      let providerStatus = await tdpos.providerStatus.call(accounts[0]);
+      assert.equal(PROVIDER_REGISTERED, providerStatus);
       await tdpos.publicResignAsProvider(accounts[0]);
       const resignedProvider = await tdpos.providers.call(accounts[0]);
-      let [providerStatus, pricePerStorageMineral, pricePerComputeMineral,
+      let [pricePerStorageMineral, pricePerComputeMineral,
         blockRewardCut, feeShare, totalAmountBonded] = resignedProvider;
+      providerStatus = await tdpos.providerStatus.call(accounts[0]);
       assert.equal(PROVIDER_UNREGISTERED, providerStatus);
       assert.equal(0, pricePerStorageMineral);
       assert.equal(0, pricePerComputeMineral);
@@ -248,7 +251,7 @@ contract('TransmuteDPOS', accounts => {
     it('should increase the totalAmountBonded of the Provider', async () => {
       await tdpos.bond(accounts[0], 20, {from: accounts[6]});
       const provider = await tdpos.providers.call(accounts[0]);
-      const totalAmountBonded = provider[5];
+      const totalAmountBonded = provider[4];
       assert.equal(31, totalAmountBonded);
     });
 
@@ -271,7 +274,9 @@ contract('TransmuteDPOS', accounts => {
     it('should fail if TST balance is less than bonded amount', async () => {
       await tdpos.approve(contractAddress, 1001, {from: accounts[9]});
       await assertFail( tdpos.bond(accounts[1], 1001, {from: accounts[9]}) )
-      assert(1001 >= (await tdpos.providers(accounts[1]))[5]);
+      const provider = await tdpos.providers.call(accounts[1]);
+      const totalAmountBonded = provider[4];
+      assert(1001 >= totalAmountBonded);
     });
 
     it("should transfer amount from the Delegator's balance to the contract's balance", async () => {
@@ -282,7 +287,7 @@ contract('TransmuteDPOS', accounts => {
       assert.equal(contractBalance + 300, await tdpos.balanceOf(tdpos.address));
     });
 
-    it('should not affect the providerPool if Provider is not registered', async() => {
+    it('should not affect the providerPool if Provider is not registered', async () => {
       assert.equal(false, await tdpos.containsProvider(accounts[2]));
       await tdpos.approve(contractAddress, 300, {from: accounts[2]});
       await tdpos.bond(accounts[2], 300, {from: accounts[2]});
@@ -328,7 +333,7 @@ contract('TransmuteDPOS', accounts => {
       await tdpos.bond(accounts[0], 300, {from: accounts[5]});
     });
 
-    it('should fail if called by an address that is not a Delegator (no bonded amount)', async() => {
+    it('should fail if called by an address that is not a Delegator (no bonded amount)', async () => {
       assert.equal(DELEGATOR_UNBONDED, await tdpos.delegatorStatus(accounts[9]));
       await assertFail( tdpos.unbond({from: accounts[9]}) );
     });
@@ -346,18 +351,18 @@ contract('TransmuteDPOS', accounts => {
     });
 
     it('should decrease the totalBondedAmount of the Provider by the unbonded amount', async () => {
-      const totalBondedAmount = (await tdpos.providers(accounts[0]))[5];
+      const totalBondedAmount = (await tdpos.providers(accounts[0]))[4];
       const bondedAmount = (await tdpos.delegators(accounts[3]))[1];
       const newAmount = totalBondedAmount - bondedAmount;
       await tdpos.unbond({from: accounts[3]});
-      assert.equal(newAmount, (await tdpos.providers([accounts[0]]))[5]);
+      assert.equal(newAmount, (await tdpos.providers([accounts[0]]))[4]);
       assert.equal(newAmount, (await tdpos.getProvider(accounts[0]))[0]);
     });
 
     it('should resign the Provider if a Provider calls the function', async () => {
-      assert.equal(true, await tdpos.containsProvider(accounts[1]));
+      assert.equal(PROVIDER_REGISTERED, await tdpos.providerStatus.call(accounts[1]));
       await tdpos.unbond({from: accounts[1]});
-      assert.equal(false, await tdpos.containsProvider(accounts[1]));
+      assert.equal(PROVIDER_UNREGISTERED, await tdpos.providerStatus.call(accounts[1]));
     });
 
     it('should remove the Delegator from the mapping', async () => {
@@ -396,7 +401,7 @@ contract('TransmuteDPOS', accounts => {
       await approveBondProvider(22, 10, 1, 25, 1, accounts[0]);
     });
 
-    it('should return Unbonded if address is not a Delegator', async() => {
+    it('should return Unbonded if address is not a Delegator', async () => {
       // Assert that address is not a delegator
       const delegator = await tdpos.delegators.call(accounts[3]);
       let [delegateAddress, amountBonded] = delegator;
@@ -405,14 +410,14 @@ contract('TransmuteDPOS', accounts => {
       assert.equal(DELEGATOR_UNBONDED, await tdpos.delegatorStatus(accounts[3]));
     });
 
-    it('should return Bonded if Delegator has called bond()', async() => {
+    it('should return Bonded if Delegator has called bond()', async () => {
       assert.equal(DELEGATOR_UNBONDED, await tdpos.delegatorStatus(accounts[4]));
       await tdpos.approve(contractAddress, 300, {from: accounts[4]});
       await tdpos.bond(accounts[0], 300, {from: accounts[4]});
       assert.equal(DELEGATOR_BONDED, await tdpos.delegatorStatus(accounts[4]));
     });
 
-    it('should return UnbondedWithTokensToWithdraw if Delegator has called unbond()', async() => {
+    it('should return UnbondedWithTokensToWithdraw if Delegator has called unbond()', async () => {
       assert.equal(DELEGATOR_BONDED, await tdpos.delegatorStatus(accounts[4]));
       await tdpos.unbond({from: accounts[4]});
       assert.equal(DELEGATOR_UNBONDED_WITH_TOKENS_TO_WITHDRAW, await tdpos.delegatorStatus(accounts[4]));
@@ -425,6 +430,27 @@ contract('TransmuteDPOS', accounts => {
       await blockMiner.mineUntilBlock(withdrawBlock - 1);
       await tdpos.withdraw({from: accounts[4]});
       assert.equal(DELEGATOR_UNBONDED, await tdpos.delegatorStatus(accounts[4]));
+    });
+  });
+
+  describe('providerStatus', () => {
+
+    before(async () => {
+      await initNew();
+      await approveBondProvider(22, 10, 1, 25, 1, accounts[0]);
+    });
+
+    it('should return Unregistered if address is not a Provider', async () => {
+      assert.equal(PROVIDER_UNREGISTERED, await tdpos.providerStatus.call(accounts[1]));
+    });
+
+    it('should return Registered if address has called provider()', async () => {
+      assert.equal(PROVIDER_REGISTERED, await tdpos.providerStatus.call(accounts[0]));
+    });
+
+    it('should return Unregistered if Provider has resigned', async () => {
+      await tdpos.unbond({from: accounts[0]});
+      assert.equal(PROVIDER_UNREGISTERED, await tdpos.providerStatus.call(accounts[0]));
     });
   });
 
@@ -474,7 +500,7 @@ contract('TransmuteDPOS', accounts => {
       assert.equal(previousBalance.plus(300).toNumber(), await tdpos.balanceOf(accounts[3]));
     });
 
-    it('should switch Delegator status to Unbonded', async() => {
+    it('should switch Delegator status to Unbonded', async () => {
       assert.equal(DELEGATOR_UNBONDED, await tdpos.delegatorStatus(accounts[3]));
     });
   });
