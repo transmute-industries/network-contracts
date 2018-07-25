@@ -1,5 +1,5 @@
 const TST = artifacts.require('./TransmuteToken.sol');
-const utils = require('./utils.js');
+const utils = require('../utils.js');
 const assertFail = utils.assertFail;
 
 contract('TST', accounts => {

@@ -2,7 +2,7 @@
 // This is to be able to test the addProvider function which has internal visibility 
 // through the publicAddProvider function from TestProviderPool which has public visibility
 const ProviderPool = artifacts.require('./TestProviderPool.sol');
-const { blockMiner, assertFail } = require('./utils.js');
+const { blockMiner, assertFail } = require('../utils.js');
 
 contract('ProviderPool', accounts => {
 

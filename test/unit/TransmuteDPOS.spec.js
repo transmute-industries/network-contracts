@@ -1,5 +1,5 @@
 const TransmuteDPOS = artifacts.require('./TestTransmuteDPOS.sol');
-const { blockMiner, assertFail } = require('./utils.js');
+const { blockMiner, assertFail } = require('../utils.js');
 require('truffle-test-utils').init();
 
 contract('TransmuteDPOS', accounts => {

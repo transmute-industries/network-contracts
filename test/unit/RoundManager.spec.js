@@ -1,5 +1,5 @@
 const RoundManager = artifacts.require('./RoundManager.sol');
-const { blockMiner, assertFail } = require('./utils.js');
+const { blockMiner, assertFail } = require('../utils.js');
 
 contract('RoundManager', accounts => {
 
