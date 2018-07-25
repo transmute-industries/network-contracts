@@ -52,7 +52,6 @@ contract TransmuteDPOS is TransmuteToken, RoundManager, ProviderPool {
   enum ProviderStatus { Unregistered, Registered }
 
   struct Provider {
-    ProviderStatus status;
     uint pricePerStorageMineral;
     uint pricePerComputeMineral;
     uint blockRewardCut;
@@ -86,14 +85,13 @@ contract TransmuteDPOS is TransmuteToken, RoundManager, ProviderPool {
     Delegator storage d = delegators[msg.sender];
     // Provider has to be a Delegator to himself
     require(d.delegateAddress == msg.sender);
-    if (p.status == ProviderStatus.Unregistered) {
+    if (providerStatus(msg.sender) == ProviderStatus.Unregistered) {
       numberOfProviders = numberOfProviders.add(1);
       addProvider(msg.sender, p.totalAmountBonded);
       emit ProviderAdded(msg.sender, _pricePerStorageMineral, _pricePerComputeMineral, _blockRewardCut, _feeShare);
     } else {
       emit ProviderUpdated(msg.sender, _pricePerStorageMineral, _pricePerComputeMineral, _blockRewardCut, _feeShare);
     }
-    p.status = ProviderStatus.Registered;
     p.pricePerStorageMineral = _pricePerStorageMineral;
     p.pricePerComputeMineral = _pricePerComputeMineral;
     p.blockRewardCut = _blockRewardCut;
@@ -101,7 +99,7 @@ contract TransmuteDPOS is TransmuteToken, RoundManager, ProviderPool {
   }
 
   function resignAsProvider(address _provider) internal {
-    require(providers[_provider].status != ProviderStatus.Unregistered);
+    require(providerStatus(_provider) == ProviderStatus.Registered);
     removeProvider(_provider);
     delete providers[_provider];
     emit ProviderResigned(_provider);
@@ -112,14 +110,15 @@ contract TransmuteDPOS is TransmuteToken, RoundManager, ProviderPool {
     Provider storage p = providers[_provider];
     // A delegator is only allowed to bond to himself (in which case he wants to be a Provider)
     // or to a Registered Provider
-    require(_provider == msg.sender || p.status == ProviderStatus.Registered);
+    ProviderStatus pStatus = providerStatus(_provider);
+    require(_provider == msg.sender || pStatus == ProviderStatus.Registered);
     // Check if delegator has not already bonded to some address
     require(delegators[msg.sender].delegateAddress == address(0));
     this.transferFrom(msg.sender, this, _amount);
     delegators[msg.sender] = Delegator(_provider, _amount);
     p.totalAmountBonded = p.totalAmountBonded.add(_amount);
     // Update the bonded amount of the provider in the pool
-    if (p.status == ProviderStatus.Registered) {
+    if (pStatus == ProviderStatus.Registered) {
       updateProvider(_provider, p.totalAmountBonded);
     }
     emit DelegatorBonded(msg.sender, _provider, _amount);
@@ -157,8 +156,14 @@ contract TransmuteDPOS is TransmuteToken, RoundManager, ProviderPool {
     delete withdrawInformations[msg.sender];
   }
 
-  // TODO: Create the same function for Providers
-  // This will remove the need for ProviderStatus inside the Provider Struct
+  function providerStatus(address _provider) public view returns (ProviderStatus) {
+    if (this.containsProvider(_provider)) {
+      return ProviderStatus.Registered;
+    } else {
+      return ProviderStatus.Unregistered;
+    }
+  }
+
   function delegatorStatus(address _delegator) public view returns (DelegatorStatus) {
     if (delegators[_delegator].amountBonded != 0) {
       // If _delegator is in the mapping, he is Bonded
