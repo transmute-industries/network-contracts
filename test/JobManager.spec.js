@@ -50,12 +50,13 @@ contract('JobManager', accounts => {
       });
     });
 
-    it('should accept no name for Mineral', async () => {
+    it('should fail if name is an empty string', async () => {
       const mineralId = (await jm.numberOfMinerals.call()).toNumber();
-      await jm.submitMineral("", MINERAL_COMPUTE);
+      await assertFail( jm.submitMineral("", MINERAL_COMPUTE) );
+      await jm.submitMineral("non empty string", MINERAL_COMPUTE);
       const mineral = await jm.minerals.call(mineralId);
       let name = mineral[0];
-      assert.equal("", name);
+      assert.equal("non empty string", name);
     });
   });
 

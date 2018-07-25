@@ -41,6 +41,8 @@ contract JobManager {
   mapping(uint => Job) public jobs;
 
   function submitMineral(string _name, uint _category) external {
+    // name should be non null
+    require(bytes(_name).length > 0);
     // Mineral has to be one of two categories: Compute or Storage
     MineralCategory mc;
     if(_category == uint(MineralCategory.Compute)) {
