@@ -23,10 +23,11 @@ contract('JobManager', accounts => {
 
     it('should store the Mineral in the minerals mapping', async () => {
       const mineralId = (await jm.numberOfMinerals.call()).toNumber();
-      await jm.submitMineral('multiplication', MINERAL_COMPUTE);
+      await jm.submitMineral('multiplication', MINERAL_COMPUTE, {from: accounts[0]});
       const mineral = await jm.minerals.call(mineralId);
-      let [name, category] = mineral;
+      let [name, producer, category] = mineral;
       assert.equal('multiplication', name);
+      assert.equal(accounts[0], producer);
       assert.equal(MINERAL_COMPUTE, category);
     });
 
@@ -38,12 +39,13 @@ contract('JobManager', accounts => {
 
     it('should emit a MineralAdded event', async () => {
       const mineralId = (await jm.numberOfMinerals.call()).toNumber();
-      let result = await jm.submitMineral('division', MINERAL_COMPUTE);
+      let result = await jm.submitMineral('division', MINERAL_COMPUTE, {from: accounts[0]});
       assert.web3Event(result, {
         event: 'MineralAdded',
         args: {
           id: mineralId,
           name: 'division',
+          producer: accounts[0],
           category: MINERAL_COMPUTE,
         }
       });

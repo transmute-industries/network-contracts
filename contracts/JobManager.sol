@@ -10,6 +10,7 @@ contract JobManager {
   event MineralAdded (
     uint id,
     string name,
+    address producer,
     MineralCategory category
   );
 
@@ -22,12 +23,14 @@ contract JobManager {
 
   struct Mineral {
     string name;
+    address producer;
     MineralCategory category;
   }
 
   struct Job {
     uint mineralId;
     uint minPricePerMineral;
+    // TODO: Add consumer address
     uint expirationBlock;
   }
 
@@ -47,14 +50,14 @@ contract JobManager {
     } else {
       revert();
     }
-    minerals[numberOfMinerals] = Mineral(_name, mc);
-    emit MineralAdded(numberOfMinerals, _name, mc);
+    minerals[numberOfMinerals] = Mineral(_name, msg.sender, mc);
+    emit MineralAdded(numberOfMinerals, _name, msg.sender, mc);
     numberOfMinerals = numberOfMinerals.add(1);
   }
 
   function mineralIsValid(uint _mineralId) public view returns (bool) {
     Mineral memory m = minerals[_mineralId];
-    return m.category != MineralCategory.Null;
+    return m.producer != address(0);
   }
 
   function submitJob(uint _mineralId, uint _minPricePerMineral, uint _expirationBlock) external {
