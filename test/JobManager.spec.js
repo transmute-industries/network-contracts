@@ -53,7 +53,7 @@ contract('JobManager', accounts => {
       const mineralId = (await jm.numberOfMinerals.call()).toNumber();
       await jm.submitMineral("", MINERAL_COMPUTE);
       const mineral = await jm.minerals.call(mineralId);
-      let [name, _] = mineral;
+      let name = mineral[0];
       assert.equal("", name);
     });
   });
