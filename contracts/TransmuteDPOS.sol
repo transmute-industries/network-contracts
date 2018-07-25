@@ -99,7 +99,7 @@ contract TransmuteDPOS is TransmuteToken, RoundManager, ProviderPool {
   }
 
   function resignAsProvider(address _provider) internal {
-    require(providerStatus(_provider) != ProviderStatus.Unregistered);
+    require(providerStatus(_provider) == ProviderStatus.Registered);
     removeProvider(_provider);
     delete providers[_provider];
     emit ProviderResigned(_provider);
