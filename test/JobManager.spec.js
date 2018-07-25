@@ -6,7 +6,7 @@ contract('JobManager', accounts => {
 
   let jm;
   const MINERAL_COMPUTE = 1;
-  const MINEARL_STORAGE = 2;
+  const MINERAL_STORAGE = 2;
 
   describe('submitMineral', () => {
 
@@ -17,7 +17,7 @@ contract('JobManager', accounts => {
     it('should fail if category is not MINERAL_COMPUTE or MINERAL_STORAGE', async () => {
       await assertFail( jm.submitMineral("test", 0) );
       await jm.submitMineral("test", MINERAL_COMPUTE);
-      await jm.submitMineral("test", MINEARL_STORAGE);
+      await jm.submitMineral("test", MINERAL_STORAGE);
       await assertFail( jm.submitMineral("test", 3) );
     });
 
