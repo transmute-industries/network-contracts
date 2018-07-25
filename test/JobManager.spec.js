@@ -5,8 +5,8 @@ require('truffle-test-utils').init();
 contract('JobManager', accounts => {
 
   let jm;
-  const MINERAL_COMPUTE = 1;
-  const MINERAL_STORAGE = 2;
+  const MINERAL_COMPUTE = 0;
+  const MINERAL_STORAGE = 1;
 
   describe('submitMineral', () => {
 
@@ -15,10 +15,9 @@ contract('JobManager', accounts => {
     });
 
     it('should fail if category is not MINERAL_COMPUTE or MINERAL_STORAGE', async () => {
-      await assertFail( jm.submitMineral("test", 0) );
       await jm.submitMineral("test", MINERAL_COMPUTE);
       await jm.submitMineral("test", MINERAL_STORAGE);
-      await assertFail( jm.submitMineral("test", 3) );
+      await assertFail( jm.submitMineral("test", 2) );
     });
 
     it('should store the Mineral in the minerals mapping', async () => {

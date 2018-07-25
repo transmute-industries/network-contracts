@@ -5,7 +5,7 @@ import "zeppelin-solidity/contracts/math/SafeMath.sol";
 contract JobManager {
   using SafeMath for uint;
 
-  enum MineralCategory { Null, Compute, Storage }
+  enum MineralCategory { Compute, Storage }
 
   event MineralAdded (
     uint id,
