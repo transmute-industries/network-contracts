@@ -11,7 +11,7 @@ class BlockMiner {
   async mineUntilEndOfElectionPeriod(roundManager) {
     const startOfCurrentRound = await roundManager.startOfCurrentRound.call();
     const electionPeriodLength = await roundManager.electionPeriodLength.call();
-    const electionPeriodEndBlock = startOfCurrentRound.add(electionPeriodLength);
+    const electionPeriodEndBlock = startOfCurrentRound.add(electionPeriodLength).sub(1);
     await this.mineUntilBlock(electionPeriodEndBlock);
   }
 
