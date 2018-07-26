@@ -30,6 +30,9 @@ contract('integration/TransmuteDPOS', accounts => {
 
     before(async () => {
       await reset();
+      // Make sure that block.number > electionPeriodLength otherwise some tests containing initializeRound might fail
+      // it is ok to do this because in the main network block.number >> 100
+      await blockMiner.mine(100);
     });
 
     it('provider1 delegates tokens to himself before calling provider()', async () => {
