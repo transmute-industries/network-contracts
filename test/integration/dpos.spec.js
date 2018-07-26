@@ -6,23 +6,16 @@ contract('integration/TransmuteDPOS', accounts => {
   let tdpos;
   let contractAddress;
   const PROVIDER_POOL_SIZE = 4;
+
   // Provider states
   const PROVIDER_UNREGISTERED = 0;
   const PROVIDER_REGISTERED = 1;
-
-  // Delegator states
-  const DELEGATOR_UNBONDED = 0;
-  const DELEGATOR_UNBONDED_WITH_TOKENS_TO_WITHDRAW = 1;
-  const DELEGATOR_BONDED = 2;
 
   let provider1 = accounts[1];
   let provider2 = accounts[2];
   let provider3 = accounts[3];
   let provider4 = accounts[4];
   let provider5 = accounts[5];
-  let delegator1 = accounts[6];
-  let delegator2 = accounts[7];
-  let delegator3 = accounts[8];
 
   async function reset() {
     tdpos = await TransmuteDPOS.new();
