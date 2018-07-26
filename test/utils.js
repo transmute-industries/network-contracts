@@ -7,19 +7,20 @@ class BlockMiner {
     }
   }
 
+  // TODO refactor
   async mineUntilEndOfElectionPeriod(roundManager) {
+    const startOfCurrentRound = await roundManager.startOfCurrentRound.call();
     const electionPeriodLength = await roundManager.electionPeriodLength.call();
-    const currentBlockNumber = web3.eth.blockNumber;
-    const padding = electionPeriodLength - currentBlockNumber % electionPeriodLength - 1;
-    await this.mine(padding);
+    const electionPeriodEndBlock = startOfCurrentRound.add(electionPeriodLength);
+    await this.mineUntilBlock(electionPeriodEndBlock);
   }
 
   async mineUntilLastBlockBeforeLockPeriod(roundManager) {
+    const startOfCurrentRound = await roundManager.startOfCurrentRound.call();
     const electionPeriodLength = await roundManager.electionPeriodLength.call();
     const rateLockDeadline = await roundManager.rateLockDeadline.call();
-    const currentBlockNumber = web3.eth.blockNumber;
-    const padding = electionPeriodLength - rateLockDeadline - 1 - currentBlockNumber % electionPeriodLength - 1;
-    await this.mine(padding);
+    const rateLockDeadlineBlock = startOfCurrentRound.add(electionPeriodLength).sub(rateLockDeadline).sub(2);
+    await this.mineUntilBlock(rateLockDeadlineBlock);
   }
 
   async mineUntilBlock(blockNumber) {
