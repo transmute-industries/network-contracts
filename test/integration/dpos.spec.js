@@ -1,5 +1,5 @@
 const TransmuteDPOS = artifacts.require('./TestTransmuteDPOS.sol');
-const { blockMiner, assertFail } = require('../utils.js');
+const { blockMiner, assertFail, roundManagerHelper } = require('../utils.js');
 
 contract('integration/TransmuteDPOS', accounts => {
 
@@ -96,10 +96,8 @@ contract('integration/TransmuteDPOS', accounts => {
     });
 
     it('provider4 fails to register because rateLockDeadline has passed for the current round', async () => {
-      // Enter rateLockDeadline
-      await blockMiner.mineUntilLastBlockBeforeLockPeriod(tdpos);
-      // TODO: remove
-      await blockMiner.mine(1);
+      const rateLockDeadlineBlock = await roundManagerHelper.getRateLockDeadlineBlock(tdpos);
+      await blockMiner.mineUntilBlock(rateLockDeadlineBlock);
       await assertFail( tdpos.provider(22, 10, 1, 25, {from: provider4}) );
     });
 
@@ -108,7 +106,8 @@ contract('integration/TransmuteDPOS', accounts => {
     });
 
     it('someone calls initializeRound() after Election Period is over', async () => {
-      await blockMiner.mineUntilEndOfElectionPeriod(tdpos);
+      const electionPeriodEndBlock = await roundManagerHelper.getElectionPeriodEndBlock(tdpos);
+      await blockMiner.mineUntilBlock(electionPeriodEndBlock);
       const roundNumber = await tdpos.roundNumber.call();
       await tdpos.initializeRound();
       assert.deepEqual(roundNumber.add(1), await tdpos.roundNumber.call());

@@ -1,3 +1,22 @@
+class RoundManagerHelper {
+  // At that block, a new round can be initialized
+  async getElectionPeriodEndBlock(roundManager) {
+    const startOfCurrentRound = await roundManager.startOfCurrentRound.call();
+    const electionPeriodLength = await roundManager.electionPeriodLength.call();
+    return startOfCurrentRound.add(electionPeriodLength).sub(1).toNumber();
+  }
+
+  // At that block, a provider can no longer update his parameters
+  async getRateLockDeadlineBlock(roundManager) {
+    const startOfCurrentRound = await roundManager.startOfCurrentRound.call();
+    const electionPeriodLength = await roundManager.electionPeriodLength.call();
+    const rateLockDeadline = await roundManager.rateLockDeadline.call();
+    return startOfCurrentRound.add(electionPeriodLength).sub(rateLockDeadline).sub(1);
+  }
+}
+
+module.exports.roundManagerHelper = new RoundManagerHelper();
+
 class BlockMiner {
   async mine(numberOfBlocks) {
     for(let i = 0; i < numberOfBlocks; i++) {
@@ -5,22 +24,6 @@ class BlockMiner {
         web3.currentProvider.sendAsync({ method: "evm_mine", id: i }, resolve);
       });
     }
-  }
-
-  // TODO refactor
-  async mineUntilEndOfElectionPeriod(roundManager) {
-    const startOfCurrentRound = await roundManager.startOfCurrentRound.call();
-    const electionPeriodLength = await roundManager.electionPeriodLength.call();
-    const electionPeriodEndBlock = startOfCurrentRound.add(electionPeriodLength).sub(1);
-    await this.mineUntilBlock(electionPeriodEndBlock);
-  }
-
-  async mineUntilLastBlockBeforeLockPeriod(roundManager) {
-    const startOfCurrentRound = await roundManager.startOfCurrentRound.call();
-    const electionPeriodLength = await roundManager.electionPeriodLength.call();
-    const rateLockDeadline = await roundManager.rateLockDeadline.call();
-    const rateLockDeadlineBlock = startOfCurrentRound.add(electionPeriodLength).sub(rateLockDeadline).sub(2);
-    await this.mineUntilBlock(rateLockDeadlineBlock);
   }
 
   async mineUntilBlock(blockNumber) {
