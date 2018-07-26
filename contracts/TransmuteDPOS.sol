@@ -71,8 +71,8 @@ contract TransmuteDPOS is TransmuteToken, RoundManager, ProviderPool {
   // FIXME: Those are temporary values
   constructor() public {
     // Set constants from RoundManager
-    electionPeriodLength = 20;
-    rateLockDeadline = 5;
+    electionPeriodLength = 50;
+    rateLockDeadline = 10;
     unbondingPeriod = 10;
   }
 
