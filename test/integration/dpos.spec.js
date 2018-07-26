@@ -24,17 +24,6 @@ contract('integration/TransmuteDPOS', accounts => {
   let delegator2 = accounts[7];
   let delegator3 = accounts[8];
 
-  // This is a convenience function for the process of registering a new provider.
-  // Step 1: Approve the transfer of amountBonded tokens (ERC20 spec)
-  // Step 2: Bond the amount to the provider
-  // Step 3: Registering parameters with provider()
-  async function registerProvider(pricePerStorageMineral, pricePerComputeMineral, blockRewardCut, feeShare, amountBonded, provider) {
-      // This approve function comes from the ERC20 Transmute Token contract
-      await tdpos.approve(contractAddress, amountBonded, {from: provider});
-      await tdpos.bond(provider, amountBonded, {from: provider});
-      await tdpos.provider(pricePerStorageMineral, pricePerComputeMineral, blockRewardCut, feeShare, {from: provider});
-  }
-
   async function reset() {
     tdpos = await TransmuteDPOS.new();
     contractAddress = tdpos.address;
@@ -44,14 +33,10 @@ contract('integration/TransmuteDPOS', accounts => {
     await tdpos.setMaxNumberOfProviders(PROVIDER_POOL_SIZE);
   }
 
-  let beginning;
-
   describe('Registering as Providers', () => {
 
     before(async () => {
       await reset();
-      beginning = web3.eth.blockNumber;
-
     });
 
     it('provider1 delegates tokens to himself before calling provider()', async () => {
