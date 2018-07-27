@@ -1,5 +1,5 @@
 const TransmuteDPOS = artifacts.require('./TestTransmuteDPOS.sol');
-const { blockMiner, assertFail } = require('./utils.js');
+const { blockMiner, assertFail, roundManagerHelper } = require('../utils.js');
 require('truffle-test-utils').init();
 
 contract('TransmuteDPOS', accounts => {
@@ -34,7 +34,8 @@ contract('TransmuteDPOS', accounts => {
       await tdpos.mint(accounts[i], 1000, {from: accounts[0]});
     }
     await tdpos.setMaxNumberOfProviders(PROVIDER_POOL_SIZE);
-    await blockMiner.mineUntilEndOfElectionPeriod(tdpos);
+    const electionPeriodEndBlock = await roundManagerHelper.getElectionPeriodEndBlock(tdpos);
+    await blockMiner.mineUntilBlock(electionPeriodEndBlock);
     await tdpos.initializeRound();
   }
 
@@ -50,7 +51,8 @@ contract('TransmuteDPOS', accounts => {
     });
 
     beforeEach(async () => {
-      await blockMiner.mineUntilEndOfElectionPeriod(tdpos);
+      const electionPeriodEndBlock = await roundManagerHelper.getElectionPeriodEndBlock(tdpos);
+      await blockMiner.mineUntilBlock(electionPeriodEndBlock);
       await tdpos.initializeRound();
     });
 
@@ -90,12 +92,15 @@ contract('TransmuteDPOS', accounts => {
     });
 
     it('should fail if not called during an active round', async () => {
-      await blockMiner.mineUntilEndOfElectionPeriod(tdpos);
+      const electionPeriodEndBlock = await roundManagerHelper.getElectionPeriodEndBlock(tdpos);
+      await blockMiner.mineUntilBlock(electionPeriodEndBlock);
       await assertFail( tdpos.provider(22, 10, 1, 25, {from: accounts[0]}) );
     });
 
     it('should work if called before the lock period of an active round', async () => {
-      await blockMiner.mineUntilLastBlockBeforeLockPeriod(tdpos);
+      const rateLockDeadlineBlock = await roundManagerHelper.getRateLockDeadlineBlock(tdpos);
+      // One block before lock deadline
+      await blockMiner.mineUntilBlock(rateLockDeadlineBlock - 1);
       await tdpos.provider(23, 10, 1, 25, {from: accounts[0]});
       const provider = await tdpos.providers(accounts[0]);
       const pricePerStorageMineral = provider[0];
@@ -103,9 +108,9 @@ contract('TransmuteDPOS', accounts => {
     });
 
     it('should fail during the lock period of an active round', async () => {
-      await blockMiner.mineUntilLastBlockBeforeLockPeriod(tdpos);
-      // Enter lock period
-      await blockMiner.mine(1);
+      const rateLockDeadlineBlock = await roundManagerHelper.getRateLockDeadlineBlock(tdpos);
+      // lock deadline block
+      await blockMiner.mineUntilBlock(rateLockDeadlineBlock);
       await assertFail( tdpos.provider(22, 10, 1, 25, {from: accounts[0]}) );
     });
 

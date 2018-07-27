@@ -1,5 +1,5 @@
 const JobManager = artifacts.require('./JobManager.sol');
-const { assertFail } = require('./utils.js');
+const { assertFail } = require('../utils.js');
 require('truffle-test-utils').init();
 
 contract('JobManager', accounts => {

@@ -17,6 +17,7 @@ contract RoundManager is Ownable {
   uint public unbondingPeriod;
 
   modifier onlyBeforeActiveRoundIsLocked() {
+    require(roundNumber > 0);
     require(block.number.sub(startOfCurrentRound) < electionPeriodLength.sub(rateLockDeadline));
     _;
   }
