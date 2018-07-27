@@ -11,11 +11,8 @@ contract('integration/TransmuteDPOS', accounts => {
   const PROVIDER_UNREGISTERED = 0;
   const PROVIDER_REGISTERED = 1;
 
-  let provider1 = accounts[1];
-  let provider2 = accounts[2];
-  let provider3 = accounts[3];
-  let provider4 = accounts[4];
-  let provider5 = accounts[5];
+  let provider1, provider2, provider3, provider4, provider5;
+  let delegator1, delegator2, delegator3, delegator4, delegator5;
 
   async function reset() {
     tdpos = await TransmuteDPOS.new();
@@ -33,6 +30,11 @@ contract('integration/TransmuteDPOS', accounts => {
       // Make sure that block.number > electionPeriodLength otherwise some tests containing initializeRound might fail
       // it is ok to do this because in the main network block.number >> 100
       await blockMiner.mine(100);
+      provider1 = accounts[1];
+      provider2 = accounts[2];
+      provider3 = accounts[3];
+      provider4 = accounts[4];
+      provider5 = accounts[5];
     });
 
     it('provider1 delegates tokens to himself before calling provider()', async () => {
@@ -133,6 +135,65 @@ contract('integration/TransmuteDPOS', accounts => {
       let size = providerPool[3];
       assert.deepEqual(maxSize, size);
       await assertFail( tdpos.provider(22, 10, 1, 25, {from: provider5}) );
+    });
+  });
+
+
+  describe.only('Delegating tokens', () => {
+
+    before(async () => {
+      await reset();
+      provider1 = accounts[1];
+      provider2 = accounts[2];
+      delegator1 = accounts[3];
+      delegator2 = accounts[4];
+      delegator3 = accounts[5];
+      delegator4 = accounts[6];
+      delegator5 = accounts[7];
+      await tdpos.initializeRound();
+      // Register provider1
+      await tdpos.approve(contractAddress, 100, {from: provider1});
+      await tdpos.bond(provider1, 100, {from: provider1});
+      await tdpos.provider(22, 10, 1, 25, {from: provider1});
+      // Register provider2
+      await tdpos.approve(contractAddress, 200, {from: provider2});
+      await tdpos.bond(provider2, 200, {from: provider2});
+      await tdpos.provider(22, 10, 1, 25, {from: provider2});
+    });
+
+    it("delegator1 fails to delegate his tokens to provider1 because he didn't approve the transfer first", async () => {
+      await assertFail( tdpos.bond(provider1, 100, {from: delegator1}) );
+    });
+
+    it("delegator1 approves the transfer of his tokens", async () => {
+      await tdpos.approve(contractAddress, 100, {from: delegator1});
+    });
+
+    it("delegator1 delegates his tokens to provider1", async () => {
+      await tdpos.bond(provider1, 100, {from: delegator1});
+    });
+
+    it('delegator2 fails to delegate to provider1 because amount delegated is zero', async () => {
+      await tdpos.approve(contractAddress, 100, {from: delegator2});
+      await assertFail( tdpos.bond(provider1, 0, {from: delegator2}) );
+    });
+
+    it('delegator2 delegates non zero amount of tokens to provider1', async () => {
+      await tdpos.bond(provider1, 100, {from: delegator2});
+    });
+
+    it('delegator3 fails to delegate to provider3 because provider3 is not a Registered Provider', async () => {
+      await tdpos.approve(contractAddress, 100, {from: delegator3});
+      await assertFail( tdpos.bond(provider3, 100, {from: delegator3}) );
+    });
+
+    it('delegator3 delegates to provider2', async () => {
+      await tdpos.bond(provider2, 100, {from: delegator3});
+    });
+
+    it('delegator4 delegates to himself', async () => {
+      await tdpos.approve(contractAddress, 100, {from: delegator4});
+      await tdpos.bond(delegator4, 100, {from: delegator4});
     });
   });
 });
