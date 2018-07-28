@@ -137,7 +137,7 @@ contract('integration/TransmuteDPOS', (accounts) => {
   });
 
 
-  describe.only('Delegating tokens', () => {
+  describe('Delegating tokens', () => {
     before(async () => {
       await reset();
       provider1 = accounts[1];
@@ -146,7 +146,6 @@ contract('integration/TransmuteDPOS', (accounts) => {
       delegator2 = accounts[4];
       delegator3 = accounts[5];
       delegator4 = accounts[6];
-      delegator5 = accounts[7];
       await tdpos.initializeRound();
       // Register provider1
       await tdpos.approve(contractAddress, 100, {from: provider1});
