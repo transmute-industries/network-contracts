@@ -1,4 +1,3 @@
-
 const Web3 = require('web3');
 
 module.exports = {
@@ -6,7 +5,7 @@ module.exports = {
   networks: {
     development: {
       provider: new Web3.providers.HttpProvider('http://localhost:8545'),
-      network_id: '*' // Match any network id
-    }
-  }
+      network_id: '*', // Match any network id
+    },
+  },
 };
