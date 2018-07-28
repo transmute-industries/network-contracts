@@ -18,10 +18,3 @@ ganache-cli
 npm run test:unit
 npm run test:integration
 ```
-
-## Install linters:
-
-```
-npm install -g solium
-npm install -g eslint
-```
