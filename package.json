@@ -18,6 +18,8 @@
   },
   "devDependencies": {
     "coveralls": "^3.0.2",
+    "eslint": "^5.2.0",
+    "eslint-config-google": "^0.9.1",
     "solidity-coverage": "^0.5.5"
   }
 }
