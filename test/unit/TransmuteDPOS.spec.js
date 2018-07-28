@@ -1,9 +1,8 @@
 const TransmuteDPOS = artifacts.require('./TestTransmuteDPOS.sol');
-const { blockMiner, assertFail, roundManagerHelper } = require('../utils.js');
+const {blockMiner, assertFail, roundManagerHelper} = require('../utils.js');
 require('truffle-test-utils').init();
 
-contract('TransmuteDPOS', accounts => {
-
+contract('TransmuteDPOS', (accounts) => {
   let tdpos;
   let contractAddress;
   const PROVIDER_POOL_SIZE = 5;
@@ -30,7 +29,7 @@ contract('TransmuteDPOS', accounts => {
   async function initNew() {
     tdpos = await TransmuteDPOS.new();
     contractAddress = tdpos.address;
-    for(let i = 0; i < 10; i++) {
+    for (let i = 0; i < 10; i++) {
       await tdpos.mint(accounts[i], 1000, {from: accounts[0]});
     }
     await tdpos.setMaxNumberOfProviders(PROVIDER_POOL_SIZE);
@@ -40,11 +39,10 @@ contract('TransmuteDPOS', accounts => {
   }
 
   describe('provider', () => {
-
     before(async () => {
       tdpos = await TransmuteDPOS.deployed();
       contractAddress = tdpos.address;
-      for(let i = 0; i < 5; i++) {
+      for (let i = 0; i < 5; i++) {
         await tdpos.mint(accounts[i], 1000, {from: accounts[0]});
       }
       await tdpos.setMaxNumberOfProviders(PROVIDER_POOL_SIZE);
@@ -67,7 +65,7 @@ contract('TransmuteDPOS', accounts => {
       assert.equal(42, totalBondedAmount);
     });
 
-    it("should register a Provider's parameters", async () => {
+    it('should register a Provider\'s parameters', async () => {
       assert.equal(PROVIDER_UNREGISTERED, await tdpos.providerStatus.call(accounts[1]));
       await approveBondProvider(10, 20, 2, 35, 1, accounts[1]);
       const provider = await tdpos.providers.call(accounts[1]);
@@ -124,7 +122,7 @@ contract('TransmuteDPOS', accounts => {
           _pricePerComputeMineral: 10,
           _blockRewardCut: 1,
           _feeShare: 25,
-        }
+        },
       });
     });
 
@@ -138,7 +136,7 @@ contract('TransmuteDPOS', accounts => {
           _pricePerComputeMineral: 11,
           _blockRewardCut: 2,
           _feeShare: 24,
-        }
+        },
       });
     });
 
@@ -160,18 +158,18 @@ contract('TransmuteDPOS', accounts => {
       const maxSize = providerPool[2].toNumber();
       let currentSize = providerPool[3];
       assert.isAbove(maxSize, currentSize.toNumber());
-      await approveBondProvider(20 ,10, 2, 25, 1, accounts[4]);
+      await approveBondProvider(20, 10, 2, 25, 1, accounts[4]);
       providerPool = await tdpos.providerPool.call();
       currentSize = providerPool[3];
       assert.equal(maxSize, currentSize);
-      await assertFail( approveBondProvider(20 ,10, 2, 25, 1, accounts[5]) );
+      await assertFail( approveBondProvider(20, 10, 2, 25, 1, accounts[5]) );
     });
 
     it('should work if Provider is Registered and size == maxSize', async () => {
       let provider = await tdpos.providers.call(accounts[4]);
       pricePerStorageMineral = provider[0];
       assert.equal(20, pricePerStorageMineral);
-      await tdpos.provider(21 ,10, 2, 25, {from: accounts[4]});
+      await tdpos.provider(21, 10, 2, 25, {from: accounts[4]});
       provider = await tdpos.providers.call(accounts[4]);
       pricePerStorageMineral = provider[0];
       assert.equal(21, pricePerStorageMineral);
@@ -179,7 +177,6 @@ contract('TransmuteDPOS', accounts => {
   });
 
   describe('resignAsProvider', () => {
-
     before(async () => {
       await initNew();
       await approveBondProvider(22, 10, 1, 25, 1, accounts[0]);
@@ -188,7 +185,6 @@ contract('TransmuteDPOS', accounts => {
     });
 
     it('should remove the Provider from the provider mapping', async () => {
-      const registeredProvider = await tdpos.providers.call(accounts[0]);
       let providerStatus = await tdpos.providerStatus.call(accounts[0]);
       assert.equal(PROVIDER_REGISTERED, providerStatus);
       await tdpos.publicResignAsProvider(accounts[0]);
@@ -216,17 +212,16 @@ contract('TransmuteDPOS', accounts => {
         event: 'ProviderResigned',
         args: {
           _provider: accounts[2],
-        }
+        },
       });
     });
 
-    it("should fail if the transaction's sender is not a Provider", async () => {
+    it('should fail if the transaction\'s sender is not a Provider', async () => {
       await assertFail( tdpos.publicResignAsProvider(accounts[3]) );
     });
   });
 
   describe('bond', () => {
-
     before(async () => {
       await initNew();
       await approveBondProvider(22, 10, 1, 25, 1, accounts[0]);
@@ -261,12 +256,12 @@ contract('TransmuteDPOS', accounts => {
     });
 
     it('should fail if the address is not a registered Provider address', async () => {
-      await tdpos.approve(contractAddress, 15, {from: accounts[7]})
+      await tdpos.approve(contractAddress, 15, {from: accounts[7]});
       await assertFail( tdpos.bond(accounts[2], 15, {from: accounts[7]}) );
     });
 
     it('should work if the address is not a registered Provider address but the address is the sender address', async () => {
-      await tdpos.approve(contractAddress, 15, {from: accounts[3]})
+      await tdpos.approve(contractAddress, 15, {from: accounts[3]});
       await tdpos.bond(accounts[3], 15, {from: accounts[3]});
     });
 
@@ -278,13 +273,13 @@ contract('TransmuteDPOS', accounts => {
 
     it('should fail if TST balance is less than bonded amount', async () => {
       await tdpos.approve(contractAddress, 1001, {from: accounts[9]});
-      await assertFail( tdpos.bond(accounts[1], 1001, {from: accounts[9]}) )
+      await assertFail( tdpos.bond(accounts[1], 1001, {from: accounts[9]}) );
       const provider = await tdpos.providers.call(accounts[1]);
       const totalAmountBonded = provider[4];
       assert(1001 >= totalAmountBonded);
     });
 
-    it("should transfer amount from the Delegator's balance to the contract's balance", async () => {
+    it('should transfer amount from the Delegator\'s balance to the contract\'s balance', async () => {
       const contractBalance = (await tdpos.balanceOf(tdpos.address)).toNumber();
       assert.equal(1000, await tdpos.balanceOf(accounts[9]));
       await tdpos.bond(accounts[1], 300, {from: accounts[9]});
@@ -316,14 +311,13 @@ contract('TransmuteDPOS', accounts => {
         args: {
           _delegator: accounts[4],
           _provider: accounts[0],
-          _amount: 300
-        }
+          _amount: 300,
+        },
       });
     });
   });
 
   describe('unbond', () => {
-
     before(async () => {
       await initNew();
       await approveBondProvider(22, 10, 1, 25, 1, accounts[0]);
@@ -343,7 +337,7 @@ contract('TransmuteDPOS', accounts => {
       await assertFail( tdpos.unbond({from: accounts[9]}) );
     });
 
-    it("should set withdrawInformation for the Delegator's address", async () => {
+    it('should set withdrawInformation for the Delegator\'s address', async () => {
       let withdrawInformation = await tdpos.withdrawInformations.call(accounts[2]);
       let withdrawBlock = withdrawInformation[0];
       assert.equal(0, withdrawBlock);
@@ -393,14 +387,13 @@ contract('TransmuteDPOS', accounts => {
         args: {
           _delegator: accounts[5],
           _provider: accounts[0],
-          _amount: 300
-        }
+          _amount: 300,
+        },
       });
     });
   });
 
   describe('delegatorStatus', () => {
-
     before(async () => {
       await initNew();
       await approveBondProvider(22, 10, 1, 25, 1, accounts[0]);
@@ -439,7 +432,6 @@ contract('TransmuteDPOS', accounts => {
   });
 
   describe('providerStatus', () => {
-
     before(async () => {
       await initNew();
       await approveBondProvider(22, 10, 1, 25, 1, accounts[0]);
@@ -460,7 +452,6 @@ contract('TransmuteDPOS', accounts => {
   });
 
   describe('withdraw', () => {
-
     before(async () => {
       await initNew();
       await approveBondProvider(22, 10, 1, 25, 1, accounts[0]);
@@ -502,7 +493,7 @@ contract('TransmuteDPOS', accounts => {
       await blockMiner.mineUntilBlock(withdrawBlock - 1);
       await tdpos.withdraw({from: accounts[3]});
       const newBalance = await tdpos.balanceOf(accounts[3]);
-      assert.equal(previousBalance.plus(300).toNumber(), await tdpos.balanceOf(accounts[3]));
+      assert.equal(previousBalance.plus(300).toNumber(), newBalance);
     });
 
     it('should switch Delegator status to Unbonded', async () => {

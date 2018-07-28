@@ -1,11 +1,10 @@
 // Here we use the TestProviderPool contract instead of the ProviderPool
-// This is to be able to test the addProvider function which has internal visibility 
+// This is to be able to test the addProvider function which has internal visibility
 // through the publicAddProvider function from TestProviderPool which has public visibility
 const ProviderPool = artifacts.require('./TestProviderPool.sol');
-const { blockMiner, assertFail } = require('../utils.js');
+const {assertFail} = require('../utils.js');
 
-contract('ProviderPool', accounts => {
-
+contract('ProviderPool', (accounts) => {
   let pp;
 
   async function assertProvidersAreSortedByBondedAmount() {
@@ -17,7 +16,7 @@ contract('ProviderPool', accounts => {
     let currentAddress = providerPool[0]; // [0] is head of the list
     let node = await pp.getProvider.call(currentAddress);
     let end = providerPool[1]; // [1] is tail of the list
-    while(currentAddress != end) {
+    while (currentAddress != end) {
       assert(bondedAmountOfPreviousAddress >= node[0]); // [0] is the bondedAmount
       assert.equal(node[2], previousAddress); // [2] is previous address in the list
       bondedAmountOfPreviousAddress = node[0].toNumber();
@@ -28,7 +27,6 @@ contract('ProviderPool', accounts => {
   }
 
   describe('setMaxNumberOfProviders', () => {
-
     before(async () => {
       pp = await ProviderPool.deployed();
     });
@@ -41,17 +39,16 @@ contract('ProviderPool', accounts => {
       assert.equal(7, providerPool[2]);
     });
 
-    it("should fail if it is not called from the owner's address", async () => {
+    it('should fail if it is not called from the owner\'s address', async () => {
       await assertFail( pp.setMaxNumberOfProviders(10, {from: accounts[1]}) );
     });
 
-    it("should fail if new size is less than current size", async () => {
+    it('should fail if new size is less than current size', async () => {
       await assertFail( pp.setMaxNumberOfProviders(6, {from: accounts[0]}) );
     });
   });
 
   describe('addProvider', () => {
-
     it('should add a provider to the pool', async () => {
       let providerPool = await pp.providerPool.call();
       assert.equal(0, providerPool[0]); // address head
@@ -90,7 +87,6 @@ contract('ProviderPool', accounts => {
   });
 
   describe('containsProvider', () => {
-
     before(async () => {
       pp = await ProviderPool.new();
       await pp.setMaxNumberOfProviders(10, {from: accounts[0]});
@@ -107,7 +103,6 @@ contract('ProviderPool', accounts => {
   });
 
   describe('updateProvider', () => {
-
     before(async () => {
       pp = await ProviderPool.new();
       await pp.setMaxNumberOfProviders(10, {from: accounts[0]});
@@ -120,20 +115,22 @@ contract('ProviderPool', accounts => {
 
     it('should update the new key', async () => {
       let provider = await pp.getProvider(accounts[0]);
-      assert.equal(1, provider[0]); //[0] is the key (ie totalBondedAmount)
+      let totalBondedAmount = provider[0];
+      assert.equal(1, totalBondedAmount);
       await pp.publicUpdateProvider(accounts[0], 9);
       provider = await pp.getProvider(accounts[0]);
-      assert.equal(9, provider[0]);
+      totalBondedAmount = provider[0];
+      assert.equal(9, totalBondedAmount);
     });
 
     it('should keep the value sorted', async () => {
       await pp.publicUpdateProvider(accounts[1], 10);
-      await assertProvidersAreSortedByBondedAmount()
+      await assertProvidersAreSortedByBondedAmount();
     });
 
     it('should maintain the size of the pool constant', async () => {
       let providerPool = await pp.providerPool.call();
-      const previousSize = providerPool[3].toNumber(); // [3] is the current size of the pool
+      const previousSize = providerPool[3].toNumber();
       await pp.publicUpdateProvider(accounts[2], 20);
       providerPool = await pp.providerPool.call();
       assert.equal(previousSize, providerPool[3]);
@@ -141,7 +138,7 @@ contract('ProviderPool', accounts => {
 
     it('should remove the provider if updated totalBondedAmount is zero', async () => {
       let providerPool = await pp.providerPool.call();
-      const previousSize = providerPool[3].toNumber(); // [3] is the current size of the pool
+      const previousSize = providerPool[3].toNumber();
       assert.equal(true, await pp.containsProvider(accounts[2]));
       await pp.publicUpdateProvider(accounts[2], 0);
       assert.equal(false, await pp.containsProvider(accounts[2]));
@@ -155,7 +152,6 @@ contract('ProviderPool', accounts => {
   });
 
   describe('removeProvider', () => {
-
     it('should remove the provider from the pool', async () => {
       assert.equal(true, await pp.containsProvider(accounts[0]));
       await pp.publicRemoveProvider(accounts[0]);
@@ -164,7 +160,7 @@ contract('ProviderPool', accounts => {
 
     it('should decrease the size of the pool by one', async () => {
       let providerPool = await pp.providerPool.call();
-      const previousSize = providerPool[3].toNumber(); // [3] is the current size of the pool
+      const previousSize = providerPool[3].toNumber();
       await pp.publicRemoveProvider(accounts[1]);
       providerPool = await pp.providerPool.call();
       assert.equal(previousSize - 1, providerPool[3]);

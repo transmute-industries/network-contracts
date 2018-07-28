@@ -1,23 +1,21 @@
 const JobManager = artifacts.require('./JobManager.sol');
-const { assertFail } = require('../utils.js');
+const {assertFail} = require('../utils.js');
 require('truffle-test-utils').init();
 
-contract('JobManager', accounts => {
-
+contract('JobManager', (accounts) => {
   let jm;
   const MINERAL_COMPUTE = 0;
   const MINERAL_STORAGE = 1;
 
   describe('submitMineral', () => {
-
     before(async () => {
       jm = await JobManager.deployed();
     });
 
     it('should fail if category is not MINERAL_COMPUTE or MINERAL_STORAGE', async () => {
-      await jm.submitMineral("test", MINERAL_COMPUTE);
-      await jm.submitMineral("test", MINERAL_STORAGE);
-      await assertFail( jm.submitMineral("test", 2) );
+      await jm.submitMineral('test', MINERAL_COMPUTE);
+      await jm.submitMineral('test', MINERAL_STORAGE);
+      await assertFail( jm.submitMineral('test', 2) );
     });
 
     it('should store the Mineral in the minerals mapping', async () => {
@@ -33,7 +31,7 @@ contract('JobManager', accounts => {
     it('should increment numberOfMinerals', async () => {
       const numberOfMinerals = await jm.numberOfMinerals.call();
       await jm.submitMineral('addition', MINERAL_COMPUTE);
-      assert.deepEqual(numberOfMinerals.add(1), await jm.numberOfMinerals.call())
+      assert.deepEqual(numberOfMinerals.add(1), await jm.numberOfMinerals.call());
     });
 
     it('should emit a MineralAdded event', async () => {
@@ -46,28 +44,27 @@ contract('JobManager', accounts => {
           name: 'division',
           producer: accounts[0],
           category: MINERAL_COMPUTE,
-        }
+        },
       });
     });
 
     it('should fail if name is an empty string', async () => {
       const mineralId = (await jm.numberOfMinerals.call()).toNumber();
-      await assertFail( jm.submitMineral("", MINERAL_COMPUTE) );
-      await jm.submitMineral("non empty string", MINERAL_COMPUTE);
+      await assertFail( jm.submitMineral('', MINERAL_COMPUTE) );
+      await jm.submitMineral('non empty string', MINERAL_COMPUTE);
       const mineral = await jm.minerals.call(mineralId);
       let name = mineral[0];
-      assert.equal("non empty string", name);
+      assert.equal('non empty string', name);
     });
   });
 
   describe('submitJob', () => {
-
     let expirationBlock = web3.eth.blockNumber + 1000;
 
     before(async () => {
       jm = await JobManager.new();
-      await jm.submitMineral("multiplication", MINERAL_COMPUTE);
-      await jm.submitMineral("addition", MINERAL_COMPUTE);
+      await jm.submitMineral('multiplication', MINERAL_COMPUTE);
+      await jm.submitMineral('addition', MINERAL_COMPUTE);
     });
 
     it('should fail if mineralId is not the id of a valid Mineral', async () => {
@@ -103,15 +100,15 @@ contract('JobManager', accounts => {
           id: jobId.toNumber(),
           mineralId: 1,
           minPricePerMineral: 12,
-          expirationBlock: expirationBlock
-        }
+          expirationBlock: expirationBlock,
+        },
       });
     });
 
     it('should increment numberOfJobs', async () => {
       const numberOfJobs = await jm.numberOfJobs.call();
       await jm.submitJob(1, 12, expirationBlock);
-      assert.deepEqual(numberOfJobs.add(1), await jm.numberOfJobs.call())
+      assert.deepEqual(numberOfJobs.add(1), await jm.numberOfJobs.call());
     });
   });
 });

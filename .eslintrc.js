@@ -8,5 +8,6 @@ module.exports = {
     },
     "rules": {
         "max-len": "off",
+        "require-jsdoc": "off",
     }
 };

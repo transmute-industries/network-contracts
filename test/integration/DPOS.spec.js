@@ -1,8 +1,7 @@
 const TransmuteDPOS = artifacts.require('./TestTransmuteDPOS.sol');
-const { blockMiner, assertFail, roundManagerHelper } = require('../utils.js');
+const {blockMiner, assertFail, roundManagerHelper} = require('../utils.js');
 
-contract('integration/TransmuteDPOS', accounts => {
-
+contract('integration/TransmuteDPOS', (accounts) => {
   let tdpos;
   let contractAddress;
   const PROVIDER_POOL_SIZE = 4;
@@ -11,20 +10,19 @@ contract('integration/TransmuteDPOS', accounts => {
   const PROVIDER_UNREGISTERED = 0;
   const PROVIDER_REGISTERED = 1;
 
-  let provider1, provider2, provider3, provider4, provider5;
-  let delegator1, delegator2, delegator3, delegator4, delegator5;
+  let provider1; let provider2; let provider3; let provider4; let provider5;
+  let delegator1; let delegator2; let delegator3; let delegator4;
 
   async function reset() {
     tdpos = await TransmuteDPOS.new();
     contractAddress = tdpos.address;
-    for(let i = 0; i < 10; i++) {
+    for (let i = 0; i < 10; i++) {
       await tdpos.mint(accounts[i], 1000, {from: accounts[0]});
     }
     await tdpos.setMaxNumberOfProviders(PROVIDER_POOL_SIZE);
   }
 
   describe('Registering as Providers', () => {
-
     before(async () => {
       await reset();
       // Make sure that block.number > electionPeriodLength otherwise some tests containing initializeRound might fail
@@ -62,7 +60,7 @@ contract('integration/TransmuteDPOS', accounts => {
       await assertFail( tdpos.initializeRound() );
     });
 
-    it("provider2 fails to register because he didn't delegate tokens to himself", async () => {
+    it('provider2 fails to register because he didn\'t delegate tokens to himself', async () => {
       await assertFail( tdpos.provider(22, 10, 1, 25, {from: provider2}) );
     });
 
@@ -140,7 +138,6 @@ contract('integration/TransmuteDPOS', accounts => {
 
 
   describe.only('Delegating tokens', () => {
-
     before(async () => {
       await reset();
       provider1 = accounts[1];
@@ -161,15 +158,15 @@ contract('integration/TransmuteDPOS', accounts => {
       await tdpos.provider(22, 10, 1, 25, {from: provider2});
     });
 
-    it("delegator1 fails to delegate his tokens to provider1 because he didn't approve the transfer first", async () => {
+    it('delegator1 fails to delegate his tokens to provider1 because he didn\'t approve the transfer first', async () => {
       await assertFail( tdpos.bond(provider1, 100, {from: delegator1}) );
     });
 
-    it("delegator1 approves the transfer of his tokens", async () => {
+    it('delegator1 approves the transfer of his tokens', async () => {
       await tdpos.approve(contractAddress, 100, {from: delegator1});
     });
 
-    it("delegator1 delegates his tokens to provider1", async () => {
+    it('delegator1 delegates his tokens to provider1', async () => {
       await tdpos.bond(provider1, 100, {from: delegator1});
     });
 
