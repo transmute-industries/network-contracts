@@ -7,7 +7,9 @@
     "test:unit": "truffle migrate --reset && truffle test test/unit/*",
     "test:integration": "truffle migrate --reset && truffle test test/integration/*",
     "test": "truffle migrate --reset && truffle test test/unit/* test/integration/*; ",
-    "coverage": "./node_modules/.bin/solidity-coverage"
+    "coverage": "./node_modules/.bin/solidity-coverage",
+    "linter:js": "./node_modules/.bin/eslint test/*",
+    "linter:js:fix":  "./node_modules/.bin/eslint test/* --fix"
   },
   "author": "",
   "license": "ISC",
@@ -18,6 +20,8 @@
   },
   "devDependencies": {
     "coveralls": "^3.0.2",
+    "eslint": "^5.2.0",
+    "eslint-config-google": "^0.9.1",
     "solidity-coverage": "^0.5.5"
   }
 }

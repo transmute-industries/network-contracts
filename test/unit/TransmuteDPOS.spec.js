@@ -1,15 +1,21 @@
 const TransmuteDPOS = artifacts.require('./TestTransmuteDPOS.sol');
-const { blockMiner, assertFail, roundManagerHelper } = require('../utils.js');
+const {blockMiner, assertFail, roundManagerHelper} = require('../utils.js');
 require('truffle-test-utils').init();
 
-contract('TransmuteDPOS', accounts => {
-
+contract('TransmuteDPOS', (accounts) => {
   let tdpos;
   let contractAddress;
   const PROVIDER_POOL_SIZE = 5;
   // Provider states
   const PROVIDER_UNREGISTERED = 0;
   const PROVIDER_REGISTERED = 1;
+
+  // Provider parameters
+  const PRICE_PER_STORAGE_MINERAL = 22;
+  const PRICE_PER_COMPUTE_MINERAL = 10;
+  const BLOCK_REWARD_CUT = 1;
+  const FEE_SHARE = 25;
+  const STANDARD_PROVIDER_PARAMETERS = [PRICE_PER_STORAGE_MINERAL, PRICE_PER_COMPUTE_MINERAL, BLOCK_REWARD_CUT, FEE_SHARE];
 
   // Delegator states
   const DELEGATOR_UNBONDED = 0;
@@ -30,7 +36,7 @@ contract('TransmuteDPOS', accounts => {
   async function initNew() {
     tdpos = await TransmuteDPOS.new();
     contractAddress = tdpos.address;
-    for(let i = 0; i < 10; i++) {
+    for (let i = 0; i < 10; i++) {
       await tdpos.mint(accounts[i], 1000, {from: accounts[0]});
     }
     await tdpos.setMaxNumberOfProviders(PROVIDER_POOL_SIZE);
@@ -40,11 +46,10 @@ contract('TransmuteDPOS', accounts => {
   }
 
   describe('provider', () => {
-
     before(async () => {
       tdpos = await TransmuteDPOS.deployed();
       contractAddress = tdpos.address;
-      for(let i = 0; i < 5; i++) {
+      for (let i = 0; i < 5; i++) {
         await tdpos.mint(accounts[i], 1000, {from: accounts[0]});
       }
       await tdpos.setMaxNumberOfProviders(PROVIDER_POOL_SIZE);
@@ -57,88 +62,89 @@ contract('TransmuteDPOS', accounts => {
     });
 
     it('should fail if the Provider does not bond some tokens on himself first', async () => {
-      await assertFail( tdpos.provider(22, 10, 1, 25, {from: accounts[0]}) );
+      await assertFail( tdpos.provider(...STANDARD_PROVIDER_PARAMETERS, {from: accounts[0]}) );
     });
 
     it('should initially set totalBondedAmount to the amount the Provider bonded to himself', async () => {
-      await approveBondProvider(22, 10, 1, 25, 42, accounts[0]);
+      await approveBondProvider(...STANDARD_PROVIDER_PARAMETERS, 42, accounts[0]);
       const provider = await tdpos.providers.call(accounts[0]);
       const totalBondedAmount = provider[4];
       assert.equal(42, totalBondedAmount);
     });
 
-    it("should register a Provider's parameters", async () => {
+    it('should register a Provider\'s parameters', async () => {
       assert.equal(PROVIDER_UNREGISTERED, await tdpos.providerStatus.call(accounts[1]));
-      await approveBondProvider(10, 20, 2, 35, 1, accounts[1]);
+      await approveBondProvider(...STANDARD_PROVIDER_PARAMETERS, 1, accounts[1]);
       const provider = await tdpos.providers.call(accounts[1]);
       let [pricePerStorageMineral, pricePerComputeMineral,
         blockRewardCut, feeShare] = provider;
       assert.equal(PROVIDER_REGISTERED, await tdpos.providerStatus.call(accounts[1]));
-      assert.equal(10, pricePerStorageMineral);
-      assert.equal(20, pricePerComputeMineral);
-      assert.equal(2, blockRewardCut);
-      assert.equal(35, feeShare);
+      assert.equal(PRICE_PER_STORAGE_MINERAL, pricePerStorageMineral);
+      assert.equal(PRICE_PER_COMPUTE_MINERAL, pricePerComputeMineral);
+      assert.equal(BLOCK_REWARD_CUT, blockRewardCut);
+      assert.equal(FEE_SHARE, feeShare);
     });
 
     it('should fail with invalid parameters', async () => {
-      await assertFail(
-        approveBondProvider(22, 10, -1, 25, 1, accounts[2]),
-        'provider should not be able to have a negative blockRewardCut'
-      );
-      await assertFail(
-        tdpos.provider(22, 10, 1, 125, {from: accounts[2]}),
-        'provider should not be able to have more than 100% feeShare'
-      );
+      const INVALID_BLOCK_REWARD_CUT = -1;
+      await assertFail( approveBondProvider(PRICE_PER_STORAGE_MINERAL, PRICE_PER_COMPUTE_MINERAL, INVALID_BLOCK_REWARD_CUT, FEE_SHARE, 1, accounts[2]) );
+      const INVALID_FEE_SHARE = 125;
+      await assertFail( tdpos.provider(PRICE_PER_STORAGE_MINERAL, PRICE_PER_COMPUTE_MINERAL, BLOCK_REWARD_CUT, INVALID_FEE_SHARE, {from: accounts[2]}) );
     });
 
     it('should fail if not called during an active round', async () => {
       const electionPeriodEndBlock = await roundManagerHelper.getElectionPeriodEndBlock(tdpos);
       await blockMiner.mineUntilBlock(electionPeriodEndBlock);
-      await assertFail( tdpos.provider(22, 10, 1, 25, {from: accounts[0]}) );
+      await assertFail( tdpos.provider(...STANDARD_PROVIDER_PARAMETERS, {from: accounts[0]}) );
     });
 
     it('should work if called before the lock period of an active round', async () => {
       const rateLockDeadlineBlock = await roundManagerHelper.getRateLockDeadlineBlock(tdpos);
       // One block before lock deadline
       await blockMiner.mineUntilBlock(rateLockDeadlineBlock - 1);
-      await tdpos.provider(23, 10, 1, 25, {from: accounts[0]});
+      const UPDATED_PRICE_PER_STORAGE_MINERAL = 23;
+      await tdpos.provider(UPDATED_PRICE_PER_STORAGE_MINERAL, PRICE_PER_COMPUTE_MINERAL, BLOCK_REWARD_CUT, FEE_SHARE, {from: accounts[0]});
       const provider = await tdpos.providers(accounts[0]);
       const pricePerStorageMineral = provider[0];
-      assert.equal(23, pricePerStorageMineral);
+      assert.equal(UPDATED_PRICE_PER_STORAGE_MINERAL, pricePerStorageMineral);
     });
 
     it('should fail during the lock period of an active round', async () => {
       const rateLockDeadlineBlock = await roundManagerHelper.getRateLockDeadlineBlock(tdpos);
       // lock deadline block
       await blockMiner.mineUntilBlock(rateLockDeadlineBlock);
-      await assertFail( tdpos.provider(22, 10, 1, 25, {from: accounts[0]}) );
+      await assertFail( tdpos.provider(...STANDARD_PROVIDER_PARAMETERS, {from: accounts[0]}) );
     });
 
     it('should send a ProviderAdded event for a new Provider', async () => {
-      const result = await tdpos.provider(22, 10, 1, 25, {from: accounts[2]});
+      const result = await tdpos.provider(...STANDARD_PROVIDER_PARAMETERS, {from: accounts[2]});
       assert.web3Event(result, {
         event: 'ProviderAdded',
         args: {
           _provider: accounts[2],
-          _pricePerStorageMineral: 22,
-          _pricePerComputeMineral: 10,
-          _blockRewardCut: 1,
-          _feeShare: 25,
-        }
+          _pricePerStorageMineral: PRICE_PER_STORAGE_MINERAL,
+          _pricePerComputeMineral: PRICE_PER_COMPUTE_MINERAL,
+          _blockRewardCut: BLOCK_REWARD_CUT,
+          _feeShare: FEE_SHARE,
+        },
       });
     });
 
     it('should send a ProviderUpdated event for an existing Provider', async () => {
-      const result = await tdpos.provider(21, 11, 2, 24, {from: accounts[2]});
+      const UPDATED_PRICE_PER_STORAGE_MINERAL = 21;
+      const UPDATED_PRICE_PER_COMPUTE_MINERAL = 11;
+      const UPDATED_BLOCK_REWARD_CUT = 2;
+      const UPDATED_FEE_SHARE = 24;
+      const result = await tdpos.provider(UPDATED_PRICE_PER_STORAGE_MINERAL, UPDATED_PRICE_PER_COMPUTE_MINERAL, UPDATED_BLOCK_REWARD_CUT, UPDATED_FEE_SHARE, {from: accounts[2]});
       assert.web3Event(result, {
         event: 'ProviderUpdated',
         args: {
           _provider: accounts[2],
-          _pricePerStorageMineral: 21,
-          _pricePerComputeMineral: 11,
-          _blockRewardCut: 2,
-          _feeShare: 24,
-        }
+          _pricePerStorageMineral: UPDATED_PRICE_PER_STORAGE_MINERAL,
+          _pricePerComputeMineral: UPDATED_PRICE_PER_COMPUTE_MINERAL,
+          _blockRewardCut: UPDATED_BLOCK_REWARD_CUT,
+          _feeShare: UPDATED_FEE_SHARE,
+        },
       });
     });
 
@@ -148,7 +154,7 @@ contract('TransmuteDPOS', accounts => {
       // Check the size of the pool increases by 1
       let providerPool = await tdpos.providerPool.call();
       const previousSize = providerPool[3].toNumber();
-      await approveBondProvider(21, 13, 3, 26, 1, accounts[3]);
+      await approveBondProvider(...STANDARD_PROVIDER_PARAMETERS, 1, accounts[3]);
       providerPool = await tdpos.providerPool.call();
       assert.equal(previousSize + 1, providerPool[3]);
       // Check that the provider is registered in the pool now
@@ -160,35 +166,35 @@ contract('TransmuteDPOS', accounts => {
       const maxSize = providerPool[2].toNumber();
       let currentSize = providerPool[3];
       assert.isAbove(maxSize, currentSize.toNumber());
-      await approveBondProvider(20 ,10, 2, 25, 1, accounts[4]);
+      await approveBondProvider(...STANDARD_PROVIDER_PARAMETERS, 1, accounts[4]);
       providerPool = await tdpos.providerPool.call();
       currentSize = providerPool[3];
       assert.equal(maxSize, currentSize);
-      await assertFail( approveBondProvider(20 ,10, 2, 25, 1, accounts[5]) );
+      await assertFail( approveBondProvider(...STANDARD_PROVIDER_PARAMETERS, 1, accounts[5]) );
     });
 
     it('should work if Provider is Registered and size == maxSize', async () => {
       let provider = await tdpos.providers.call(accounts[4]);
       pricePerStorageMineral = provider[0];
-      assert.equal(20, pricePerStorageMineral);
-      await tdpos.provider(21 ,10, 2, 25, {from: accounts[4]});
+      assert.equal(PRICE_PER_STORAGE_MINERAL, pricePerStorageMineral);
+       [];
+      const UPDATED_PRICE_PER_STORAGE_MINERAL = 21;
+      await tdpos.provider(UPDATED_PRICE_PER_STORAGE_MINERAL, PRICE_PER_COMPUTE_MINERAL, BLOCK_REWARD_CUT, FEE_SHARE, {from: accounts[4]});
       provider = await tdpos.providers.call(accounts[4]);
       pricePerStorageMineral = provider[0];
-      assert.equal(21, pricePerStorageMineral);
+      assert.equal(UPDATED_PRICE_PER_STORAGE_MINERAL, pricePerStorageMineral);
     });
   });
 
   describe('resignAsProvider', () => {
-
     before(async () => {
       await initNew();
-      await approveBondProvider(22, 10, 1, 25, 1, accounts[0]);
-      await approveBondProvider(22, 10, 1, 25, 1, accounts[1]);
-      await approveBondProvider(22, 10, 1, 25, 1, accounts[2]);
+      await approveBondProvider(...STANDARD_PROVIDER_PARAMETERS, 1, accounts[0]);
+      await approveBondProvider(...STANDARD_PROVIDER_PARAMETERS, 1, accounts[1]);
+      await approveBondProvider(...STANDARD_PROVIDER_PARAMETERS, 1, accounts[2]);
     });
 
     it('should remove the Provider from the provider mapping', async () => {
-      const registeredProvider = await tdpos.providers.call(accounts[0]);
       let providerStatus = await tdpos.providerStatus.call(accounts[0]);
       assert.equal(PROVIDER_REGISTERED, providerStatus);
       await tdpos.publicResignAsProvider(accounts[0]);
@@ -216,21 +222,20 @@ contract('TransmuteDPOS', accounts => {
         event: 'ProviderResigned',
         args: {
           _provider: accounts[2],
-        }
+        },
       });
     });
 
-    it("should fail if the transaction's sender is not a Provider", async () => {
+    it('should fail if the transaction\'s sender is not a Provider', async () => {
       await assertFail( tdpos.publicResignAsProvider(accounts[3]) );
     });
   });
 
   describe('bond', () => {
-
     before(async () => {
       await initNew();
-      await approveBondProvider(22, 10, 1, 25, 1, accounts[0]);
-      await approveBondProvider(10, 20, 2, 35, 1, accounts[1]);
+      await approveBondProvider(...STANDARD_PROVIDER_PARAMETERS, 1, accounts[0]);
+      await approveBondProvider(...STANDARD_PROVIDER_PARAMETERS, 1, accounts[1]);
     });
 
     it('should fail if the Delegator does not approve to transfer at least the bonded amount', async () => {
@@ -261,12 +266,12 @@ contract('TransmuteDPOS', accounts => {
     });
 
     it('should fail if the address is not a registered Provider address', async () => {
-      await tdpos.approve(contractAddress, 15, {from: accounts[7]})
+      await tdpos.approve(contractAddress, 15, {from: accounts[7]});
       await assertFail( tdpos.bond(accounts[2], 15, {from: accounts[7]}) );
     });
 
     it('should work if the address is not a registered Provider address but the address is the sender address', async () => {
-      await tdpos.approve(contractAddress, 15, {from: accounts[3]})
+      await tdpos.approve(contractAddress, 15, {from: accounts[3]});
       await tdpos.bond(accounts[3], 15, {from: accounts[3]});
     });
 
@@ -278,13 +283,13 @@ contract('TransmuteDPOS', accounts => {
 
     it('should fail if TST balance is less than bonded amount', async () => {
       await tdpos.approve(contractAddress, 1001, {from: accounts[9]});
-      await assertFail( tdpos.bond(accounts[1], 1001, {from: accounts[9]}) )
+      await assertFail( tdpos.bond(accounts[1], 1001, {from: accounts[9]}) );
       const provider = await tdpos.providers.call(accounts[1]);
       const totalAmountBonded = provider[4];
       assert(1001 >= totalAmountBonded);
     });
 
-    it("should transfer amount from the Delegator's balance to the contract's balance", async () => {
+    it('should transfer amount from the Delegator\'s balance to the contract\'s balance', async () => {
       const contractBalance = (await tdpos.balanceOf(tdpos.address)).toNumber();
       assert.equal(1000, await tdpos.balanceOf(accounts[9]));
       await tdpos.bond(accounts[1], 300, {from: accounts[9]});
@@ -309,25 +314,25 @@ contract('TransmuteDPOS', accounts => {
     });
 
     it('should emit the DelegateBonded event', async () => {
-      await tdpos.approve(contractAddress, 300, {from: accounts[4]});
-      const result = await tdpos.bond(accounts[0], 300, {from: accounts[4]});
+      const bondedAmount = 300;
+      await tdpos.approve(contractAddress, bondedAmount, {from: accounts[4]});
+      const result = await tdpos.bond(accounts[0], bondedAmount, {from: accounts[4]});
       assert.web3Event(result, {
         event: 'DelegatorBonded',
         args: {
           _delegator: accounts[4],
           _provider: accounts[0],
-          _amount: 300
-        }
+          _amount: bondedAmount,
+        },
       });
     });
   });
 
   describe('unbond', () => {
-
     before(async () => {
       await initNew();
-      await approveBondProvider(22, 10, 1, 25, 1, accounts[0]);
-      await approveBondProvider(22, 10, 1, 25, 1, accounts[1]);
+      await approveBondProvider(...STANDARD_PROVIDER_PARAMETERS, 1, accounts[0]);
+      await approveBondProvider(...STANDARD_PROVIDER_PARAMETERS, 1, accounts[1]);
       await tdpos.approve(contractAddress, 300, {from: accounts[2]});
       await tdpos.bond(accounts[0], 300, {from: accounts[2]});
       await tdpos.approve(contractAddress, 300, {from: accounts[3]});
@@ -343,7 +348,7 @@ contract('TransmuteDPOS', accounts => {
       await assertFail( tdpos.unbond({from: accounts[9]}) );
     });
 
-    it("should set withdrawInformation for the Delegator's address", async () => {
+    it('should set withdrawInformation for the Delegator\'s address', async () => {
       let withdrawInformation = await tdpos.withdrawInformations.call(accounts[2]);
       let withdrawBlock = withdrawInformation[0];
       assert.equal(0, withdrawBlock);
@@ -393,17 +398,16 @@ contract('TransmuteDPOS', accounts => {
         args: {
           _delegator: accounts[5],
           _provider: accounts[0],
-          _amount: 300
-        }
+          _amount: 300,
+        },
       });
     });
   });
 
   describe('delegatorStatus', () => {
-
     before(async () => {
       await initNew();
-      await approveBondProvider(22, 10, 1, 25, 1, accounts[0]);
+      await approveBondProvider(...STANDARD_PROVIDER_PARAMETERS, 1, accounts[0]);
     });
 
     it('should return Unbonded if address is not a Delegator', async () => {
@@ -439,10 +443,9 @@ contract('TransmuteDPOS', accounts => {
   });
 
   describe('providerStatus', () => {
-
     before(async () => {
       await initNew();
-      await approveBondProvider(22, 10, 1, 25, 1, accounts[0]);
+      await approveBondProvider(...STANDARD_PROVIDER_PARAMETERS, 1, accounts[0]);
     });
 
     it('should return Unregistered if address is not a Provider', async () => {
@@ -460,11 +463,10 @@ contract('TransmuteDPOS', accounts => {
   });
 
   describe('withdraw', () => {
-
     before(async () => {
       await initNew();
-      await approveBondProvider(22, 10, 1, 25, 1, accounts[0]);
-      await approveBondProvider(22, 10, 1, 25, 1, accounts[1]);
+      await approveBondProvider(...STANDARD_PROVIDER_PARAMETERS, 1, accounts[0]);
+      await approveBondProvider(...STANDARD_PROVIDER_PARAMETERS, 1, accounts[1]);
       await tdpos.approve(contractAddress, 300, {from: accounts[2]});
       await tdpos.bond(accounts[0], 300, {from: accounts[2]});
       await tdpos.approve(contractAddress, 300, {from: accounts[3]});
@@ -502,7 +504,7 @@ contract('TransmuteDPOS', accounts => {
       await blockMiner.mineUntilBlock(withdrawBlock - 1);
       await tdpos.withdraw({from: accounts[3]});
       const newBalance = await tdpos.balanceOf(accounts[3]);
-      assert.equal(previousBalance.plus(300).toNumber(), await tdpos.balanceOf(accounts[3]));
+      assert.equal(previousBalance.plus(300).toNumber(), newBalance);
     });
 
     it('should switch Delegator status to Unbonded', async () => {

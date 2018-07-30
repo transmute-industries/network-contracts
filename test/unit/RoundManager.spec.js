@@ -1,15 +1,13 @@
 const RoundManager = artifacts.require('./RoundManager.sol');
-const { blockMiner, assertFail } = require('../utils.js');
+const {blockMiner, assertFail} = require('../utils.js');
 
-contract('RoundManager', accounts => {
-
+contract('RoundManager', (accounts) => {
   let rm;
   const electionPeriodLength = 20;
   const rateLockDeadline = 5;
   const unbondingPeriod = 10;
 
   describe('initializeRound', () => {
-
     before(async () => {
       rm = await RoundManager.deployed();
       await rm.setElectionPeriodLength(electionPeriodLength);

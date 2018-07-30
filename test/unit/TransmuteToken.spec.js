@@ -2,8 +2,8 @@ const TST = artifacts.require('./TransmuteToken.sol');
 const utils = require('../utils.js');
 const assertFail = utils.assertFail;
 
-contract('TST', accounts => {
-  let owner, tst;
+contract('TST', (accounts) => {
+  let owner; let tst;
   const tokenAmount = 1000;
 
   it('has the correct owner', async () => {
@@ -21,7 +21,7 @@ contract('TST', accounts => {
     assert(tokenAmount === (await tst.balanceOf.call(accounts[1])).toNumber());
   });
 
-  it('only owner can mint new tokens', async() => {
+  it('only owner can mint new tokens', async () => {
     await assertFail(
       tst.mint(owner, tokenAmount, {from: accounts[1]}),
       'this account should not be able to mint tokens'
@@ -49,12 +49,12 @@ contract('TST', accounts => {
     assert(approvedAmount <= (await tst.balanceOf(accounts[2])).toNumber());
     await tst.approve(accounts[4], approvedAmount, {from: accounts[2]});
     await assertFail(
-      tst.transferFrom(accounts[2], accounts[3], approvedAmount + 1 , {from: accounts[4]}),
+      tst.transferFrom(accounts[2], accounts[3], approvedAmount + 1, {from: accounts[4]}),
       'should not be able to transfer more tokens than what was approved'
     );
   });
 
-  it('owner cannot mint new token after finishMinting is called', async() => {
+  it('owner cannot mint new token after finishMinting is called', async () => {
     await tst.finishMinting({from: owner});
     await assertFail(
       tst.mint(owner, tokenAmount, {from: owner}),
