@@ -10,6 +10,13 @@ contract('integration/TransmuteDPOS', (accounts) => {
   const PROVIDER_UNREGISTERED = 0;
   const PROVIDER_REGISTERED = 1;
 
+  // Provider parameters
+  const PRICE_PER_STORAGE_MINERAL = 22;
+  const PRICE_PER_COMPUTE_MINERAL = 10;
+  const BLOCK_REWARD_CUT = 1;
+  const FEE_SHARE = 25;
+  const STANDARD_PROVIDER_PARAMETERS = [PRICE_PER_STORAGE_MINERAL, PRICE_PER_COMPUTE_MINERAL, BLOCK_REWARD_CUT, FEE_SHARE];
+
   // Delegator states
   const DELEGATOR_UNBONDED = 0;
   const DELEGATOR_UNBONDED_WITH_TOKENS_TO_WITHDRAW = 1;
@@ -46,7 +53,7 @@ contract('integration/TransmuteDPOS', (accounts) => {
     });
 
     it('provider1 fails to register because initializeRound() was not called', async () => {
-      await assertFail( tdpos.provider(22, 10, 1, 25, {from: provider1}) );
+      await assertFail( tdpos.provider(...STANDARD_PROVIDER_PARAMETERS, {from: provider1}) );
     });
 
     it('someone calls initializeRound()', async () => {
@@ -57,7 +64,7 @@ contract('integration/TransmuteDPOS', (accounts) => {
 
     it('provider1 registers as Provider', async () => {
       assert.equal(PROVIDER_UNREGISTERED, await tdpos.providerStatus(provider1));
-      await tdpos.provider(22, 10, 1, 25, {from: provider1});
+      await tdpos.provider(...STANDARD_PROVIDER_PARAMETERS, {from: provider1});
       assert.equal(PROVIDER_REGISTERED, await tdpos.providerStatus(provider1));
     });
 
@@ -66,7 +73,7 @@ contract('integration/TransmuteDPOS', (accounts) => {
     });
 
     it('provider2 fails to register because he didn\'t delegate tokens to himself', async () => {
-      await assertFail( tdpos.provider(22, 10, 1, 25, {from: provider2}) );
+      await assertFail( tdpos.provider(...STANDARD_PROVIDER_PARAMETERS, {from: provider2}) );
     });
 
     it('provider2 delegates tokens to himself', async () => {
@@ -76,7 +83,7 @@ contract('integration/TransmuteDPOS', (accounts) => {
 
     it('provider2 registers as Provider', async () => {
       assert.equal(PROVIDER_UNREGISTERED, await tdpos.providerStatus(provider2));
-      await tdpos.provider(22, 10, 1, 25, {from: provider2});
+      await tdpos.provider(...STANDARD_PROVIDER_PARAMETERS, {from: provider2});
       assert.equal(PROVIDER_REGISTERED, await tdpos.providerStatus(provider2));
     });
 
@@ -86,15 +93,15 @@ contract('integration/TransmuteDPOS', (accounts) => {
     });
 
     it('provider3 fails to register with invalid parameters', async () => {
-      // Cannot have negative blockRewardCut
-      await assertFail( tdpos.provider(22, 10, -1, 25, {from: provider3}) );
-      // Cannot have over 100% of feeShare
-      await assertFail( tdpos.provider(22, 10, 1, 125, {from: provider3}) );
+      const INVALID_BLOCK_REWARD_CUT = -1;
+      await assertFail( tdpos.provider(PRICE_PER_STORAGE_MINERAL, PRICE_PER_COMPUTE_MINERAL, INVALID_BLOCK_REWARD_CUT, FEE_SHARE, {from: provider3}) );
+      const INVALID_FEE_SHARE = 125;
+      await assertFail( tdpos.provider(PRICE_PER_STORAGE_MINERAL, PRICE_PER_COMPUTE_MINERAL, BLOCK_REWARD_CUT, INVALID_FEE_SHARE, {from: provider3}) );
     });
 
     it('provider3 registers as Provider with valid parameters', async () => {
       assert.equal(PROVIDER_UNREGISTERED, await tdpos.providerStatus(provider3));
-      await tdpos.provider(22, 10, 1, 25, {from: provider3});
+      await tdpos.provider(...STANDARD_PROVIDER_PARAMETERS, {from: provider3});
       assert.equal(PROVIDER_REGISTERED, await tdpos.providerStatus(provider3));
     });
 
@@ -106,7 +113,7 @@ contract('integration/TransmuteDPOS', (accounts) => {
     it('provider4 fails to register because rateLockDeadline has passed for the current round', async () => {
       const rateLockDeadlineBlock = await roundManagerHelper.getRateLockDeadlineBlock(tdpos);
       await blockMiner.mineUntilBlock(rateLockDeadlineBlock);
-      await assertFail( tdpos.provider(22, 10, 1, 25, {from: provider4}) );
+      await assertFail( tdpos.provider(...STANDARD_PROVIDER_PARAMETERS, {from: provider4}) );
     });
 
     it('someone calls initializeRound() but it fails because Election Period is not over', async () => {
@@ -123,7 +130,7 @@ contract('integration/TransmuteDPOS', (accounts) => {
 
     it('provider4 registers as Provider in the new round', async () => {
       assert.equal(PROVIDER_UNREGISTERED, await tdpos.providerStatus(provider4));
-      await tdpos.provider(22, 10, 1, 25, {from: provider4});
+      await tdpos.provider(...STANDARD_PROVIDER_PARAMETERS, {from: provider4});
       assert.equal(PROVIDER_REGISTERED, await tdpos.providerStatus(provider4));
     });
 
@@ -137,7 +144,7 @@ contract('integration/TransmuteDPOS', (accounts) => {
       let maxSize = providerPool[2];
       let size = providerPool[3];
       assert.deepEqual(maxSize, size);
-      await assertFail( tdpos.provider(22, 10, 1, 25, {from: provider5}) );
+      await assertFail( tdpos.provider(...STANDARD_PROVIDER_PARAMETERS, {from: provider5}) );
     });
   });
 
@@ -155,11 +162,11 @@ contract('integration/TransmuteDPOS', (accounts) => {
       // Register provider1
       await tdpos.approve(contractAddress, 100, {from: provider1});
       await tdpos.bond(provider1, 100, {from: provider1});
-      await tdpos.provider(22, 10, 1, 25, {from: provider1});
+      await tdpos.provider(...STANDARD_PROVIDER_PARAMETERS, {from: provider1});
       // Register provider2
       await tdpos.approve(contractAddress, 200, {from: provider2});
       await tdpos.bond(provider2, 200, {from: provider2});
-      await tdpos.provider(22, 10, 1, 25, {from: provider2});
+      await tdpos.provider(...STANDARD_PROVIDER_PARAMETERS, {from: provider2});
     });
 
     it('delegator1 fails to delegate his tokens to provider1 because he didn\'t approve the transfer first', async () => {
