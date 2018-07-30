@@ -309,14 +309,15 @@ contract('TransmuteDPOS', (accounts) => {
     });
 
     it('should emit the DelegateBonded event', async () => {
-      await tdpos.approve(contractAddress, 300, {from: accounts[4]});
-      const result = await tdpos.bond(accounts[0], 300, {from: accounts[4]});
+      const bondedAmount = 300;
+      await tdpos.approve(contractAddress, bondedAmount, {from: accounts[4]});
+      const result = await tdpos.bond(accounts[0], bondedAmount, {from: accounts[4]});
       assert.web3Event(result, {
         event: 'DelegatorBonded',
         args: {
           _delegator: accounts[4],
           _provider: accounts[0],
-          _amount: 300,
+          _amount: bondedAmount,
         },
       });
     });
