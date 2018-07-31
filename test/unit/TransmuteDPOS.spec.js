@@ -167,7 +167,7 @@ contract('TransmuteDPOS', (accounts) => {
     it('should fail if Provider is Unregistered and size == maxSize', async () => {
       const maxSize = await tdpos.getProviderPoolMaxSize();
       let currentSize = await tdpos.getProviderPoolSize();
-      assert.isAbove(maxSize, currentSize.toNumber());
+      assert.isAbove(maxSize.toNumber(), currentSize.toNumber());
       await approveBondProvider(...STANDARD_PROVIDER_PARAMETERS, 1, accounts[4]);
       currentSize = await tdpos.getProviderPoolSize();
       assert.deepEqual(maxSize, currentSize);
