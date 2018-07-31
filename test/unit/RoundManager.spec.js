@@ -1,5 +1,6 @@
 const RoundManager = artifacts.require('./RoundManager.sol');
-const {blockMiner, assertFail} = require('../utils.js');
+const TransmuteDPOS = artifacts.require('./TestTransmuteDPOS.sol');
+const {roundManagerHelper, blockMiner, assertFail} = require('../utils.js');
 
 contract('RoundManager', (accounts) => {
   let rm;
@@ -22,9 +23,6 @@ contract('RoundManager', (accounts) => {
     it('should fail if numberOfActiveProviders is not set', async () => {
       await assertFail( rm.initializeRound() );
       assert.equal(0, await rm.roundNumber.call());
-    });
-
-    it('should initialize the round', async () => {
       await rm.setNumberOfActiveProviders(NUMBER_OF_ACTIVE_PROVIDERS);
       await rm.initializeRound();
       assert.equal(1, await rm.roundNumber.call());
@@ -43,6 +41,77 @@ contract('RoundManager', (accounts) => {
       await blockMiner.mine(ELECTION_PERIOD_LENGTH - 3);
       // Here the next initializeRound() call will happen on the (electionPeriodLength - 1)th block of the current round
       await assertFail(rm.initializeRound());
+    });
+  });
+
+  describe('setActiveProviders', () => {
+    let tdpos;
+    let contractAddress;
+
+    let provider1 = accounts[1];
+    let provider2 = accounts[2];
+    let provider3 = accounts[3];
+    let provider4 = accounts[4];
+    let provider1Stake = 100;
+    let provider2Stake = 400;
+    let provider3Stake = 200;
+
+    async function approveBondProvider(pricePerStorageMineral, pricePerComputeMineral, blockRewardCut, feeShare, amountBonded, provider) {
+      await tdpos.approve(contractAddress, amountBonded, {from: provider});
+      await tdpos.bond(provider, amountBonded, {from: provider});
+      await tdpos.provider(pricePerStorageMineral, pricePerComputeMineral, blockRewardCut, feeShare, {from: provider});
+    }
+
+    before(async () => {
+      // Here we use the TransmuteDPOS contract instead of RoundManager contract
+      // even though we want to test a method from the RoundManager contract
+      // because we need to fill the providerPool with methods from TransmuteDPOS
+      tdpos = await TransmuteDPOS.deployed();
+      contractAddress = tdpos.address;
+      for (let i = 0; i < 10; i++) {
+        await tdpos.mint(accounts[i], 1000, {from: accounts[0]});
+      }
+      await tdpos.setProviderPoolMaxSize(PROVIDER_POOL_SIZE);
+      await tdpos.setNumberOfActiveProviders(2);
+      await tdpos.initializeRound();
+      // After the 3 providers are registered the providerPool should be
+      // Rank 1: provider2 with 400 TST;
+      // Rank 2: provider3 with 200 TST;
+      // Rank 3: provider1 with 100 TST;
+      // Since numberOfActiveProviders is 2 only provider2 and provider3
+      // should be active. provider1 is registered but not active
+      await approveBondProvider(10, 20, 30, 40, provider1Stake, provider1);
+      await approveBondProvider(11, 21, 31, 41, provider2Stake, provider2);
+      await approveBondProvider(12, 22, 32, 42, provider3Stake, provider3);
+      const newRoundBlock = await roundManagerHelper.getElectionPeriodEndBlock(tdpos);
+      await blockMiner.mineUntilBlock(newRoundBlock);
+      await tdpos.initializeRound();
+    });
+
+
+    it('should create a new ActiveProviderSet for the round with right totalStake', async () => {
+      const roundNumber = await tdpos.roundNumber.call();
+      // activeProviderSets.call(roundNumber) only returns the active totalStake
+      // not the array of provider addresses nor the isActive mapping
+      const totalStake = await tdpos.activeProviderSets.call(roundNumber);
+      assert.equal(provider2Stake + provider3Stake, totalStake);
+    });
+
+    it('should contain the addresses of active providers', async () => {
+      const activeProviderAddresses = await tdpos.getActiveProviderAddresses.call();
+      assert.equal(2, activeProviderAddresses.length);
+      assert.equal(provider2, activeProviderAddresses[0]);
+      assert.equal(provider3, activeProviderAddresses[1]);
+    });
+
+    it('should not contain the addresses of registered but not active providers', async () => {
+      const activeProviderAddresses = await tdpos.getActiveProviderAddresses.call();
+      assert(!activeProviderAddresses.includes(provider1));
+    });
+
+    it('should not contain the addresses of unregistered providers', async () => {
+      const activeProviderAddresses = await tdpos.getActiveProviderAddresses.call();
+      assert(!activeProviderAddresses.includes(provider4));
     });
   });
 });
