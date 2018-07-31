@@ -5,68 +5,6 @@ import "./RoundManager.sol";
 
 contract TransmuteDPOS is TransmuteToken, RoundManager {
 
-  event DelegatorBonded(
-    address indexed _delegator,
-    address indexed _provider,
-    uint _amount
-  );
-
-  event DelegatorUnbonded(
-    address indexed _delegator,
-    address indexed _provider,
-    uint _amount
-  );
-
-  event ProviderAdded (
-    address indexed _provider,
-    uint _pricePerStorageMineral,
-    uint _pricePerComputeMineral,
-    uint _blockRewardCut,
-    uint _feeShare
-  );
-
-  event ProviderUpdated (
-    address indexed _provider,
-    uint _pricePerStorageMineral,
-    uint _pricePerComputeMineral,
-    uint _blockRewardCut,
-    uint _feeShare
-  );
-
-  event ProviderResigned (
-    address indexed _provider
-  );
-
-  enum DelegatorStatus { Unbonded, UnbondedWithTokensToWithdraw, Bonded }
-
-  struct Delegator {
-    address delegateAddress;
-    // TODO: rename variable
-    uint amountBonded;
-  }
-
-  uint public numberOfDelegators;
-  mapping(address => Delegator) public delegators;
-
-  enum ProviderStatus { Unregistered, Registered }
-
-  struct Provider {
-    uint pricePerStorageMineral;
-    uint pricePerComputeMineral;
-    uint blockRewardCut;
-    uint feeShare;
-    uint totalAmountBonded;
-  }
-
-  uint public numberOfProviders;
-  mapping(address => Provider) public providers;
-
-  struct WithdrawInformation {
-    uint withdrawBlock;
-    uint amount;
-  }
-  mapping (address => WithdrawInformation) public withdrawInformations;
-
   // FIXME: Those are temporary values
   constructor() public {
     // Set constants from RoundManager
