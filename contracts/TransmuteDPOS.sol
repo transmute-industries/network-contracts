@@ -19,12 +19,14 @@ contract TransmuteDPOS is TransmuteToken, RoundManager, DelegatorManager {
   {
     require(_blockRewardCut <= 100);
     require(_feeShare <= 100);
-    Delegator storage d = delegators[msg.sender];
+
     Provider storage p = providers[msg.sender];
     p.pricePerStorageMineral = _pricePerStorageMineral;
     p.pricePerComputeMineral = _pricePerComputeMineral;
     p.blockRewardCut = _blockRewardCut;
     p.feeShare = _feeShare;
+
+    Delegator storage d = delegators[msg.sender];
     // Provider has to be a Delegator to himself
     require(d.delegateAddress == msg.sender);
     if (providerStatus(msg.sender) == ProviderStatus.Unregistered) {
@@ -40,8 +42,8 @@ contract TransmuteDPOS is TransmuteToken, RoundManager, DelegatorManager {
   function resignAsProvider(address _provider) internal {
     require(providerStatus(_provider) == ProviderStatus.Registered);
     removeProvider(_provider);
-    // TODO
     delete providers[_provider];
+    delete activeProviders[_provider];
     emit ProviderResigned(_provider);
   }
 
@@ -53,8 +55,10 @@ contract TransmuteDPOS is TransmuteToken, RoundManager, DelegatorManager {
     require(_provider == msg.sender || pStatus == ProviderStatus.Registered);
     // Check if delegator has not already bonded to some address
     require(delegators[msg.sender].delegateAddress == address(0));
+
     this.transferFrom(msg.sender, this, _amount);
     delegators[msg.sender] = Delegator(_provider, _amount);
+
     uint currentProviderStake = getProviderStake(_provider);
     uint newProviderStake = currentProviderStake.add(_amount);
     // Update the bonded amount of the provider in the pool
@@ -67,6 +71,7 @@ contract TransmuteDPOS is TransmuteToken, RoundManager, DelegatorManager {
   function unbond() external {
     // Only Bonded Delegators can call the function
     require(delegatorStatus(msg.sender) == DelegatorStatus.Bonded);
+
     Delegator storage d = delegators[msg.sender];
     // Sets the block number from which the Delegator will be able to withdraw() his tokens
     uint withdrawBlock = block.number.add(unbondingPeriod);
