@@ -54,6 +54,7 @@ contract RoundManager is Ownable, ProviderPool, ProviderManager {
     setActiveProviders();
   }
 
+  // TODO: tests
   function setActiveProviders() internal {
     // Value must have been initialized
     require(numberOfActiveProviders > 0);
@@ -70,7 +71,7 @@ contract RoundManager is Ownable, ProviderPool, ProviderManager {
       totalStake = totalStake.add(stake);
 
       // Set pending rates as current rates
-      Provider storage p = providers[currentProvider];
+      activeProviders[currentProvider] = providers[currentProvider];
 
       // Get next provider in the pool
       currentProvider = providerPool.getNext(currentProvider);

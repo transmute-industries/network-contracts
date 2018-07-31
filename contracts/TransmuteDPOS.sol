@@ -95,6 +95,7 @@ contract TransmuteDPOS is TransmuteToken, RoundManager, DelegatorManager {
     delete withdrawInformations[msg.sender];
   }
 
+  // Add Active status
   function providerStatus(address _provider) public view returns (ProviderStatus) {
     if (this.containsProvider(_provider)) {
       return ProviderStatus.Registered;
