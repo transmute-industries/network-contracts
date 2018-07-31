@@ -16,8 +16,7 @@ contract('RoundManager', (accounts) => {
       await rm.setRateLockDeadline(RATE_LOCK_DEADLINE);
       await rm.setUnbondingPeriod(UNBONDING_PERIOD);
       // Set ProviderPool parameters
-      // TODO: Change name
-      await rm.setMaxNumberOfProviders(PROVIDER_POOL_SIZE);
+      await rm.setProviderPoolMaxSize(PROVIDER_POOL_SIZE);
     });
 
     it('should fail if numberOfActiveProviders is not set', async () => {

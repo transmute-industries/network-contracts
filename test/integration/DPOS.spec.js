@@ -32,7 +32,7 @@ contract('integration/TransmuteDPOS', (accounts) => {
     for (let i = 0; i < 10; i++) {
       await tdpos.mint(accounts[i], 1000, {from: accounts[0]});
     }
-    await tdpos.setMaxNumberOfProviders(PROVIDER_POOL_SIZE);
+    await tdpos.setProviderPoolMaxSize(PROVIDER_POOL_SIZE);
     await tdpos.setNumberOfActiveProviders(NUMBER_OF_ACTIVE_PROVIDERS);
   }
 

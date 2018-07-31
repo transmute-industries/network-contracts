@@ -26,7 +26,7 @@ contract('ProviderPool', (accounts) => {
     }
   }
 
-  describe('setMaxNumberOfProviders', () => {
+  describe('setProviderPoolMaxSize', () => {
     before(async () => {
       pp = await ProviderPool.deployed();
     });
@@ -34,17 +34,17 @@ contract('ProviderPool', (accounts) => {
     it('should set the max number of providers allowed in the pool', async () => {
       let providerPool = await pp.providerPool.call();
       assert.equal(0, providerPool[2]); // max size
-      await pp.setMaxNumberOfProviders(7, {from: accounts[0]});
+      await pp.setProviderPoolMaxSize(7, {from: accounts[0]});
       providerPool = await pp.providerPool.call();
       assert.equal(7, providerPool[2]);
     });
 
     it('should fail if it is not called from the owner\'s address', async () => {
-      await assertFail( pp.setMaxNumberOfProviders(10, {from: accounts[1]}) );
+      await assertFail( pp.setProviderPoolMaxSize(10, {from: accounts[1]}) );
     });
 
     it('should fail if new size is less than current size', async () => {
-      await assertFail( pp.setMaxNumberOfProviders(6, {from: accounts[0]}) );
+      await assertFail( pp.setProviderPoolMaxSize(6, {from: accounts[0]}) );
     });
   });
 
@@ -89,7 +89,7 @@ contract('ProviderPool', (accounts) => {
   describe('containsProvider', () => {
     before(async () => {
       pp = await ProviderPool.new();
-      await pp.setMaxNumberOfProviders(10, {from: accounts[0]});
+      await pp.setProviderPoolMaxSize(10, {from: accounts[0]});
     });
 
     it('should return false if provider is not in the pool', async () => {
@@ -105,7 +105,7 @@ contract('ProviderPool', (accounts) => {
   describe('updateProvider', () => {
     before(async () => {
       pp = await ProviderPool.new();
-      await pp.setMaxNumberOfProviders(10, {from: accounts[0]});
+      await pp.setProviderPoolMaxSize(10, {from: accounts[0]});
       await pp.publicAddProvider(accounts[0], 1);
       await pp.publicAddProvider(accounts[1], 12);
       await pp.publicAddProvider(accounts[2], 3);

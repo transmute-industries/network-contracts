@@ -11,7 +11,7 @@ contract ProviderPool is Ownable {
   using SortedDoublyLL for SortedDoublyLL.Data;
   SortedDoublyLL.Data public providerPool;
 
-  function setMaxNumberOfProviders(uint _maxNumber) external onlyOwner {
+  function setProviderPoolMaxSize(uint _maxNumber) external onlyOwner {
     // TODO: providerPool.maxSize = _maxNumber;
     providerPool.setMaxSize(_maxNumber);
   }
