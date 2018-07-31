@@ -3,9 +3,12 @@ const {blockMiner, assertFail} = require('../utils.js');
 
 contract('RoundManager', (accounts) => {
   let rm;
+  // TODO: Caps
   const electionPeriodLength = 20;
   const rateLockDeadline = 5;
   const unbondingPeriod = 10;
+  const providerPoolMaxSize = 20;
+  const numberOfActiveProviders = 10;
 
   describe('initializeRound', () => {
     before(async () => {
@@ -13,9 +16,18 @@ contract('RoundManager', (accounts) => {
       await rm.setElectionPeriodLength(electionPeriodLength);
       await rm.setRateLockDeadline(rateLockDeadline);
       await rm.setUnbondingPeriod(unbondingPeriod);
+      // Set ProviderPool parameters
+      // TODO: Change name
+      await rm.setMaxNumberOfProviders(providerPoolMaxSize);
+    });
+
+    it('should fail if numberOfActiveProviders is not set', async () => {
+      await assertFail( rm.initializeRound() );
+      assert.equal(0, await rm.roundNumber.call());
     });
 
     it('should initialize the round', async () => {
+      await rm.setNumberOfActiveProviders(numberOfActiveProviders);
       await rm.initializeRound();
       assert.equal(1, await rm.roundNumber.call());
     });

@@ -5,6 +5,7 @@ contract('integration/TransmuteDPOS', (accounts) => {
   let tdpos;
   let contractAddress;
   const PROVIDER_POOL_SIZE = 4;
+  const NUMBER_OF_ACTIVE_PROVIDERS = 4;
 
   // Provider states
   const PROVIDER_UNREGISTERED = 0;
@@ -32,6 +33,7 @@ contract('integration/TransmuteDPOS', (accounts) => {
       await tdpos.mint(accounts[i], 1000, {from: accounts[0]});
     }
     await tdpos.setMaxNumberOfProviders(PROVIDER_POOL_SIZE);
+    await tdpos.setNumberOfActiveProviders(NUMBER_OF_ACTIVE_PROVIDERS);
   }
 
   describe('Registering as Providers', () => {

@@ -16,6 +16,7 @@ contract ProviderPool is Ownable {
     providerPool.setMaxSize(_maxNumber);
   }
 
+  // TODO: tests
   function setNumberOfActiveProviders(uint _numberOfActiveProviders) external onlyOwner {
     require(_numberOfActiveProviders <= providerPool.maxSize);
     numberOfActiveProviders = _numberOfActiveProviders;

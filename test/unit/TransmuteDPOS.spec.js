@@ -6,6 +6,8 @@ contract('TransmuteDPOS', (accounts) => {
   let tdpos;
   let contractAddress;
   const PROVIDER_POOL_SIZE = 5;
+  const NUMBER_OF_ACTIVE_PROVIDERS = 4;
+
   // Provider states
   const PROVIDER_UNREGISTERED = 0;
   const PROVIDER_REGISTERED = 1;
@@ -40,6 +42,7 @@ contract('TransmuteDPOS', (accounts) => {
       await tdpos.mint(accounts[i], 1000, {from: accounts[0]});
     }
     await tdpos.setMaxNumberOfProviders(PROVIDER_POOL_SIZE);
+    await tdpos.setNumberOfActiveProviders(NUMBER_OF_ACTIVE_PROVIDERS);
     const electionPeriodEndBlock = await roundManagerHelper.getElectionPeriodEndBlock(tdpos);
     await blockMiner.mineUntilBlock(electionPeriodEndBlock);
     await tdpos.initializeRound();
@@ -53,6 +56,7 @@ contract('TransmuteDPOS', (accounts) => {
         await tdpos.mint(accounts[i], 1000, {from: accounts[0]});
       }
       await tdpos.setMaxNumberOfProviders(PROVIDER_POOL_SIZE);
+      await tdpos.setNumberOfActiveProviders(NUMBER_OF_ACTIVE_PROVIDERS);
     });
 
     beforeEach(async () => {

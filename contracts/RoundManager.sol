@@ -56,7 +56,7 @@ contract RoundManager is Ownable, ProviderPool, ProviderManager {
 
   function setActiveProviders() internal {
     // Value must have been initialized
-    // TODO: require(numberOfActiveProviders > 0);
+    require(numberOfActiveProviders > 0);
 
     uint totalStake = 0;
     uint activeSetSize = Math.min256(numberOfActiveProviders, providerPool.size);
