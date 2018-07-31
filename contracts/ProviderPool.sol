@@ -32,11 +32,6 @@ contract ProviderPool is Ownable {
     return providerPool.contains(_provider);
   }
 
-  // TODO
-  function getProviderStake(address _provider) public view returns (uint) {
-    return providerPool.nodes[_provider].key;
-  }
-
   function addProvider(address _provider, uint _bondedAmount) internal {
     providerPool.insert(_provider, _bondedAmount, 0, 0);
   }
@@ -48,4 +43,22 @@ contract ProviderPool is Ownable {
   function removeProvider(address _provider) internal {
     providerPool.remove(_provider);
   }
+
+  // Getter functions for providerPool
+  function getFirstProvider() public view returns (address) {
+    return providerPool.getFirst();
+  }
+
+  function getNextProvider(address _provider) public view returns (address) {
+    return providerPool.getNext(_provider);
+  }
+
+  function getProviderStake(address _provider) public view returns (uint) {
+    return providerPool.nodes[_provider].key;
+  }
+
+  function getProviderPoolSize() public view returns (uint) {
+    return providerPool.size;
+  }
+
 }

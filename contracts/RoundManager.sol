@@ -23,7 +23,7 @@ contract RoundManager is Ownable, ProviderPool, ProviderManager {
   struct ActiveProviderSet {
     address[] providers;
     mapping (address => bool) isActive;
-    uint256 totalStake;
+    uint totalStake;
   }
 
   // Stores the ActiveProviderSet for each round
@@ -54,28 +54,30 @@ contract RoundManager is Ownable, ProviderPool, ProviderManager {
     setActiveProviders();
   }
 
-  // TODO: tests
   function setActiveProviders() internal {
     // Value must have been initialized
     require(numberOfActiveProviders > 0);
 
-    uint totalStake = 0;
-    uint activeSetSize = Math.min256(numberOfActiveProviders, providerPool.size);
-    address currentProvider = providerPool.getFirst();
+    uint activeSetSize = Math.min256(numberOfActiveProviders, getProviderPoolSize());
+    address currentProvider = getFirstProvider();
     ActiveProviderSet storage aps = activeProviderSets[roundNumber];
     for (uint i = 0; i < activeSetSize; i++) {
       aps.providers.push(currentProvider);
       aps.isActive[currentProvider] = true;
 
-      uint stake = providerPool.getKey(currentProvider);
-      totalStake = totalStake.add(stake);
+      uint stake = getProviderStake(currentProvider);
+      aps.totalStake = aps.totalStake.add(stake);
 
       // Set pending rates as current rates
       activeProviders[currentProvider] = providers[currentProvider];
 
       // Get next provider in the pool
-      currentProvider = providerPool.getNext(currentProvider);
+      currentProvider = getNextProvider(currentProvider);
     }
-    aps.totalStake = totalStake;
+  }
+
+  // Getter function for ActiveProviderSet
+  function getActiveProviderAddresses() public returns (address[]) {
+    return activeProviderSets[roundNumber].providers;
   }
 }
