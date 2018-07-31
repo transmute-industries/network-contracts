@@ -3,22 +3,21 @@ const {blockMiner, assertFail} = require('../utils.js');
 
 contract('RoundManager', (accounts) => {
   let rm;
-  // TODO: Caps
-  const electionPeriodLength = 20;
-  const rateLockDeadline = 5;
-  const unbondingPeriod = 10;
-  const providerPoolMaxSize = 20;
-  const numberOfActiveProviders = 10;
+  const ELECTION_PERIOD_LENGTH = 20;
+  const RATE_LOCK_DEADLINE = 5;
+  const UNBONDING_PERIOD = 10;
+  const PROVIDER_POOL_SIZE = 20;
+  const NUMBER_OF_ACTIVE_PROVIDERS = 10;
 
   describe('initializeRound', () => {
     before(async () => {
       rm = await RoundManager.deployed();
-      await rm.setElectionPeriodLength(electionPeriodLength);
-      await rm.setRateLockDeadline(rateLockDeadline);
-      await rm.setUnbondingPeriod(unbondingPeriod);
+      await rm.setElectionPeriodLength(ELECTION_PERIOD_LENGTH);
+      await rm.setRateLockDeadline(RATE_LOCK_DEADLINE);
+      await rm.setUnbondingPeriod(UNBONDING_PERIOD);
       // Set ProviderPool parameters
       // TODO: Change name
-      await rm.setMaxNumberOfProviders(providerPoolMaxSize);
+      await rm.setMaxNumberOfProviders(PROVIDER_POOL_SIZE);
     });
 
     it('should fail if numberOfActiveProviders is not set', async () => {
@@ -27,13 +26,13 @@ contract('RoundManager', (accounts) => {
     });
 
     it('should initialize the round', async () => {
-      await rm.setNumberOfActiveProviders(numberOfActiveProviders);
+      await rm.setNumberOfActiveProviders(NUMBER_OF_ACTIVE_PROVIDERS);
       await rm.initializeRound();
       assert.equal(1, await rm.roundNumber.call());
     });
 
     it('should initialize the next round electionPeriodLength blocks after initializing the last round', async () => {
-      await blockMiner.mine(electionPeriodLength - 1);
+      await blockMiner.mine(ELECTION_PERIOD_LENGTH - 1);
       await rm.initializeRound();
     });
 
@@ -42,7 +41,7 @@ contract('RoundManager', (accounts) => {
     });
 
     it('should fail to initialize a new round electionPeriodLength - 1 block after initializing the last round', async () => {
-      await blockMiner.mine(electionPeriodLength - 3);
+      await blockMiner.mine(ELECTION_PERIOD_LENGTH - 3);
       // Here the next initializeRound() call will happen on the (electionPeriodLength - 1)th block of the current round
       await assertFail(rm.initializeRound());
     });
