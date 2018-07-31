@@ -127,11 +127,11 @@ contract('TransmuteDPOS', (accounts) => {
       assert.web3Event(result, {
         event: 'ProviderAdded',
         args: {
-          _provider: accounts[2],
-          _pricePerStorageMineral: PRICE_PER_STORAGE_MINERAL,
-          _pricePerComputeMineral: PRICE_PER_COMPUTE_MINERAL,
-          _blockRewardCut: BLOCK_REWARD_CUT,
-          _feeShare: FEE_SHARE,
+          provider: accounts[2],
+          pricePerStorageMineral: PRICE_PER_STORAGE_MINERAL,
+          pricePerComputeMineral: PRICE_PER_COMPUTE_MINERAL,
+          blockRewardCut: BLOCK_REWARD_CUT,
+          feeShare: FEE_SHARE,
         },
       });
     });
@@ -145,11 +145,11 @@ contract('TransmuteDPOS', (accounts) => {
       assert.web3Event(result, {
         event: 'ProviderUpdated',
         args: {
-          _provider: accounts[2],
-          _pricePerStorageMineral: UPDATED_PRICE_PER_STORAGE_MINERAL,
-          _pricePerComputeMineral: UPDATED_PRICE_PER_COMPUTE_MINERAL,
-          _blockRewardCut: UPDATED_BLOCK_REWARD_CUT,
-          _feeShare: UPDATED_FEE_SHARE,
+          provider: accounts[2],
+          pricePerStorageMineral: UPDATED_PRICE_PER_STORAGE_MINERAL,
+          pricePerComputeMineral: UPDATED_PRICE_PER_COMPUTE_MINERAL,
+          blockRewardCut: UPDATED_BLOCK_REWARD_CUT,
+          feeShare: UPDATED_FEE_SHARE,
         },
       });
     });
@@ -226,7 +226,7 @@ contract('TransmuteDPOS', (accounts) => {
       assert.web3Event(result, {
         event: 'ProviderResigned',
         args: {
-          _provider: accounts[2],
+          provider: accounts[2],
         },
       });
     });
@@ -323,9 +323,9 @@ contract('TransmuteDPOS', (accounts) => {
       assert.web3Event(result, {
         event: 'DelegatorBonded',
         args: {
-          _delegator: accounts[4],
-          _provider: accounts[0],
-          _amount: bondedAmount,
+          delegator: accounts[4],
+          provider: accounts[0],
+          amount: bondedAmount,
         },
       });
     });
@@ -398,9 +398,9 @@ contract('TransmuteDPOS', (accounts) => {
       assert.web3Event(result, {
         event: 'DelegatorUnbonded',
         args: {
-          _delegator: accounts[5],
-          _provider: accounts[0],
-          _amount: 300,
+          delegator: accounts[5],
+          provider: accounts[0],
+          amount: 300,
         },
       });
     });

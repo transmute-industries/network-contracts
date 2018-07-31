@@ -1,25 +1,24 @@
 pragma solidity ^0.4.24;
 
 contract ProviderManager {
-  //TODO: remove _
   event ProviderAdded (
-    address indexed _provider,
-    uint _pricePerStorageMineral,
-    uint _pricePerComputeMineral,
-    uint _blockRewardCut,
-    uint _feeShare
+    address indexed provider,
+    uint pricePerStorageMineral,
+    uint pricePerComputeMineral,
+    uint blockRewardCut,
+    uint feeShare
   );
 
   event ProviderUpdated (
-    address indexed _provider,
-    uint _pricePerStorageMineral,
-    uint _pricePerComputeMineral,
-    uint _blockRewardCut,
-    uint _feeShare
+    address indexed provider,
+    uint pricePerStorageMineral,
+    uint pricePerComputeMineral,
+    uint blockRewardCut,
+    uint feeShare
   );
 
   event ProviderResigned (
-    address indexed _provider
+    address indexed provider
   );
 
   enum ProviderStatus { Unregistered, Registered }

@@ -2,15 +2,15 @@ pragma solidity ^0.4.24;
 
 contract DelegatorManager {
   event DelegatorBonded(
-    address indexed _delegator,
-    address indexed _provider,
-    uint _amount
+    address indexed delegator,
+    address indexed provider,
+    uint amount
   );
 
   event DelegatorUnbonded(
-    address indexed _delegator,
-    address indexed _provider,
-    uint _amount
+    address indexed delegator,
+    address indexed provider,
+    uint amount
   );
 
   enum DelegatorStatus { Unbonded, UnbondedWithTokensToWithdraw, Bonded }
