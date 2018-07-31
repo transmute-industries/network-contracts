@@ -48,6 +48,29 @@ contract('ProviderPool', (accounts) => {
     });
   });
 
+  describe('setNumberOfActiveProviders', () => {
+    it('should set the number of active providers', async () => {
+      let numberOfActiveProviders = await pp.numberOfActiveProviders.call();
+      assert.equal(0, numberOfActiveProviders); // max size
+      await pp.setNumberOfActiveProviders(5, {from: accounts[0]});
+      numberOfActiveProviders = await pp.numberOfActiveProviders.call();
+      assert.equal(5, numberOfActiveProviders);
+    });
+
+    it('should fail if it is not called from the owner\'s address', async () => {
+      await assertFail( pp.setNumberOfActiveProviders(7, {from: accounts[1]}) );
+    });
+
+    it('should fail if new value is more than pool maxSize', async () => {
+      await assertFail( pp.setNumberOfActiveProviders(8, {from: accounts[0]}) );
+    });
+
+    it('should work if new value is less or equal than pool maxSize', async () => {
+      await pp.setNumberOfActiveProviders(7, {from: accounts[0]});
+      await pp.setNumberOfActiveProviders(6, {from: accounts[0]});
+    });
+  });
+
   describe('addProvider', () => {
     it('should add a provider to the pool', async () => {
       let providerPool = await pp.providerPool.call();
