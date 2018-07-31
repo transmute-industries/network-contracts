@@ -2,8 +2,9 @@ pragma solidity ^0.4.24;
 
 import "./TransmuteToken.sol";
 import "./RoundManager.sol";
+import "./DelegatorManager.sol";
 
-contract TransmuteDPOS is TransmuteToken, RoundManager {
+contract TransmuteDPOS is TransmuteToken, RoundManager, DelegatorManager {
 
   // FIXME: Those are temporary values
   constructor() public {
