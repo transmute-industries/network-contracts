@@ -157,24 +157,20 @@ contract('TransmuteDPOS', (accounts) => {
       // Check that provider isn't registered yet
       assert.equal(PROVIDER_UNREGISTERED, await tdpos.providerStatus.call(accounts[3]));
       // Check the size of the pool increases by 1
-      let providerPool = await tdpos.providerPool.call();
-      const previousSize = providerPool[3].toNumber();
+      const previousSize = await tdpos.getProviderPoolSize();
       await approveBondProvider(...STANDARD_PROVIDER_PARAMETERS, 1, accounts[3]);
-      providerPool = await tdpos.providerPool.call();
-      assert.equal(previousSize + 1, providerPool[3]);
+      assert.deepEqual(previousSize.add(1), await tdpos.getProviderPoolSize());
       // Check that the provider is registered in the pool now
       assert.equal(true, await tdpos.containsProvider(accounts[3]));
     });
 
     it('should fail if Provider is Unregistered and size == maxSize', async () => {
-      let providerPool = await tdpos.providerPool.call();
-      const maxSize = providerPool[2].toNumber();
-      let currentSize = providerPool[3];
+      const maxSize = await tdpos.getProviderPoolMaxSize();
+      let currentSize = await tdpos.getProviderPoolSize();
       assert.isAbove(maxSize, currentSize.toNumber());
       await approveBondProvider(...STANDARD_PROVIDER_PARAMETERS, 1, accounts[4]);
-      providerPool = await tdpos.providerPool.call();
-      currentSize = providerPool[3];
-      assert.equal(maxSize, currentSize);
+      currentSize = await tdpos.getProviderPoolSize();
+      assert.deepEqual(maxSize, currentSize);
       await assertFail( approveBondProvider(...STANDARD_PROVIDER_PARAMETERS, 1, accounts[5]) );
     });
 
@@ -182,7 +178,6 @@ contract('TransmuteDPOS', (accounts) => {
       let provider = await tdpos.providers.call(accounts[4]);
       pricePerStorageMineral = provider[0];
       assert.equal(PRICE_PER_STORAGE_MINERAL, pricePerStorageMineral);
-       [];
       const UPDATED_PRICE_PER_STORAGE_MINERAL = 21;
       await tdpos.provider(UPDATED_PRICE_PER_STORAGE_MINERAL, PRICE_PER_COMPUTE_MINERAL, BLOCK_REWARD_CUT, FEE_SHARE, {from: accounts[4]});
       provider = await tdpos.providers.call(accounts[4]);

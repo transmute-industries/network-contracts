@@ -142,9 +142,8 @@ contract('integration/TransmuteDPOS', (accounts) => {
     });
 
     it('provider5 registers as Provider but fails because the providerPool is at maximum capacity', async () => {
-      const providerPool = await tdpos.providerPool.call();
-      let maxSize = providerPool[2];
-      let size = providerPool[3];
+      const maxSize = await tdpos.getProviderPoolMaxSize.call();
+      const size = await tdpos.getProviderPoolSize.call();
       assert.deepEqual(maxSize, size);
       await assertFail( tdpos.provider(...STANDARD_PROVIDER_PARAMETERS, {from: provider5}) );
     });

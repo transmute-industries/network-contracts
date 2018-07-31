@@ -12,10 +12,9 @@ contract('ProviderPool', (accounts) => {
     // to verify that the bondedAmounts are in decreasing order
     let bondedAmountOfPreviousAddress = Number.POSITIVE_INFINITY;
     let previousAddress = 0;
-    let providerPool = await pp.providerPool.call();
-    let currentAddress = providerPool[0]; // [0] is head of the list
+    let currentAddress = await pp.getFirstProvider.call();
     let node = await pp.getProvider.call(currentAddress);
-    let end = providerPool[1]; // [1] is tail of the list
+    let end = await pp.getLastProvider.call();
     while (currentAddress != end) {
       assert(bondedAmountOfPreviousAddress >= node[0]); // [0] is the bondedAmount
       assert.equal(node[2], previousAddress); // [2] is previous address in the list
@@ -32,11 +31,9 @@ contract('ProviderPool', (accounts) => {
     });
 
     it('should set the max number of providers allowed in the pool', async () => {
-      let providerPool = await pp.providerPool.call();
-      assert.equal(0, providerPool[2]); // max size
+      assert.equal(0, await pp.getProviderPoolMaxSize());
       await pp.setProviderPoolMaxSize(7, {from: accounts[0]});
-      providerPool = await pp.providerPool.call();
-      assert.equal(7, providerPool[2]);
+      assert.equal(7, await pp.getProviderPoolMaxSize());
     });
 
     it('should fail if it is not called from the owner\'s address', async () => {
@@ -73,15 +70,13 @@ contract('ProviderPool', (accounts) => {
 
   describe('addProvider', () => {
     it('should add a provider to the pool', async () => {
-      let providerPool = await pp.providerPool.call();
-      assert.equal(0, providerPool[0]); // address head
-      assert.equal(0, providerPool[1]); // address tail
-      assert.equal(0, providerPool[3]); // size
+      assert.equal(0, await pp.getFirstProvider());
+      assert.equal(0, await pp.getLastProvider());
+      assert.equal(0, await pp.getProviderPoolSize());
       await pp.publicAddProvider(accounts[1], 10);
-      providerPool = await pp.providerPool.call();
-      assert.equal(accounts[1], providerPool[0]); // address head
-      assert.equal(accounts[1], providerPool[1]); // address tail
-      assert.equal(1, providerPool[3]); // size
+      assert.equal(accounts[1], await pp.getFirstProvider());
+      assert.equal(accounts[1], await pp.getLastProvider());
+      assert.equal(1, await pp.getProviderPoolSize());
     });
 
     it('should keep the list sorted by descending order of bondedAmount', async () => {
@@ -152,21 +147,17 @@ contract('ProviderPool', (accounts) => {
     });
 
     it('should maintain the size of the pool constant', async () => {
-      let providerPool = await pp.providerPool.call();
-      const previousSize = providerPool[3].toNumber();
+      const previousSize = await pp.getProviderPoolSize();
       await pp.publicUpdateProvider(accounts[2], 20);
-      providerPool = await pp.providerPool.call();
-      assert.equal(previousSize, providerPool[3]);
+      assert.deepEqual(previousSize, await pp.getProviderPoolSize());
     });
 
     it('should remove the provider if updated providerStake is zero', async () => {
-      let providerPool = await pp.providerPool.call();
-      const previousSize = providerPool[3].toNumber();
+      const previousSize = await pp.getProviderPoolSize();
       assert.equal(true, await pp.containsProvider(accounts[2]));
       await pp.publicUpdateProvider(accounts[2], 0);
       assert.equal(false, await pp.containsProvider(accounts[2]));
-      providerPool = await pp.providerPool.call();
-      assert.equal(previousSize - 1, providerPool[3]);
+      assert.equal(previousSize - 1, await pp.getProviderPoolSize());
     });
 
     it('should fail if updated provider is not in the pool', async () => {
@@ -182,11 +173,9 @@ contract('ProviderPool', (accounts) => {
     });
 
     it('should decrease the size of the pool by one', async () => {
-      let providerPool = await pp.providerPool.call();
-      const previousSize = providerPool[3].toNumber();
+      const previousSize = await pp.getProviderPoolSize();
       await pp.publicRemoveProvider(accounts[1]);
-      providerPool = await pp.providerPool.call();
-      assert.equal(previousSize - 1, providerPool[3]);
+      assert.equal(previousSize - 1, await pp.getProviderPoolSize());
     });
 
     it('should keep the list in decreasing order of bonded amounts', async () => {
