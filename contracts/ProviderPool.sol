@@ -9,8 +9,7 @@ contract ProviderPool is Ownable {
   uint public numberOfActiveProviders;
 
   using SortedDoublyLL for SortedDoublyLL.Data;
-  // TODO: Change visibility ?
-  SortedDoublyLL.Data public providerPool;
+  SortedDoublyLL.Data internal providerPool;
 
   function setProviderPoolMaxSize(uint _maxNumber) external onlyOwner {
     // TODO: Remove limitation providerPool.maxSize = _maxNumber;
@@ -49,6 +48,10 @@ contract ProviderPool is Ownable {
     return providerPool.getFirst();
   }
 
+  function getLastProvider() public view returns (address) {
+    return providerPool.getLast();
+  }
+
   function getNextProvider(address _provider) public view returns (address) {
     return providerPool.getNext(_provider);
   }
@@ -59,6 +62,10 @@ contract ProviderPool is Ownable {
 
   function getProviderPoolSize() public view returns (uint) {
     return providerPool.size;
+  }
+
+  function getProviderPoolMaxSize() public view returns (uint) {
+    return providerPool.maxSize;
   }
 
 }
