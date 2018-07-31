@@ -80,9 +80,9 @@ contract('RoundManager', (accounts) => {
       // Rank 3: provider1 with 100 TST;
       // Since numberOfActiveProviders is 2 only provider2 and provider3
       // should be active. provider1 is registered but not active
-      await approveBondProvider(10, 20, 30, 40, provider1Stake, provider1);
-      await approveBondProvider(11, 21, 31, 41, provider2Stake, provider2);
-      await approveBondProvider(12, 22, 32, 42, provider3Stake, provider3);
+      await approveBondProvider(11, 21, 31, 41, provider1Stake, provider1);
+      await approveBondProvider(12, 22, 32, 42, provider2Stake, provider2);
+      await approveBondProvider(13, 23, 33, 43, provider3Stake, provider3);
       const newRoundBlock = await roundManagerHelper.getElectionPeriodEndBlock(tdpos);
       await blockMiner.mineUntilBlock(newRoundBlock);
       await tdpos.initializeRound();
@@ -104,14 +104,48 @@ contract('RoundManager', (accounts) => {
       assert.equal(provider3, activeProviderAddresses[1]);
     });
 
-    it('should not contain the addresses of registered but not active providers', async () => {
+    it('should not contain the addresses of not active providers', async () => {
       const activeProviderAddresses = await tdpos.getActiveProviderAddresses.call();
+      // provider1 is registered but not active
       assert(!activeProviderAddresses.includes(provider1));
+      // provider4 is not registered
+      assert(!activeProviderAddresses.includes(provider4));
     });
 
-    it('should not contain the addresses of unregistered providers', async () => {
-      const activeProviderAddresses = await tdpos.getActiveProviderAddresses.call();
-      assert(!activeProviderAddresses.includes(provider4));
+    it('should set active provider parameters in activeProviders mapping', async () => {
+      const activeProvider2 = await tdpos.activeProviders.call(provider2);
+      let [pricePerStorageMineral, pricePerComputeMineral,
+        blockRewardCut, feeShare] = activeProvider2;
+      assert.equal(12, pricePerStorageMineral);
+      assert.equal(22, pricePerComputeMineral);
+      assert.equal(32, blockRewardCut);
+      assert.equal(42, feeShare);
+      const activeProvider3 = await tdpos.activeProviders.call(provider3);
+      [pricePerStorageMineral, pricePerComputeMineral,
+        blockRewardCut, feeShare] = activeProvider3;
+      assert.equal(13, pricePerStorageMineral);
+      assert.equal(23, pricePerComputeMineral);
+      assert.equal(33, blockRewardCut);
+      assert.equal(43, feeShare);
+    });
+
+    it('should not set non active provider parameters in activeProviders mapping', async () => {
+      // provider1 is registered but not active
+      const activeProvider1 = await tdpos.activeProviders.call(provider1);
+      let [pricePerStorageMineral, pricePerComputeMineral,
+        blockRewardCut, feeShare] = activeProvider1;
+      assert.equal(0, pricePerStorageMineral);
+      assert.equal(0, pricePerComputeMineral);
+      assert.equal(0, blockRewardCut);
+      assert.equal(0, feeShare);
+      // provider4 is not registered
+      const activeProvider4 = await tdpos.activeProviders.call(provider4);
+      [pricePerStorageMineral, pricePerComputeMineral,
+        blockRewardCut, feeShare] = activeProvider4;
+      assert.equal(0, pricePerStorageMineral);
+      assert.equal(0, pricePerComputeMineral);
+      assert.equal(0, blockRewardCut);
+      assert.equal(0, feeShare);
     });
   });
 });
