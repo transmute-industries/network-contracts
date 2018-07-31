@@ -69,7 +69,6 @@ contract('TransmuteDPOS', (accounts) => {
       await assertFail( tdpos.provider(...STANDARD_PROVIDER_PARAMETERS, {from: accounts[0]}) );
     });
 
-    // TODO: search for totalBondedAmount
     it('should initially set providerStake to the amount the Provider bonded to himself', async () => {
       let providerStake = await tdpos.getProviderStake.call(accounts[0]);
       assert.equal(0, providerStake);

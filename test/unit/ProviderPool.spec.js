@@ -138,12 +138,12 @@ contract('ProviderPool', (accounts) => {
 
     it('should update the new key', async () => {
       let provider = await pp.getProvider(accounts[0]);
-      let totalBondedAmount = provider[0];
-      assert.equal(1, totalBondedAmount);
+      let providerStake = provider[0];
+      assert.equal(1, providerStake);
       await pp.publicUpdateProvider(accounts[0], 9);
       provider = await pp.getProvider(accounts[0]);
-      totalBondedAmount = provider[0];
-      assert.equal(9, totalBondedAmount);
+      providerStake = provider[0];
+      assert.equal(9, providerStake);
     });
 
     it('should keep the value sorted', async () => {
@@ -159,7 +159,7 @@ contract('ProviderPool', (accounts) => {
       assert.equal(previousSize, providerPool[3]);
     });
 
-    it('should remove the provider if updated totalBondedAmount is zero', async () => {
+    it('should remove the provider if updated providerStake is zero', async () => {
       let providerPool = await pp.providerPool.call();
       const previousSize = providerPool[3].toNumber();
       assert.equal(true, await pp.containsProvider(accounts[2]));
