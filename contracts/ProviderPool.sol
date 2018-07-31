@@ -4,8 +4,22 @@ import "./SortedDoublyLL.sol";
 import "zeppelin-solidity/contracts/ownership/Ownable.sol";
 
 contract ProviderPool is Ownable {
+
+  // TODO: init
+  uint public numberOfActiveProviders;
+
   using SortedDoublyLL for SortedDoublyLL.Data;
   SortedDoublyLL.Data public providerPool;
+
+  function setMaxNumberOfProviders(uint _maxNumber) external onlyOwner {
+    // TODO: providerPool.maxSize = _maxNumber;
+    providerPool.setMaxSize(_maxNumber);
+  }
+
+  function setNumberOfActiveProviders(uint _numberOfActiveProviders) external onlyOwner {
+    require(_numberOfActiveProviders <= providerPool.maxSize);
+    numberOfActiveProviders = _numberOfActiveProviders;
+  }
 
   // @dev convenience method to access the 'nodes' mapping that lives inside providerPool
   function getProvider(address _provider) external view returns (uint, address, address) {
@@ -15,10 +29,6 @@ contract ProviderPool is Ownable {
 
   function containsProvider(address _provider) external view returns (bool) {
     return providerPool.contains(_provider);
-  }
-
-  function setMaxNumberOfProviders(uint _maxNumber) external onlyOwner {
-    providerPool.setMaxSize(_maxNumber);
   }
 
   function addProvider(address _provider, uint _bondedAmount) internal {
