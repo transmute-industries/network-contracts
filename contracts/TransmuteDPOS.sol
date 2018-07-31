@@ -19,33 +19,34 @@ contract TransmuteDPOS is TransmuteToken, RoundManager, DelegatorManager {
   {
     require(_blockRewardCut <= 100);
     require(_feeShare <= 100);
-    Provider storage p = providers[msg.sender];
     Delegator storage d = delegators[msg.sender];
-    // Provider has to be a Delegator to himself
-    require(d.delegateAddress == msg.sender);
-    if (providerStatus(msg.sender) == ProviderStatus.Unregistered) {
-      numberOfProviders = numberOfProviders.add(1);
-      addProvider(msg.sender, p.totalAmountBonded);
-      emit ProviderAdded(msg.sender, _pricePerStorageMineral, _pricePerComputeMineral, _blockRewardCut, _feeShare);
-    } else {
-      emit ProviderUpdated(msg.sender, _pricePerStorageMineral, _pricePerComputeMineral, _blockRewardCut, _feeShare);
-    }
+    Provider storage p = providers[msg.sender];
     p.pricePerStorageMineral = _pricePerStorageMineral;
     p.pricePerComputeMineral = _pricePerComputeMineral;
     p.blockRewardCut = _blockRewardCut;
     p.feeShare = _feeShare;
+    // Provider has to be a Delegator to himself
+    require(d.delegateAddress == msg.sender);
+    if (providerStatus(msg.sender) == ProviderStatus.Unregistered) {
+      numberOfProviders = numberOfProviders.add(1);
+      addProvider(msg.sender, d.amountBonded);
+      // TODO: update with amount
+      emit ProviderAdded(msg.sender, _pricePerStorageMineral, _pricePerComputeMineral, _blockRewardCut, _feeShare);
+    } else {
+      emit ProviderUpdated(msg.sender, _pricePerStorageMineral, _pricePerComputeMineral, _blockRewardCut, _feeShare);
+    }
   }
 
   function resignAsProvider(address _provider) internal {
     require(providerStatus(_provider) == ProviderStatus.Registered);
     removeProvider(_provider);
+    // TODO
     delete providers[_provider];
     emit ProviderResigned(_provider);
   }
 
   function bond(address _provider, uint _amount) external {
     require(_amount > 0);
-    Provider storage p = providers[_provider];
     // A delegator is only allowed to bond to himself (in which case he wants to be a Provider)
     // or to a Registered Provider
     ProviderStatus pStatus = providerStatus(_provider);
@@ -54,10 +55,11 @@ contract TransmuteDPOS is TransmuteToken, RoundManager, DelegatorManager {
     require(delegators[msg.sender].delegateAddress == address(0));
     this.transferFrom(msg.sender, this, _amount);
     delegators[msg.sender] = Delegator(_provider, _amount);
-    p.totalAmountBonded = p.totalAmountBonded.add(_amount);
+    uint currentProviderStake = getProviderStake(_provider);
+    uint newProviderStake = currentProviderStake.add(_amount);
     // Update the bonded amount of the provider in the pool
     if (pStatus == ProviderStatus.Registered) {
-      updateProvider(_provider, p.totalAmountBonded);
+      updateProvider(_provider, newProviderStake);
     }
     emit DelegatorBonded(msg.sender, _provider, _amount);
   }
@@ -66,20 +68,19 @@ contract TransmuteDPOS is TransmuteToken, RoundManager, DelegatorManager {
     // Only Bonded Delegators can call the function
     require(delegatorStatus(msg.sender) == DelegatorStatus.Bonded);
     Delegator storage d = delegators[msg.sender];
-    Provider storage p = providers[d.delegateAddress];
     // Sets the block number from which the Delegator will be able to withdraw() his tokens
     uint withdrawBlock = block.number.add(unbondingPeriod);
     uint amount = d.amountBonded;
     withdrawInformations[msg.sender] = WithdrawInformation(withdrawBlock, amount);
-    // Decrease the totalAmountBonded parameter of the provider
-    p.totalAmountBonded = p.totalAmountBonded.sub(amount);
     if (d.delegateAddress == msg.sender) {
       // A Provider has to be a Delegator to himself
       // Therefore if a Provider unbonds he should resign
       resignAsProvider(msg.sender);
     } else {
       // Otherwise it should update the position of the Provider in the pool
-      updateProvider(d.delegateAddress, p.totalAmountBonded);
+      uint currentProviderStake = getProviderStake(d.delegateAddress);
+      uint newProviderStake = currentProviderStake.sub(amount);
+      updateProvider(d.delegateAddress, newProviderStake);
     }
     emit DelegatorUnbonded(msg.sender, d.delegateAddress, amount);
     // Remove delegator from the list. He is now no longer in the the Bonded State

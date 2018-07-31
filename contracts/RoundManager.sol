@@ -64,7 +64,6 @@ contract RoundManager is Ownable, ProviderPool, ProviderManager {
     ActiveProviderSet storage aps = activeProviderSets[roundNumber];
     for (uint i = 0; i < activeSetSize; i++) {
       aps.providers.push(currentProvider);
-      // TODO: Optimization possible by removing this
       aps.isActive[currentProvider] = true;
 
       uint stake = providerPool.getKey(currentProvider);

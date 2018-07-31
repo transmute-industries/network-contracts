@@ -1,6 +1,7 @@
 pragma solidity ^0.4.24;
 
 contract ProviderManager {
+  //TODO: remove _
   event ProviderAdded (
     address indexed _provider,
     uint _pricePerStorageMineral,
@@ -28,7 +29,6 @@ contract ProviderManager {
     uint pricePerComputeMineral;
     uint blockRewardCut;
     uint feeShare;
-    uint totalAmountBonded;
   }
 
   uint public numberOfProviders;
