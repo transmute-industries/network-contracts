@@ -2,8 +2,9 @@ pragma solidity ^0.4.24;
 
 import "zeppelin-solidity/contracts/math/SafeMath.sol";
 import "zeppelin-solidity/contracts/ownership/Ownable.sol";
+import "./ProviderPool.sol";
 
-contract RoundManager is Ownable {
+contract RoundManager is Ownable, ProviderPool {
   using SafeMath for uint;
 
   // Round number of the last round

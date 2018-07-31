@@ -2,9 +2,8 @@ pragma solidity ^0.4.24;
 
 import "./TransmuteToken.sol";
 import "./RoundManager.sol";
-import "./ProviderPool.sol";
 
-contract TransmuteDPOS is TransmuteToken, RoundManager, ProviderPool {
+contract TransmuteDPOS is TransmuteToken, RoundManager {
 
   event DelegatorBonded(
     address indexed _delegator,
