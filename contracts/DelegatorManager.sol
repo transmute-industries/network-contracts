@@ -17,7 +17,6 @@ contract DelegatorManager {
 
   struct Delegator {
     address delegateAddress;
-    // TODO: rename variable
     uint amountBonded;
   }
 
