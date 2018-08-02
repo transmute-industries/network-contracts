@@ -507,5 +507,97 @@ contract('TransmuteDPOS', (accounts) => {
       assert.equal(DELEGATOR_UNBONDED, await tdpos.delegatorStatus(accounts[3]));
     });
   });
+
+  describe.only('rebond', () => {
+    before(async () => {
+      await initNew();
+      await approveBondProvider(...STANDARD_PROVIDER_PARAMETERS, 1, accounts[0]);
+      await approveBondProvider(...STANDARD_PROVIDER_PARAMETERS, 1, accounts[1]);
+      await tdpos.approve(contractAddress, 200, {from: accounts[2]});
+      await tdpos.bond(accounts[0], 200, {from: accounts[2]});
+      await tdpos.approve(contractAddress, 300, {from: accounts[3]});
+      await tdpos.bond(accounts[0], 300, {from: accounts[3]});
+      await tdpos.unbond({from: accounts[3]});
+    });
+
+    it('should fail if Delegator is in Bonded state', async () => {
+      assert.equal(DELEGATOR_BONDED, await tdpos.delegatorStatus(accounts[2]));
+      await assertFail( tdpos.rebond(accounts[0], {from: accounts[2]}) );
+    });
+
+    it('should fail if Delegator is in Unbonded state', async () => {
+      assert.equal(DELEGATOR_UNBONDED, await tdpos.delegatorStatus(accounts[4]));
+      await assertFail( tdpos.rebond(accounts[0], {from: accounts[4]}) );
+    });
+
+    // TODO: should delete mapping
+    it('should set the amountBonded for the same amount that was bonded before', async () => {
+      // TODO: rename
+      assert.equal(DELEGATOR_UNBONDED_WITH_TOKENS_TO_WITHDRAW, await tdpos.delegatorStatus(accounts[3]));
+      // TODO: name providers explicitly
+      await tdpos.rebond(accounts[1], {from: accounts[3]});
+      const unbondingInformation = await tdpos.unbondingInformations.call(accounts[3]);
+      const previousAmountBonded = unbondingInformation[1];
+      const delegator = await tdpos.delegators.call(accounts[3]);
+      const amountBonded = delegator[1];
+      assert.deepEqual(previousAmountBonded, amountBonded);
+    });
+
+    it('should fail if target is not a Registered Provider or the Delegator himself', async () => {
+      // target is a Registered Provider
+      await tdpos.unbond({from: accounts[3]});
+      await tdpos.rebond(accounts[1], {from: accounts[3]});
+      // target is a Delegator himself
+      await tdpos.unbond({from: accounts[3]});
+      await tdpos.rebond(accounts[3], {from: accounts[3]});
+      // target is neither
+      await tdpos.unbond({from: accounts[3]});
+      await assertFail( tdpos.rebond(accounts[9], {from: accounts[3]}) );
+    });
+
+    it('should create an entry in the delegators mapping', async () => {
+      let delegator = await tdpos.delegators.call(accounts[3]);
+      let [delegateAddress, amountBonded] = delegator;
+      assert.equal(0, delegateAddress);
+      assert.equal(0, amountBonded);
+      await tdpos.rebond(accounts[1], {from: accounts[3]});
+      delegator = await tdpos.delegators.call(accounts[3]);
+      [delegateAddress, amountBonded] = delegator;
+      assert.equal(accounts[1], delegateAddress);
+      assert.equal(300, amountBonded);
+    });
+
+    it('should update the stake of the target Provider', async () => {
+      await tdpos.unbond({from: accounts[3]});
+      const previousStake = await tdpos.getProviderStake.call(accounts[0]);
+      await tdpos.rebond(accounts[0], {from: accounts[3]});
+      const delegator = await tdpos.delegators.call(accounts[3]);
+      const amountBonded = delegator[1];
+      const currentStake = await tdpos.getProviderStake.call(accounts[0]);
+      assert.deepEqual(previousStake.add(amountBonded), currentStake);
+    });
+
+    it('should emit an DelegatorBonded event', async () => {
+      const delegator = await tdpos.delegators.call(accounts[3]);
+      const amountBonded = delegator[1].toNumber();
+      await tdpos.unbond({from: accounts[3]});
+      const result = await tdpos.rebond(accounts[0], {from: accounts[3]});
+      assert.web3Event(result, {
+        event: 'DelegatorBonded',
+        args: {
+          delegator: accounts[3],
+          provider: accounts[0],
+          amount: amountBonded,
+        },
+      });
+    });
+
+    it('should switch Delegator status to Bonded', async () => {
+      await tdpos.unbond({from: accounts[3]});
+      assert.equal(DELEGATOR_UNBONDED_WITH_TOKENS_TO_WITHDRAW, await tdpos.delegatorStatus(accounts[3]));
+      await tdpos.rebond(accounts[1], {from: accounts[3]});
+      assert.equal(DELEGATOR_BONDED, await tdpos.delegatorStatus(accounts[3]));
+    });
+  });
 });
 
