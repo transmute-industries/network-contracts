@@ -13,7 +13,7 @@ contract DelegatorManager {
     uint amount
   );
 
-  enum DelegatorStatus { Unbonded, UnbondedWithTokensToWithdraw, Bonded }
+  enum DelegatorStatus { Unbonded, Unbonding, Bonded }
 
   struct Delegator {
     address delegateAddress;

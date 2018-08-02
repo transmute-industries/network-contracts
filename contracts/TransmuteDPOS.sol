@@ -86,16 +86,15 @@ contract TransmuteDPOS is TransmuteToken, RoundManager, DelegatorManager {
   function withdraw() external {
     UnbondingInformation storage unbondingInformation = unbondingInformations[msg.sender];
     require(unbondingInformation.withdrawBlock <= block.number);
-    require(delegatorStatus(msg.sender) == DelegatorStatus.UnbondedWithTokensToWithdraw);
+    require(delegatorStatus(msg.sender) == DelegatorStatus.Unbonding);
     this.transfer(msg.sender, unbondingInformation.amount);
     delete unbondingInformations[msg.sender];
   }
 
   function rebond(address _provider) external {
     // Only Delegators who have called unbond() can call this function
-    require(delegatorStatus(msg.sender) == DelegatorStatus.UnbondedWithTokensToWithdraw);
+    require(delegatorStatus(msg.sender) == DelegatorStatus.Unbonding);
     // Get amount previously bonded
-    // TODO: why ? Add explanation to wiki
     uint amount = unbondingInformations[msg.sender].amount;
     // Process bonding
     processBonding(_provider, amount);
@@ -134,7 +133,7 @@ contract TransmuteDPOS is TransmuteToken, RoundManager, DelegatorManager {
       return DelegatorStatus.Bonded;
     } else if (unbondingInformations[_delegator].withdrawBlock != 0) {
       // Else if _delegator has some unbondingInformation, he just called unbond() and didn't withdraw() or rebond() yet
-      return DelegatorStatus.UnbondedWithTokensToWithdraw;
+      return DelegatorStatus.Unbonding;
     } else {
       // Else he is Unbonded: either he didn't call bond() or he called bond() unbond() and withdraw()
       return DelegatorStatus.Unbonded;

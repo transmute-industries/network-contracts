@@ -20,7 +20,7 @@ contract('integration/TransmuteDPOS', (accounts) => {
 
   // Delegator states
   const DELEGATOR_UNBONDED = 0;
-  const DELEGATOR_UNBONDED_WITH_TOKENS_TO_WITHDRAW = 1;
+  const DELEGATOR_UNBONDING = 1;
   const DELEGATOR_BONDED = 2;
 
   let provider1; let provider2; let provider3; let provider4; let provider5;
@@ -211,14 +211,14 @@ contract('integration/TransmuteDPOS', (accounts) => {
       delegator5 = accounts[7];
     });
 
-    it('delegator1 unbonds and enters the UNBONDED_WITH_TOKENS_TO_WITHDRAW state', async () => {
+    it('delegator1 unbonds and enters the UNBONDING state', async () => {
       assert.equal(DELEGATOR_BONDED, await tdpos.delegatorStatus(delegator1));
       await tdpos.unbond({from: delegator1});
-      assert.equal(DELEGATOR_UNBONDED_WITH_TOKENS_TO_WITHDRAW, await tdpos.delegatorStatus(delegator1));
+      assert.equal(DELEGATOR_UNBONDING, await tdpos.delegatorStatus(delegator1));
     });
 
-    it('delegator1 unbonds again but fails because he is in the UNBONDED_WITH_TOKENS_TO_WITHDRAW state', async () => {
-      assert.equal(DELEGATOR_UNBONDED_WITH_TOKENS_TO_WITHDRAW, await tdpos.delegatorStatus(delegator1));
+    it('delegator1 unbonds again but fails because he is in the UNBONDING state', async () => {
+      assert.equal(DELEGATOR_UNBONDING, await tdpos.delegatorStatus(delegator1));
       await assertFail( tdpos.unbond({from: delegator1}) );
     });
 
@@ -236,7 +236,7 @@ contract('integration/TransmuteDPOS', (accounts) => {
 
   describe('Withdrawing tokens', () => {
     it('delegator1 withdraws and fails because he didn\'t wait the unbondingPeriod', async () => {
-      assert.equal(DELEGATOR_UNBONDED_WITH_TOKENS_TO_WITHDRAW, await tdpos.delegatorStatus(delegator1));
+      assert.equal(DELEGATOR_UNBONDING, await tdpos.delegatorStatus(delegator1));
       await assertFail( tdpos.withdraw({from: delegator1}) );
     });
 
@@ -249,7 +249,7 @@ contract('integration/TransmuteDPOS', (accounts) => {
     });
 
     it('provider1 withdraws his tokens and enters UNBONDED state', async () => {
-      assert.equal(DELEGATOR_UNBONDED_WITH_TOKENS_TO_WITHDRAW, await tdpos.delegatorStatus(provider1));
+      assert.equal(DELEGATOR_UNBONDING, await tdpos.delegatorStatus(provider1));
       await tdpos.withdraw({from: provider1});
       assert.equal(DELEGATOR_UNBONDED, await tdpos.delegatorStatus(provider1));
     });

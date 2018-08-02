@@ -21,7 +21,7 @@ contract('TransmuteDPOS', (accounts) => {
 
   // Delegator states
   const DELEGATOR_UNBONDED = 0;
-  const DELEGATOR_UNBONDED_WITH_TOKENS_TO_WITHDRAW = 1;
+  const DELEGATOR_UNBONDING = 1;
   const DELEGATOR_BONDED = 2;
 
   // This is a convenience function for the process of registering a new provider.
@@ -431,14 +431,14 @@ contract('TransmuteDPOS', (accounts) => {
       assert.equal(DELEGATOR_BONDED, await tdpos.delegatorStatus(accounts[4]));
     });
 
-    it('should return UnbondedWithTokensToWithdraw if Delegator has called unbond()', async () => {
+    it('should return Unbonding if Delegator has called unbond()', async () => {
       assert.equal(DELEGATOR_BONDED, await tdpos.delegatorStatus(accounts[4]));
       await tdpos.unbond({from: accounts[4]});
-      assert.equal(DELEGATOR_UNBONDED_WITH_TOKENS_TO_WITHDRAW, await tdpos.delegatorStatus(accounts[4]));
+      assert.equal(DELEGATOR_UNBONDING, await tdpos.delegatorStatus(accounts[4]));
     });
 
     it('should return Unbonded if Delegator has called unbond() and withdraw()', async () => {
-      assert.equal(DELEGATOR_UNBONDED_WITH_TOKENS_TO_WITHDRAW, await tdpos.delegatorStatus(accounts[4]));
+      assert.equal(DELEGATOR_UNBONDING, await tdpos.delegatorStatus(accounts[4]));
       const unbondingInformation = await tdpos.unbondingInformations(accounts[4]);
       const withdrawBlock = unbondingInformation[0];
       await blockMiner.mineUntilBlock(withdrawBlock - 1);
@@ -480,7 +480,7 @@ contract('TransmuteDPOS', (accounts) => {
 
     it('should fail if withdrawBlock has not been reached', async () => {
       await tdpos.unbond({from: accounts[2]});
-      assert.equal(DELEGATOR_UNBONDED_WITH_TOKENS_TO_WITHDRAW, await tdpos.delegatorStatus(accounts[2]));
+      assert.equal(DELEGATOR_UNBONDING, await tdpos.delegatorStatus(accounts[2]));
       const unbondingInformation = await tdpos.unbondingInformations(accounts[2]);
       const withdrawBlock = unbondingInformation[0];
       await blockMiner.mineUntilBlock(withdrawBlock - 2);
@@ -555,10 +555,8 @@ contract('TransmuteDPOS', (accounts) => {
       await assertFail( tdpos.rebond(accounts[0], {from: accounts[4]}) );
     });
 
-    // TODO: should delete mapping
     it('should set the amountBonded for the same amount that was bonded before', async () => {
-      // TODO: rename
-      assert.equal(DELEGATOR_UNBONDED_WITH_TOKENS_TO_WITHDRAW, await tdpos.delegatorStatus(accounts[3]));
+      assert.equal(DELEGATOR_UNBONDING, await tdpos.delegatorStatus(accounts[3]));
       // TODO: name providers explicitly
       const unbondingInformation = await tdpos.unbondingInformations.call(accounts[3]);
       const previousAmountBonded = unbondingInformation[1];
@@ -619,7 +617,7 @@ contract('TransmuteDPOS', (accounts) => {
 
     it('should switch Delegator status to Bonded', async () => {
       await tdpos.unbond({from: accounts[3]});
-      assert.equal(DELEGATOR_UNBONDED_WITH_TOKENS_TO_WITHDRAW, await tdpos.delegatorStatus(accounts[3]));
+      assert.equal(DELEGATOR_UNBONDING, await tdpos.delegatorStatus(accounts[3]));
       await tdpos.rebond(accounts[1], {from: accounts[3]});
       assert.equal(DELEGATOR_BONDED, await tdpos.delegatorStatus(accounts[3]));
     });
