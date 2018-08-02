@@ -338,6 +338,8 @@ contract('TransmuteDPOS', (accounts) => {
       await tdpos.bond(accounts[0], 300, {from: accounts[4]});
       await tdpos.approve(contractAddress, 300, {from: accounts[5]});
       await tdpos.bond(accounts[0], 300, {from: accounts[5]});
+      await tdpos.approve(contractAddress, 300, {from: accounts[6]});
+      await tdpos.bond(accounts[6], 300, {from: accounts[6]});
     });
 
     it('should fail if called by an address that is not a Delegator (no bonded amount)', async () => {
@@ -369,6 +371,13 @@ contract('TransmuteDPOS', (accounts) => {
       assert.equal(PROVIDER_REGISTERED, await tdpos.providerStatus.call(accounts[1]));
       await tdpos.unbond({from: accounts[1]});
       assert.equal(PROVIDER_UNREGISTERED, await tdpos.providerStatus.call(accounts[1]));
+    });
+
+    it('should work if Delegator bonded to himself', async () => {
+      const delegator = await tdpos.delegators.call(accounts[6]);
+      const delegateAddress = delegator[0];
+      assert.equal(delegateAddress, accounts[6]);
+      await tdpos.unbond({from: accounts[6]});
     });
 
     it('should remove the Delegator from the mapping', async () => {
@@ -508,7 +517,7 @@ contract('TransmuteDPOS', (accounts) => {
     });
   });
 
-  describe.only('rebond', () => {
+  describe('rebond', () => {
     before(async () => {
       await initNew();
       await approveBondProvider(...STANDARD_PROVIDER_PARAMETERS, 1, accounts[0]);

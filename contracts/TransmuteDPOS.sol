@@ -67,9 +67,11 @@ contract TransmuteDPOS is TransmuteToken, RoundManager, DelegatorManager {
     uint amount = d.amountBonded;
     unbondingInformations[msg.sender] = UnbondingInformation(withdrawBlock, amount);
     if (d.delegateAddress == msg.sender) {
-      // A Provider has to be a Delegator to himself
-      // Therefore if a Provider unbonds he should resign
-      resignAsProvider(msg.sender);
+      if (providerStatus(msg.sender) == ProviderStatus.Registered) {
+        // A Provider has to be a Delegator to himself
+        // Therefore if a Provider unbonds he should resign
+        resignAsProvider(msg.sender);
+      }
     } else {
       // Otherwise it should update the position of the Provider in the pool
       uint currentProviderStake = getProviderStake(d.delegateAddress);
