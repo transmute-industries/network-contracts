@@ -497,8 +497,8 @@ contract('TransmuteDPOS', (accounts) => {
     });
 
     it('should fail if Delegator is in Unbonded state', async () => {
-      assert.equal(DELEGATOR_UNBONDED, await tdpos.delegatorStatus(accounts[4]));
-      await assertFail( tdpos.withdraw({from: accounts[4]}) );
+      assert.equal(DELEGATOR_UNBONDED, await tdpos.delegatorStatus(accounts[5]));
+      await assertFail( tdpos.withdraw({from: accounts[5]}) );
     });
 
     it('should transfer the right amount of tokens back to the Delegator', async () => {
@@ -514,6 +514,22 @@ contract('TransmuteDPOS', (accounts) => {
 
     it('should switch Delegator status to Unbonded', async () => {
       assert.equal(DELEGATOR_UNBONDED, await tdpos.delegatorStatus(accounts[3]));
+    });
+
+    it('should delete unbondingInformation', async () => {
+      await tdpos.approve(contractAddress, 400, {from: accounts[4]});
+      await tdpos.bond(accounts[0], 400, {from: accounts[4]});
+      await tdpos.unbond({from: accounts[4]});
+      let unbondingInformation = await tdpos.unbondingInformations.call(accounts[4]);
+      let [withdrawBlock, amount] = unbondingInformation;
+      assert(0 < withdrawBlock);
+      assert(0 < amount);
+      await blockMiner.mineUntilBlock(withdrawBlock - 1);
+      await tdpos.withdraw({from: accounts[4]});
+      unbondingInformation = await tdpos.unbondingInformations.call(accounts[4]);
+      [withdrawBlock, amount] = unbondingInformation;
+      assert.equal(0, withdrawBlock);
+      assert.equal(0, amount);
     });
   });
 
@@ -606,6 +622,19 @@ contract('TransmuteDPOS', (accounts) => {
       assert.equal(DELEGATOR_UNBONDED_WITH_TOKENS_TO_WITHDRAW, await tdpos.delegatorStatus(accounts[3]));
       await tdpos.rebond(accounts[1], {from: accounts[3]});
       assert.equal(DELEGATOR_BONDED, await tdpos.delegatorStatus(accounts[3]));
+    });
+
+    it('should delete unbondingInformation', async () => {
+      await tdpos.unbond({from: accounts[3]});
+      let unbondingInformation = await tdpos.unbondingInformations.call(accounts[3]);
+      let [withdrawBlock, amount] = unbondingInformation;
+      assert(0 < withdrawBlock);
+      assert(0 < amount);
+      await tdpos.rebond(accounts[1], {from: accounts[3]});
+      unbondingInformation = await tdpos.unbondingInformations.call(accounts[3]);
+      [withdrawBlock, amount] = unbondingInformation;
+      assert.equal(0, withdrawBlock);
+      assert.equal(0, amount);
     });
   });
 });
