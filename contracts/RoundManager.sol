@@ -77,7 +77,7 @@ contract RoundManager is Ownable, ProviderPool, ProviderManager {
   }
 
   // Getter function for ActiveProviderSet
-  function getActiveProviderAddresses() public returns (address[]) {
+  function getActiveProviderAddresses() public view returns (address[]) {
     return activeProviderSets[roundNumber].providers;
   }
 }
