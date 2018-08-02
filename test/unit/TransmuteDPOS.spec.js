@@ -544,9 +544,9 @@ contract('TransmuteDPOS', (accounts) => {
       // TODO: rename
       assert.equal(DELEGATOR_UNBONDED_WITH_TOKENS_TO_WITHDRAW, await tdpos.delegatorStatus(accounts[3]));
       // TODO: name providers explicitly
-      await tdpos.rebond(accounts[1], {from: accounts[3]});
       const unbondingInformation = await tdpos.unbondingInformations.call(accounts[3]);
       const previousAmountBonded = unbondingInformation[1];
+      await tdpos.rebond(accounts[1], {from: accounts[3]});
       const delegator = await tdpos.delegators.call(accounts[3]);
       const amountBonded = delegator[1];
       assert.deepEqual(previousAmountBonded, amountBonded);
