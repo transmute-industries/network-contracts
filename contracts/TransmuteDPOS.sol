@@ -48,24 +48,13 @@ contract TransmuteDPOS is TransmuteToken, RoundManager, DelegatorManager {
   }
 
   function bond(address _provider, uint _amount) external {
+    // Only Unbonded Delegators can call this function
+    require(delegatorStatus(msg.sender) == DelegatorStatus.Unbonded);
+    // Transfer tokens from the Delegator's address to the contract's address
     require(_amount > 0);
-    // A delegator is only allowed to bond to himself (in which case he wants to be a Provider)
-    // or to a Registered Provider
-    ProviderStatus pStatus = providerStatus(_provider);
-    require(_provider == msg.sender || pStatus == ProviderStatus.Registered);
-    // Check if delegator has not already bonded to some address
-    require(delegators[msg.sender].delegateAddress == address(0));
-
     this.transferFrom(msg.sender, this, _amount);
-    delegators[msg.sender] = Delegator(_provider, _amount);
 
-    uint currentProviderStake = getProviderStake(_provider);
-    uint newProviderStake = currentProviderStake.add(_amount);
-    // Update the bonded amount of the provider in the pool
-    if (pStatus == ProviderStatus.Registered) {
-      updateProvider(_provider, newProviderStake);
-    }
-    emit DelegatorBonded(msg.sender, _provider, _amount);
+    processBonding(_provider, _amount);
   }
 
   function unbond() external {
@@ -103,21 +92,27 @@ contract TransmuteDPOS is TransmuteToken, RoundManager, DelegatorManager {
   function rebond(address _provider) external {
     // Only Delegators who have called unbond() can call this function
     require(delegatorStatus(msg.sender) == DelegatorStatus.UnbondedWithTokensToWithdraw);
-    // A delegator is only allowed to bond to himself (in which case he wants to be a Provider)
-    // or to a Registered Provider
+    // Get amount previously bonded
+    // TODO: why ? Add explanation to wiki
+    uint amount = withdrawInformations[msg.sender].amount;
+
+    processBonding(_provider, amount);
+  }
+
+  function processBonding(address _provider, uint _amount) internal {
     ProviderStatus pStatus = providerStatus(_provider);
+    // A Delegator is only allowed to bond to himself or to a Registered Provider
     require(_provider == msg.sender || pStatus == ProviderStatus.Registered);
     // Create the Delegator in the mapping
-    uint amount = withdrawInformations[msg.sender].amount;
-    delegators[msg.sender] = Delegator(_provider, amount);
-    // Update the bonded amount of the provider in the pool
-    uint currentProviderStake = getProviderStake(_provider);
-    uint newProviderStake = currentProviderStake.add(amount);
-    if (providerStatus(_provider) == ProviderStatus.Registered) {
+    delegators[msg.sender] = Delegator(_provider, _amount);
+    // Update the bonded amount of the Provider in the pool
+    if (pStatus == ProviderStatus.Registered) {
+      uint currentProviderStake = getProviderStake(_provider);
+      uint newProviderStake = currentProviderStake.add(_amount);
       updateProvider(_provider, newProviderStake);
     }
-
-    emit DelegatorBonded(msg.sender, _provider, amount);
+    // Emit DelegatorBonded event
+    emit DelegatorBonded(msg.sender, _provider, _amount);
   }
 
   // TODO: Add Active status
