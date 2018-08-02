@@ -100,7 +100,27 @@ contract TransmuteDPOS is TransmuteToken, RoundManager, DelegatorManager {
     delete withdrawInformations[msg.sender];
   }
 
-  // Add Active status
+  function rebond(address _provider) external {
+    // Only Delegators who have called unbond() can call this function
+    require(delegatorStatus(msg.sender) == DelegatorStatus.UnbondedWithTokensToWithdraw);
+    // A delegator is only allowed to bond to himself (in which case he wants to be a Provider)
+    // or to a Registered Provider
+    ProviderStatus pStatus = providerStatus(_provider);
+    require(_provider == msg.sender || pStatus == ProviderStatus.Registered);
+    // Create the Delegator in the mapping
+    uint amount = withdrawInformations[msg.sender].amount;
+    delegators[msg.sender] = Delegator(_provider, amount);
+    // Update the bonded amount of the provider in the pool
+    uint currentProviderStake = getProviderStake(_provider);
+    uint newProviderStake = currentProviderStake.add(amount);
+    if (providerStatus(_provider) == ProviderStatus.Registered) {
+      updateProvider(_provider, newProviderStake);
+    }
+
+    emit DelegatorBonded(msg.sender, _provider, amount);
+  }
+
+  // TODO: Add Active status
   function providerStatus(address _provider) public view returns (ProviderStatus) {
     if (this.containsProvider(_provider)) {
       return ProviderStatus.Registered;

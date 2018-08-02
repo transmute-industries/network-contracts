@@ -28,5 +28,6 @@ contract DelegatorManager {
     uint amount;
   }
 
+  // TODO: rename to unbondInformations
   mapping (address => WithdrawInformation) public withdrawInformations;
 }
