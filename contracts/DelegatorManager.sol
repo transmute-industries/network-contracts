@@ -23,11 +23,10 @@ contract DelegatorManager {
   uint public numberOfDelegators;
   mapping(address => Delegator) public delegators;
 
-  struct WithdrawInformation {
+  struct UnbondingInformation {
     uint withdrawBlock;
     uint amount;
   }
 
-  // TODO: rename to unbondInformations
-  mapping (address => WithdrawInformation) public withdrawInformations;
+  mapping (address => UnbondingInformation) public unbondingInformations;
 }

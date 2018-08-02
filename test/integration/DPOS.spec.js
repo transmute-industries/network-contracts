@@ -241,8 +241,8 @@ contract('integration/TransmuteDPOS', (accounts) => {
     });
 
     it('delegator1 waits the unbondingPeriod and withdraws his tokens', async () => {
-      const withdrawInformation = await tdpos.withdrawInformations.call(delegator1);
-      const withdrawBlock = withdrawInformation[0];
+      const unbondingInformation = await tdpos.unbondingInformations.call(delegator1);
+      const withdrawBlock = unbondingInformation[0];
       await blockMiner.mineUntilBlock(withdrawBlock);
       await tdpos.withdraw({from: delegator1});
       assert.equal(DELEGATOR_UNBONDED, await tdpos.delegatorStatus(delegator1));
