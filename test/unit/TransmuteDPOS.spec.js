@@ -534,12 +534,18 @@ contract('TransmuteDPOS', (accounts) => {
   });
 
   describe('rebond', () => {
+    let provider1;
+    let provider2;
+    let delegator1;
+    let delegator2;
+    let notRegistered;
+
     before(async () => {
-      let provider1 = accounts[0];
-      let provider2 = accounts[1];
-      let delegator1 = accounts[2];
-      let delegator2 = accounts[3];
-      let notRegistered = accounts[4];
+      provider1 = accounts[0];
+      provider2 = accounts[1];
+      delegator1 = accounts[2];
+      delegator2 = accounts[3];
+      notRegistered = accounts[4];
       await initNew();
       await approveBondProvider(...STANDARD_PROVIDER_PARAMETERS, 1, provider1);
       await approveBondProvider(...STANDARD_PROVIDER_PARAMETERS, 1, provider2);
