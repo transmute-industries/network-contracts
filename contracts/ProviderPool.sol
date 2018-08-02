@@ -4,8 +4,22 @@ import "./SortedDoublyLL.sol";
 import "zeppelin-solidity/contracts/ownership/Ownable.sol";
 
 contract ProviderPool is Ownable {
+
+  // TODO: init
+  uint public numberOfActiveProviders;
+
   using SortedDoublyLL for SortedDoublyLL.Data;
-  SortedDoublyLL.Data public providerPool;
+  SortedDoublyLL.Data internal providerPool;
+
+  function setProviderPoolMaxSize(uint _maxNumber) external onlyOwner {
+    // TODO: Remove limitation providerPool.maxSize = _maxNumber;
+    providerPool.setMaxSize(_maxNumber);
+  }
+
+  function setNumberOfActiveProviders(uint _numberOfActiveProviders) external onlyOwner {
+    require(_numberOfActiveProviders <= providerPool.maxSize);
+    numberOfActiveProviders = _numberOfActiveProviders;
+  }
 
   // @dev convenience method to access the 'nodes' mapping that lives inside providerPool
   function getProvider(address _provider) external view returns (uint, address, address) {
@@ -15,10 +29,6 @@ contract ProviderPool is Ownable {
 
   function containsProvider(address _provider) external view returns (bool) {
     return providerPool.contains(_provider);
-  }
-
-  function setMaxNumberOfProviders(uint _maxNumber) external onlyOwner {
-    providerPool.setMaxSize(_maxNumber);
   }
 
   function addProvider(address _provider, uint _bondedAmount) internal {
@@ -32,4 +42,30 @@ contract ProviderPool is Ownable {
   function removeProvider(address _provider) internal {
     providerPool.remove(_provider);
   }
+
+  // Getter functions for providerPool
+  function getFirstProvider() public view returns (address) {
+    return providerPool.getFirst();
+  }
+
+  function getLastProvider() public view returns (address) {
+    return providerPool.getLast();
+  }
+
+  function getNextProvider(address _provider) public view returns (address) {
+    return providerPool.getNext(_provider);
+  }
+
+  function getProviderStake(address _provider) public view returns (uint) {
+    return providerPool.nodes[_provider].key;
+  }
+
+  function getProviderPoolSize() public view returns (uint) {
+    return providerPool.size;
+  }
+
+  function getProviderPoolMaxSize() public view returns (uint) {
+    return providerPool.maxSize;
+  }
+
 }

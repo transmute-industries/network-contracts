@@ -5,6 +5,7 @@ contract('integration/TransmuteDPOS', (accounts) => {
   let tdpos;
   let contractAddress;
   const PROVIDER_POOL_SIZE = 4;
+  const NUMBER_OF_ACTIVE_PROVIDERS = 4;
 
   // Provider states
   const PROVIDER_UNREGISTERED = 0;
@@ -31,7 +32,8 @@ contract('integration/TransmuteDPOS', (accounts) => {
     for (let i = 0; i < 10; i++) {
       await tdpos.mint(accounts[i], 1000, {from: accounts[0]});
     }
-    await tdpos.setMaxNumberOfProviders(PROVIDER_POOL_SIZE);
+    await tdpos.setProviderPoolMaxSize(PROVIDER_POOL_SIZE);
+    await tdpos.setNumberOfActiveProviders(NUMBER_OF_ACTIVE_PROVIDERS);
   }
 
   describe('Registering as Providers', () => {
@@ -140,9 +142,8 @@ contract('integration/TransmuteDPOS', (accounts) => {
     });
 
     it('provider5 registers as Provider but fails because the providerPool is at maximum capacity', async () => {
-      const providerPool = await tdpos.providerPool.call();
-      let maxSize = providerPool[2];
-      let size = providerPool[3];
+      const maxSize = await tdpos.getProviderPoolMaxSize.call();
+      const size = await tdpos.getProviderPoolSize.call();
       assert.deepEqual(maxSize, size);
       await assertFail( tdpos.provider(...STANDARD_PROVIDER_PARAMETERS, {from: provider5}) );
     });
