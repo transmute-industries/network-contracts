@@ -53,7 +53,7 @@ contract TransmuteDPOS is TransmuteToken, RoundManager, DelegatorManager {
     // Transfer tokens from the Delegator's address to the contract's address
     require(_amount > 0);
     this.transferFrom(msg.sender, this, _amount);
-
+    // Process bonding
     processBonding(_provider, _amount);
   }
 
@@ -97,8 +97,10 @@ contract TransmuteDPOS is TransmuteToken, RoundManager, DelegatorManager {
     // Get amount previously bonded
     // TODO: why ? Add explanation to wiki
     uint amount = unbondingInformations[msg.sender].amount;
-
+    // Process bonding
     processBonding(_provider, amount);
+    // Delete unbondingInformations of the Delegator
+    delete unbondingInformations[msg.sender];
   }
 
   function processBonding(address _provider, uint _amount) internal {
