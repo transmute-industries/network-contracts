@@ -13,7 +13,7 @@ contract DelegatorManager {
     uint amount
   );
 
-  enum DelegatorStatus { Unbonded, UnbondedWithTokensToWithdraw, Bonded }
+  enum DelegatorStatus { Unbonded, Unbonding, Bonded }
 
   struct Delegator {
     address delegateAddress;
@@ -23,10 +23,10 @@ contract DelegatorManager {
   uint public numberOfDelegators;
   mapping(address => Delegator) public delegators;
 
-  struct WithdrawInformation {
+  struct UnbondingInformation {
     uint withdrawBlock;
     uint amount;
   }
 
-  mapping (address => WithdrawInformation) public withdrawInformations;
+  mapping (address => UnbondingInformation) public unbondingInformations;
 }
