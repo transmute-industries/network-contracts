@@ -132,6 +132,11 @@ contract('ProviderPool', (accounts) => {
   });
 
   describe('setNumberOfActiveProviders', () => {
+    before(async () => {
+      pp = await ProviderPool.new({from: accounts[0]});
+      await pp.setProviderPoolMaxSize(7);
+    });
+
     it('should set the number of active providers', async () => {
       let numberOfActiveProviders = await pp.numberOfActiveProviders.call();
       assert.equal(0, numberOfActiveProviders); // max size
