@@ -36,14 +36,17 @@ contract RoundManager is Ownable, ProviderPool, ProviderManager {
   }
 
   function setElectionPeriodLength(uint _electionPeriodLength) public onlyOwner {
+    emit ParameterChanged("electionPeriodLength", electionPeriodLength, _electionPeriodLength);
     electionPeriodLength = _electionPeriodLength;
   }
 
   function setRateLockDeadline(uint _rateLockDeadline) public onlyOwner {
+    emit ParameterChanged("rateLockDeadline", rateLockDeadline, _rateLockDeadline);
     rateLockDeadline = _rateLockDeadline;
   }
 
   function setUnbondingPeriod(uint _unbondingPeriod) public onlyOwner {
+    emit ParameterChanged("unbondingPeriod", unbondingPeriod, _unbondingPeriod);
     unbondingPeriod = _unbondingPeriod;
   }
 
