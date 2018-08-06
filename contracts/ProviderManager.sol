@@ -33,11 +33,10 @@ contract ProviderManager {
   }
 
   uint public numberOfProviders;
-  // TODO: rename to registeredProviders
-  mapping(address => Provider) public providers;
+  mapping(address => Provider) public registeredProviders;
 
   // Saves the parameters of active providers for that round.
-  // Any updates via provider() will save the parameters in providers mapping
+  // Any updates via provider() will save the parameters in registeredProviders mapping
   // and will be copied to this mapping at the next call of initializeRound()
   mapping(address => Provider) public activeProviders;
 }

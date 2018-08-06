@@ -24,7 +24,7 @@ contract TransmuteDPOS is TransmuteToken, RoundManager, DelegatorManager {
     require(_blockRewardCut <= 100);
     require(_feeShare <= 100);
 
-    Provider storage p = providers[msg.sender];
+    Provider storage p = registeredProviders[msg.sender];
     p.pricePerStorageMineral = _pricePerStorageMineral;
     p.pricePerComputeMineral = _pricePerComputeMineral;
     p.blockRewardCut = _blockRewardCut;
@@ -45,7 +45,7 @@ contract TransmuteDPOS is TransmuteToken, RoundManager, DelegatorManager {
   function resignAsProvider(address _provider) internal {
     require(providerStatus(_provider) == ProviderStatus.Registered);
     removeProvider(_provider);
-    delete providers[_provider];
+    delete registeredProviders[_provider];
     delete activeProviders[_provider];
     emit ProviderResigned(_provider);
   }

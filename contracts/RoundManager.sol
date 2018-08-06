@@ -72,7 +72,7 @@ contract RoundManager is Ownable, ProviderPool, ProviderManager {
       aps.totalStake = aps.totalStake.add(stake);
 
       // Set pending rates as current rates
-      activeProviders[currentProvider] = providers[currentProvider];
+      activeProviders[currentProvider] = registeredProviders[currentProvider];
 
       // Get next provider in the pool
       currentProvider = getNextProvider(currentProvider);

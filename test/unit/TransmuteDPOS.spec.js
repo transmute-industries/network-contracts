@@ -74,7 +74,7 @@ contract('TransmuteDPOS', (accounts) => {
     it('should register a Provider\'s parameters', async () => {
       assert.equal(PROVIDER_UNREGISTERED, await tdpos.providerStatus.call(accounts[1]));
       await approveBondProvider(...STANDARD_PROVIDER_PARAMETERS, 1, accounts[1]);
-      const provider = await tdpos.providers.call(accounts[1]);
+      const provider = await tdpos.registeredProviders.call(accounts[1]);
       let [pricePerStorageMineral, pricePerComputeMineral,
         blockRewardCut, feeShare] = provider;
       assert.equal(PROVIDER_REGISTERED, await tdpos.providerStatus.call(accounts[1]));
@@ -103,7 +103,7 @@ contract('TransmuteDPOS', (accounts) => {
       await blockMiner.mineUntilBlock(rateLockDeadlineBlock - 1);
       const UPDATED_PRICE_PER_STORAGE_MINERAL = 23;
       await tdpos.provider(UPDATED_PRICE_PER_STORAGE_MINERAL, PRICE_PER_COMPUTE_MINERAL, BLOCK_REWARD_CUT, FEE_SHARE, {from: accounts[0]});
-      const provider = await tdpos.providers(accounts[0]);
+      const provider = await tdpos.registeredProviders(accounts[0]);
       const pricePerStorageMineral = provider[0];
       assert.equal(UPDATED_PRICE_PER_STORAGE_MINERAL, pricePerStorageMineral);
     });
@@ -171,12 +171,12 @@ contract('TransmuteDPOS', (accounts) => {
     });
 
     it('should work if Provider is Registered and size == maxSize', async () => {
-      let provider = await tdpos.providers.call(accounts[4]);
+      let provider = await tdpos.registeredProviders.call(accounts[4]);
       pricePerStorageMineral = provider[0];
       assert.equal(PRICE_PER_STORAGE_MINERAL, pricePerStorageMineral);
       const UPDATED_PRICE_PER_STORAGE_MINERAL = 21;
       await tdpos.provider(UPDATED_PRICE_PER_STORAGE_MINERAL, PRICE_PER_COMPUTE_MINERAL, BLOCK_REWARD_CUT, FEE_SHARE, {from: accounts[4]});
-      provider = await tdpos.providers.call(accounts[4]);
+      provider = await tdpos.registeredProviders.call(accounts[4]);
       pricePerStorageMineral = provider[0];
       assert.equal(UPDATED_PRICE_PER_STORAGE_MINERAL, pricePerStorageMineral);
     });
@@ -194,7 +194,7 @@ contract('TransmuteDPOS', (accounts) => {
       let providerStatus = await tdpos.providerStatus.call(accounts[0]);
       assert.equal(PROVIDER_REGISTERED, providerStatus);
       await tdpos.publicResignAsProvider(accounts[0]);
-      const resignedProvider = await tdpos.providers.call(accounts[0]);
+      const resignedProvider = await tdpos.registeredProviders.call(accounts[0]);
       let [pricePerStorageMineral, pricePerComputeMineral,
         blockRewardCut, feeShare] = resignedProvider;
       providerStatus = await tdpos.providerStatus.call(accounts[0]);
