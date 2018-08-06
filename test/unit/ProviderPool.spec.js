@@ -3,6 +3,7 @@
 // through the publicAddProvider function from TestProviderPool which has public visibility
 const ProviderPool = artifacts.require('./TestProviderPool.sol');
 const {assertFail} = require('../utils.js');
+require('truffle-test-utils').init();
 
 contract('ProviderPool', (accounts) => {
   let pp;
@@ -47,6 +48,18 @@ contract('ProviderPool', (accounts) => {
 
     it('should fail if it is not called from the owner\'s address', async () => {
       await assertFail( pp.setProviderPoolMaxSize(10, {from: provider1}) );
+    });
+
+    it('should emit a ParameterChanged event', async () => {
+      const result = await pp.setProviderPoolMaxSize(8, {from: owner});
+      assert.web3Event(result, {
+        event: 'ParameterChanged',
+        args: {
+          name: 'providerPoolMaxSize',
+          oldValue: 7,
+          newValue: 8,
+        },
+      });
     });
 
     describe('newMaxSize == currentSize', () => {
@@ -147,6 +160,18 @@ contract('ProviderPool', (accounts) => {
 
     it('should fail if it is not called from the owner\'s address', async () => {
       await assertFail( pp.setNumberOfActiveProviders(7, {from: accounts[1]}) );
+    });
+
+    it('should emit a ParameterChanged event', async () => {
+      const result = await pp.setNumberOfActiveProviders(6, {from: accounts[0]});
+      assert.web3Event(result, {
+        event: 'ParameterChanged',
+        args: {
+          name: 'numberOfActiveProviders',
+          oldValue: 5,
+          newValue: 6,
+        },
+      });
     });
 
     it('should fail if new value is more than pool maxSize', async () => {
