@@ -5,20 +5,19 @@ import "zeppelin-solidity/contracts/ownership/Ownable.sol";
 
 contract ProviderPool is Ownable {
 
-  // TODO: init
   uint public numberOfActiveProviders;
 
   using SortedDoublyLL for SortedDoublyLL.Data;
   SortedDoublyLL.Data internal providerPool;
 
-  function setProviderPoolMaxSize(uint _maxNumber) external onlyOwner {
+  function setProviderPoolMaxSize(uint _maxNumber) public onlyOwner {
     while (providerPool.size > _maxNumber) {
       removeProvider(getLastProvider());
     }
     providerPool.maxSize = _maxNumber;
   }
 
-  function setNumberOfActiveProviders(uint _numberOfActiveProviders) external onlyOwner {
+  function setNumberOfActiveProviders(uint _numberOfActiveProviders) public onlyOwner {
     require(_numberOfActiveProviders <= providerPool.maxSize);
     numberOfActiveProviders = _numberOfActiveProviders;
   }

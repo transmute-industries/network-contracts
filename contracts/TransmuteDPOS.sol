@@ -12,6 +12,10 @@ contract TransmuteDPOS is TransmuteToken, RoundManager, DelegatorManager {
     electionPeriodLength = 50;
     rateLockDeadline = 10;
     unbondingPeriod = 10;
+
+    // Set constants from ProviderPool
+    setProviderPoolMaxSize(5);
+    setNumberOfActiveProviders(4);
   }
 
   function provider(uint _pricePerStorageMineral, uint _pricePerComputeMineral, uint _blockRewardCut, uint _feeShare)
