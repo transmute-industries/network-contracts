@@ -127,6 +127,7 @@ contract('TransmuteDPOS', (accounts) => {
           pricePerComputeMineral: PRICE_PER_COMPUTE_MINERAL,
           blockRewardCut: BLOCK_REWARD_CUT,
           feeShare: FEE_SHARE,
+          amount: 1,
         },
       });
     });
@@ -145,6 +146,7 @@ contract('TransmuteDPOS', (accounts) => {
           pricePerComputeMineral: UPDATED_PRICE_PER_COMPUTE_MINERAL,
           blockRewardCut: UPDATED_BLOCK_REWARD_CUT,
           feeShare: UPDATED_FEE_SHARE,
+          amount: 1,
         },
       });
     });

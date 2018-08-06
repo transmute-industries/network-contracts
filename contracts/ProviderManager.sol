@@ -6,7 +6,8 @@ contract ProviderManager {
     uint pricePerStorageMineral,
     uint pricePerComputeMineral,
     uint blockRewardCut,
-    uint feeShare
+    uint feeShare,
+    uint amount
   );
 
   event ProviderUpdated (
@@ -14,7 +15,8 @@ contract ProviderManager {
     uint pricePerStorageMineral,
     uint pricePerComputeMineral,
     uint blockRewardCut,
-    uint feeShare
+    uint feeShare,
+    uint amount
   );
 
   event ProviderResigned (
