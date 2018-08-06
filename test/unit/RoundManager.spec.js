@@ -71,7 +71,6 @@ contract('RoundManager', (accounts) => {
       for (let i = 0; i < 10; i++) {
         await tdpos.mint(accounts[i], 1000, {from: accounts[0]});
       }
-      await tdpos.setProviderPoolMaxSize(PROVIDER_POOL_SIZE);
       await tdpos.setNumberOfActiveProviders(2);
       await tdpos.initializeRound();
       // After the 3 providers are registered the providerPool should be
