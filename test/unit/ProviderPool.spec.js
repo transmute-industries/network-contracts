@@ -26,22 +26,108 @@ contract('ProviderPool', (accounts) => {
   }
 
   describe('setProviderPoolMaxSize', () => {
+    const SIZE = 5;
+    let owner = accounts[0];
+    let provider1 = accounts[1];
+    let provider2 = accounts[2];
+    let provider3 = accounts[3];
+    let provider4 = accounts[4];
+    let provider5 = accounts[5];
+    let unregistered = accounts[6];
+
     before(async () => {
-      pp = await ProviderPool.deployed();
+      pp = await ProviderPool.deployed({from: owner});
     });
 
     it('should set the max number of providers allowed in the pool', async () => {
       assert.equal(0, await pp.getProviderPoolMaxSize());
-      await pp.setProviderPoolMaxSize(7, {from: accounts[0]});
+      await pp.setProviderPoolMaxSize(7, {from: owner});
       assert.equal(7, await pp.getProviderPoolMaxSize());
     });
 
     it('should fail if it is not called from the owner\'s address', async () => {
-      await assertFail( pp.setProviderPoolMaxSize(10, {from: accounts[1]}) );
+      await assertFail( pp.setProviderPoolMaxSize(10, {from: provider1}) );
     });
 
-    it('should fail if new size is less than current size', async () => {
-      await assertFail( pp.setProviderPoolMaxSize(6, {from: accounts[0]}) );
+    describe('newMaxSize == currentSize', () => {
+      before(async () => {
+        await pp.publicAddProvider(provider1, 1);
+        await pp.publicAddProvider(provider2, 5);
+        await pp.publicAddProvider(provider3, 2);
+        await pp.publicAddProvider(provider4, 4);
+        await pp.publicAddProvider(provider5, 3);
+        await pp.setProviderPoolMaxSize(SIZE);
+      });
+
+      it('should set maxSize', async () => {
+        const maxSize = await pp.getProviderPoolMaxSize();
+        assert.equal(SIZE, maxSize);
+      });
+
+      it('should not affect the size of the pool', async () => {
+        const size = await pp.getProviderPoolSize();
+        assert.equal(SIZE, size);
+      });
+
+      it('should not affect the content of the pool', async () => {
+        assert.equal(true, await pp.containsProvider(provider1));
+        assert.equal(true, await pp.containsProvider(provider2));
+        assert.equal(true, await pp.containsProvider(provider3));
+        assert.equal(true, await pp.containsProvider(provider4));
+        assert.equal(true, await pp.containsProvider(provider5));
+        assert.equal(false, await pp.containsProvider(unregistered));
+      });
+    });
+
+    describe('newMaxSize > currentSize', () => {
+      before(async () => {
+        await pp.setProviderPoolMaxSize(SIZE + 1);
+      });
+
+      it('should set maxSize', async () => {
+        const maxSize = await pp.getProviderPoolMaxSize();
+        assert.equal(SIZE + 1, maxSize);
+      });
+
+      it('should not affect the size of the pool', async () => {
+        const size = await pp.getProviderPoolSize();
+        assert.equal(SIZE, size);
+      });
+
+      it('should not affect the content of the pool', async () => {
+        assert.equal(true, await pp.containsProvider(provider1));
+        assert.equal(true, await pp.containsProvider(provider2));
+        assert.equal(true, await pp.containsProvider(provider3));
+        assert.equal(true, await pp.containsProvider(provider4));
+        assert.equal(true, await pp.containsProvider(provider5));
+        assert.equal(false, await pp.containsProvider(unregistered));
+      });
+    });
+
+    describe('newMaxSize < currentSize', () => {
+      before(async () => {
+        await pp.setProviderPoolMaxSize(SIZE - 2);
+      });
+
+      it('should set maxSize', async () => {
+        const maxSize = await pp.getProviderPoolMaxSize();
+        assert.equal(SIZE - 2, maxSize);
+      });
+
+      it('should decrease the size of the pool to newMaxSize', async () => {
+        const size = await pp.getProviderPoolSize();
+        assert.equal(SIZE - 2, size);
+      });
+
+      it('should kick the providers with lowest stake out', async () => {
+        // provider1 and provider3 are the ones who had the lowest stake
+        assert.equal(false, await pp.containsProvider(provider1));
+        assert.equal(true, await pp.containsProvider(provider2));
+        assert.equal(false, await pp.containsProvider(provider3));
+        assert.equal(true, await pp.containsProvider(provider4));
+        assert.equal(true, await pp.containsProvider(provider5));
+        assert.equal(false, await pp.containsProvider(unregistered));
+      });
     });
   });
 
