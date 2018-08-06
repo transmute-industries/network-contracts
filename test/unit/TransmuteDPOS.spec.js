@@ -5,8 +5,6 @@ require('truffle-test-utils').init();
 contract('TransmuteDPOS', (accounts) => {
   let tdpos;
   let contractAddress;
-  const PROVIDER_POOL_SIZE = 5;
-  const NUMBER_OF_ACTIVE_PROVIDERS = 4;
 
   // Provider states
   const PROVIDER_UNREGISTERED = 0;
