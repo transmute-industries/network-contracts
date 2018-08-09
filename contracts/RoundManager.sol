@@ -36,14 +36,17 @@ contract RoundManager is Ownable, ProviderPool, ProviderManager {
   }
 
   function setElectionPeriodLength(uint _electionPeriodLength) public onlyOwner {
+    emit ParameterChanged("electionPeriodLength", electionPeriodLength, _electionPeriodLength);
     electionPeriodLength = _electionPeriodLength;
   }
 
   function setRateLockDeadline(uint _rateLockDeadline) public onlyOwner {
+    emit ParameterChanged("rateLockDeadline", rateLockDeadline, _rateLockDeadline);
     rateLockDeadline = _rateLockDeadline;
   }
 
   function setUnbondingPeriod(uint _unbondingPeriod) public onlyOwner {
+    emit ParameterChanged("unbondingPeriod", unbondingPeriod, _unbondingPeriod);
     unbondingPeriod = _unbondingPeriod;
   }
 
@@ -69,7 +72,7 @@ contract RoundManager is Ownable, ProviderPool, ProviderManager {
       aps.totalStake = aps.totalStake.add(stake);
 
       // Set pending rates as current rates
-      activeProviders[currentProvider] = providers[currentProvider];
+      activeProviders[currentProvider] = registeredProviders[currentProvider];
 
       // Get next provider in the pool
       currentProvider = getNextProvider(currentProvider);

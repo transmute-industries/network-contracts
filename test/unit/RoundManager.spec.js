@@ -1,22 +1,89 @@
 const RoundManager = artifacts.require('./RoundManager.sol');
 const TransmuteDPOS = artifacts.require('./TestTransmuteDPOS.sol');
 const {roundManagerHelper, blockMiner, assertFail} = require('../utils.js');
+require('truffle-test-utils').init();
 
 contract('RoundManager', (accounts) => {
   let rm;
+  let owner = accounts[0];
   const ELECTION_PERIOD_LENGTH = 20;
   const RATE_LOCK_DEADLINE = 5;
   const UNBONDING_PERIOD = 10;
   const PROVIDER_POOL_SIZE = 20;
   const NUMBER_OF_ACTIVE_PROVIDERS = 10;
 
-  describe('initializeRound', () => {
+  describe('setElectionPeriodLength', () => {
+    let result;
+
     before(async () => {
       rm = await RoundManager.deployed();
-      await rm.setElectionPeriodLength(ELECTION_PERIOD_LENGTH);
-      await rm.setRateLockDeadline(RATE_LOCK_DEADLINE);
-      await rm.setUnbondingPeriod(UNBONDING_PERIOD);
-      // Set ProviderPool parameters
+      result = await rm.setElectionPeriodLength(ELECTION_PERIOD_LENGTH, {from: owner});
+    });
+
+    it('should set the electionPeriodLength value', async () => {
+      assert.equal(ELECTION_PERIOD_LENGTH, await rm.electionPeriodLength.call());
+    });
+
+    it('should emit a ParameterChanged event', async () => {
+      assert.web3Event(result, {
+        event: 'ParameterChanged',
+        args: {
+          name: 'electionPeriodLength',
+          oldValue: 0,
+          newValue: ELECTION_PERIOD_LENGTH,
+        },
+      });
+    });
+  });
+
+  describe('setRateLockDeadline', () => {
+    let result;
+
+    before(async () => {
+      result = await rm.setRateLockDeadline(RATE_LOCK_DEADLINE, {from: owner});
+    });
+
+    it('should set the rateLockDeadline value', async () => {
+      assert.equal(RATE_LOCK_DEADLINE, await rm.rateLockDeadline.call());
+    });
+
+    it('should emit a ParameterChanged event', async () => {
+      assert.web3Event(result, {
+        event: 'ParameterChanged',
+        args: {
+          name: 'rateLockDeadline',
+          oldValue: 0,
+          newValue: RATE_LOCK_DEADLINE,
+        },
+      });
+    });
+  });
+
+  describe('setUnbondingPeriod', () => {
+    let result;
+
+    before(async () => {
+      result = await rm.setUnbondingPeriod(UNBONDING_PERIOD, {from: owner});
+    });
+
+    it('should set the unbondingPeriod value', async () => {
+      assert.equal(UNBONDING_PERIOD, await rm.unbondingPeriod.call());
+    });
+
+    it('should emit a ParameterChanged event', async () => {
+      assert.web3Event(result, {
+        event: 'ParameterChanged',
+        args: {
+          name: 'unbondingPeriod',
+          oldValue: 0,
+          newValue: UNBONDING_PERIOD,
+        },
+      });
+    });
+  });
+
+  describe('initializeRound', () => {
+    before(async () => {
       await rm.setProviderPoolMaxSize(PROVIDER_POOL_SIZE);
     });
 

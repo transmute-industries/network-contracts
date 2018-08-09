@@ -1,23 +1,26 @@
 pragma solidity ^0.4.24;
 
 import "./SortedDoublyLL.sol";
+import "./ParameterManager.sol";
 import "zeppelin-solidity/contracts/ownership/Ownable.sol";
 
-contract ProviderPool is Ownable {
+contract ProviderPool is Ownable, ParameterManager {
 
   uint public numberOfActiveProviders;
 
   using SortedDoublyLL for SortedDoublyLL.Data;
   SortedDoublyLL.Data internal providerPool;
 
-  function setProviderPoolMaxSize(uint _maxNumber) public onlyOwner {
-    while (providerPool.size > _maxNumber) {
+  function setProviderPoolMaxSize(uint _maxSize) public onlyOwner {
+    emit ParameterChanged("providerPoolMaxSize", providerPool.maxSize, _maxSize);
+    while (providerPool.size > _maxSize) {
       removeProvider(getLastProvider());
     }
-    providerPool.maxSize = _maxNumber;
+    providerPool.maxSize = _maxSize;
   }
 
   function setNumberOfActiveProviders(uint _numberOfActiveProviders) public onlyOwner {
+    emit ParameterChanged("numberOfActiveProviders", numberOfActiveProviders, _numberOfActiveProviders);
     require(_numberOfActiveProviders <= providerPool.maxSize);
     numberOfActiveProviders = _numberOfActiveProviders;
   }

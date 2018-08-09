@@ -24,7 +24,7 @@ contract TransmuteDPOS is TransmuteToken, RoundManager, DelegatorManager {
     require(_blockRewardCut <= 100);
     require(_feeShare <= 100);
 
-    Provider storage p = providers[msg.sender];
+    Provider storage p = registeredProviders[msg.sender];
     p.pricePerStorageMineral = _pricePerStorageMineral;
     p.pricePerComputeMineral = _pricePerComputeMineral;
     p.blockRewardCut = _blockRewardCut;
@@ -36,17 +36,16 @@ contract TransmuteDPOS is TransmuteToken, RoundManager, DelegatorManager {
     if (providerStatus(msg.sender) == ProviderStatus.Unregistered) {
       numberOfProviders = numberOfProviders.add(1);
       addProvider(msg.sender, d.amountBonded);
-      // TODO: update with amount
-      emit ProviderAdded(msg.sender, _pricePerStorageMineral, _pricePerComputeMineral, _blockRewardCut, _feeShare);
+      emit ProviderAdded(msg.sender, _pricePerStorageMineral, _pricePerComputeMineral, _blockRewardCut, _feeShare, d.amountBonded);
     } else {
-      emit ProviderUpdated(msg.sender, _pricePerStorageMineral, _pricePerComputeMineral, _blockRewardCut, _feeShare);
+      emit ProviderUpdated(msg.sender, _pricePerStorageMineral, _pricePerComputeMineral, _blockRewardCut, _feeShare, d.amountBonded);
     }
   }
 
   function resignAsProvider(address _provider) internal {
     require(providerStatus(_provider) == ProviderStatus.Registered);
     removeProvider(_provider);
-    delete providers[_provider];
+    delete registeredProviders[_provider];
     delete activeProviders[_provider];
     emit ProviderResigned(_provider);
   }
