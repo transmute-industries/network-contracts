@@ -83,4 +83,18 @@ contract RoundManager is Ownable, ProviderPool, ProviderManager {
   function getActiveProviderAddresses() public view returns (address[]) {
     return activeProviderSets[roundNumber].providers;
   }
+
+  function removeActiveProvider(address _provider) internal {
+    ActiveProviderSet storage aps = activeProviderSets[roundNumber];
+    require(aps.isActive[_provider]);
+    // Remove from providers[];
+    // TODO
+    // Set as inactive
+    aps.isActive[_provider] = false;
+    // Update totalStake
+    uint stake = getProviderStake(_provider);
+    aps.totalStake.sub(stake);
+    // Remove from activeProviders
+    delete activeProviders[_provider];
+  }
 }
