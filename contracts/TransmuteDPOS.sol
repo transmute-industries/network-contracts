@@ -117,14 +117,16 @@ contract TransmuteDPOS is TransmuteToken, RoundManager, DelegatorManager {
       uint newProviderStake = currentProviderStake.add(_amount);
       updateProvider(_provider, newProviderStake);
     }
-    // Emit DelegatorBonded event
     emit DelegatorBonded(msg.sender, _provider, _amount);
   }
 
-  // TODO: Add Active status
   function providerStatus(address _provider) public view returns (ProviderStatus) {
     if (this.containsProvider(_provider)) {
-      return ProviderStatus.Registered;
+      if (activeProviderSets[roundNumber].isActive[_provider]) {
+        return ProviderStatus.RegisteredAndActive;
+      } else {
+        return ProviderStatus.Registered;
+      }
     } else {
       return ProviderStatus.Unregistered;
     }
