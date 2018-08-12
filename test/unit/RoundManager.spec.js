@@ -1,4 +1,4 @@
-const TestRoundManager = artifacts.require('./RoundManager.sol');
+const RoundManager = artifacts.require('./RoundManager.sol');
 const TransmuteDPOS = artifacts.require('./TestTransmuteDPOS.sol');
 const {roundManagerHelper, blockMiner, assertFail} = require('../utils.js');
 require('truffle-test-utils').init();
@@ -16,7 +16,7 @@ contract('RoundManager', (accounts) => {
     let result;
 
     before(async () => {
-      rm = await TestRoundManager.deployed();
+      rm = await RoundManager.deployed();
       result = await rm.setElectionPeriodLength(ELECTION_PERIOD_LENGTH, {from: owner});
     });
 
