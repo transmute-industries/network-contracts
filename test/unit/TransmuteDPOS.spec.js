@@ -454,64 +454,59 @@ contract('TransmuteDPOS', (accounts) => {
       provider2 = accounts[2];
       provider3 = accounts[3];
       provider4 = accounts[4];
+      notRegistered = accounts[5];
       await initNew();
-      await approveBondProvider(...STANDARD_PROVIDER_PARAMETERS, 1, provider1);
+      await tdpos.setNumberOfActiveProviders(2);
+      await approveBondProvider(...STANDARD_PROVIDER_PARAMETERS, 4, provider1);
+      await approveBondProvider(...STANDARD_PROVIDER_PARAMETERS, 3, provider2);
+      await approveBondProvider(...STANDARD_PROVIDER_PARAMETERS, 2, provider3);
+      await approveBondProvider(...STANDARD_PROVIDER_PARAMETERS, 1, provider4);
     });
 
     it('should return Unregistered if address is not a Provider', async () => {
-      assert.equal(PROVIDER_UNREGISTERED, await tdpos.providerStatus.call(provider2));
+      assert.equal(PROVIDER_UNREGISTERED, await tdpos.providerStatus.call(notRegistered));
     });
 
-    it('should return Unregistered if Provider has resigned', async () => {
-      await tdpos.unbond({from: provider1});
-      assert.equal(PROVIDER_UNREGISTERED, await tdpos.providerStatus.call(provider1));
-    });
-
-    describe('Provider is in the top of the ProviderPool', () => {
-      before(async () => {
-        await initNew();
-        await tdpos.setNumberOfActiveProviders(2);
-        await approveBondProvider(...STANDARD_PROVIDER_PARAMETERS, 4, provider1);
-        await approveBondProvider(...STANDARD_PROVIDER_PARAMETERS, 3, provider2);
-        await approveBondProvider(...STANDARD_PROVIDER_PARAMETERS, 2, provider3);
-        await approveBondProvider(...STANDARD_PROVIDER_PARAMETERS, 1, provider4);
-      });
-
-      it('should return Registered before initializeRound is called', async () => {
+    describe('during the current round', () => {
+      it('should return Registered for Providers in the top of the Provider Pool', async () => {
         assert.equal(PROVIDER_REGISTERED, await tdpos.providerStatus.call(provider1));
         assert.equal(PROVIDER_REGISTERED, await tdpos.providerStatus.call(provider2));
       });
 
-      it('should return RegisteredAndActive after initializeRound is called', async () => {
-        const electionPeriodEndBlock = await roundManagerHelper.getElectionPeriodEndBlock(tdpos);
-        await blockMiner.mineUntilBlock(electionPeriodEndBlock);
-        await tdpos.initializeRound();
-        assert.equal(PROVIDER_REGISTERED_AND_ACTIVE, await tdpos.providerStatus.call(provider1));
-        assert.equal(PROVIDER_REGISTERED_AND_ACTIVE, await tdpos.providerStatus.call(provider2));
+      it('should return Registered for Providers in the bottom of the Provider Pool', async () => {
+        assert.equal(PROVIDER_REGISTERED, await tdpos.providerStatus.call(provider3));
+        assert.equal(PROVIDER_REGISTERED, await tdpos.providerStatus.call(provider4));
       });
     });
 
-    describe('Provider is at the bottom of the ProviderPool', () => {
+    describe('during the next round', () => {
       before(async () => {
-        await initNew();
-        await tdpos.setNumberOfActiveProviders(2);
-        await approveBondProvider(...STANDARD_PROVIDER_PARAMETERS, 4, provider1);
-        await approveBondProvider(...STANDARD_PROVIDER_PARAMETERS, 3, provider2);
-        await approveBondProvider(...STANDARD_PROVIDER_PARAMETERS, 2, provider3);
-        await approveBondProvider(...STANDARD_PROVIDER_PARAMETERS, 1, provider4);
-      });
-
-      it('should return Registered before initializeRound is called', async () => {
-        assert.equal(PROVIDER_REGISTERED, await tdpos.providerStatus.call(provider3));
-        assert.equal(PROVIDER_REGISTERED, await tdpos.providerStatus.call(provider4));
-      });
-
-      it('should return Registered after initializeRound is called', async () => {
         const electionPeriodEndBlock = await roundManagerHelper.getElectionPeriodEndBlock(tdpos);
         await blockMiner.mineUntilBlock(electionPeriodEndBlock);
         await tdpos.initializeRound();
+      });
+
+      it('should return RegisteredAndActive for Providers in the top of the Provider Pool', async () => {
+        assert.equal(PROVIDER_REGISTERED_AND_ACTIVE, await tdpos.providerStatus.call(provider1));
+        assert.equal(PROVIDER_REGISTERED_AND_ACTIVE, await tdpos.providerStatus.call(provider2));
+      });
+
+      it('should return Registered for Providers in the bottom of the Provider Pool', async () => {
         assert.equal(PROVIDER_REGISTERED, await tdpos.providerStatus.call(provider3));
         assert.equal(PROVIDER_REGISTERED, await tdpos.providerStatus.call(provider4));
+      });
+    });
+
+    describe('when a Provider resigns', () => {
+      it('should return Unregistered if a RegisteredAndActive Provider resigns', async () => {
+        await tdpos.unbond({from: provider1});
+        console.log(await tdpos.containsProvider(provider1));
+        assert.equal(PROVIDER_UNREGISTERED, await tdpos.providerStatus.call(provider1));
+      });
+
+      it('should return Unregistered if a Registered Provider resigns', async () => {
+        await tdpos.unbond({from: provider3});
+        assert.equal(PROVIDER_UNREGISTERED, await tdpos.providerStatus.call(provider3));
       });
     });
   });
