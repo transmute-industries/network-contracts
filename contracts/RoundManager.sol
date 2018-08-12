@@ -79,11 +79,6 @@ contract RoundManager is Ownable, ProviderPool, ProviderManager {
     }
   }
 
-  // Getter function for ActiveProviderSet
-  function getActiveProviderAddresses() public view returns (address[]) {
-    return activeProviderSets[roundNumber].providers;
-  }
-
   function removeActiveProvider(address _provider) internal {
     ActiveProviderSet storage aps = activeProviderSets[roundNumber];
     require(aps.isActive[_provider]);
@@ -93,8 +88,17 @@ contract RoundManager is Ownable, ProviderPool, ProviderManager {
     aps.isActive[_provider] = false;
     // Update totalStake
     uint stake = getProviderStake(_provider);
-    aps.totalStake.sub(stake);
+    aps.totalStake = aps.totalStake.sub(stake);
     // Remove from activeProviders
     delete activeProviders[_provider];
+  }
+
+  // Getter functions for ActiveProviderSet
+  function getActiveProviderAddresses() public view returns (address[]) {
+    return activeProviderSets[roundNumber].providers;
+  }
+
+  function isProviderActive(address _provider) public view returns (bool) {
+    return activeProviderSets[roundNumber].isActive[_provider];
   }
 }
