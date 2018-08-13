@@ -21,7 +21,7 @@ contract('TST', (accounts) => {
     assert(tokenAmount === (await tst.balanceOf.call(accounts[1])).toNumber());
   });
 
-  it('should fail if anyone else than owner wants to mint new tokens', async () => {
+  it('should fail if anyone other than owner wants to mint new tokens', async () => {
     await assertFail(
       tst.mint(owner, tokenAmount, {from: accounts[1]}),
       'this account should not be able to mint tokens'
