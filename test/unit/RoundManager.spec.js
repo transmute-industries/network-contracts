@@ -220,9 +220,6 @@ contract('RoundManager', (accounts) => {
 
     let provider1 = accounts[1];
     let provider2 = accounts[2];
-    let provider3 = accounts[3];
-
-    const PROVIDER_REGISTERED_AND_ACTIVE = 2;
 
     before(async () => {
       // As a reminder, provider1 is Registered but not active

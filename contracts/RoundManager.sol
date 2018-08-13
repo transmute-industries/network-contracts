@@ -83,7 +83,23 @@ contract RoundManager is Ownable, ProviderPool, ProviderManager {
     ActiveProviderSet storage aps = activeProviderSets[roundNumber];
     require(aps.isActive[_provider]);
     // Remove from providers[];
-    // TODO
+    //   - Find index of _provider in providers array
+    uint length = aps.providers.length;
+    uint i = 0;
+    while (aps.providers[i] != _provider) {
+      i = i.add(1);
+    }
+    // Note: There is an opportunity to make the following process more efficient
+    // by swapping the last provider in the array with the one we want to delete 
+    // and then .pop(), however the array wouldn't be sorted by stake anymore
+
+    //   - Shift all values from that index
+    while (i < length.sub(1)) {
+      aps.providers[i] = aps.providers[i.add(1)];
+      i = i.add(1);
+    }
+    //   - Decrement length of array
+    aps.providers.length = aps.providers.length.sub(1);
     // Set as inactive
     aps.isActive[_provider] = false;
     // Update totalStake
