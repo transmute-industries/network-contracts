@@ -7,5 +7,9 @@ contract TestTransmuteDPOS is TransmuteDPOS {
   function publicResignAsProvider(address _provider) public {
     resignAsProvider(_provider);
   }
+
+  function publicRemoveActiveProvider(address _provider) public {
+    removeActiveProvider(_provider);
+  }
 }
 

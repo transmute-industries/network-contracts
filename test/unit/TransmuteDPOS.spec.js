@@ -9,6 +9,7 @@ contract('TransmuteDPOS', (accounts) => {
   // Provider states
   const PROVIDER_UNREGISTERED = 0;
   const PROVIDER_REGISTERED = 1;
+  const PROVIDER_REGISTERED_AND_ACTIVE = 2;
 
   // Provider parameters
   const PRICE_PER_STORAGE_MINERAL = 22;
@@ -21,6 +22,10 @@ contract('TransmuteDPOS', (accounts) => {
   const DELEGATOR_UNBONDED = 0;
   const DELEGATOR_UNBONDING = 1;
   const DELEGATOR_BONDED = 2;
+
+  let provider1; let provider2; let provider3; let provider4;
+  let delegator1; let delegator2;
+  let notRegistered;
 
   // This is a convenience function for the process of registering a new provider.
   // Step 1: Approve the transfer of amountBonded tokens (ERC20 spec)
@@ -445,21 +450,64 @@ contract('TransmuteDPOS', (accounts) => {
 
   describe('providerStatus', () => {
     before(async () => {
+      provider1 = accounts[1];
+      provider2 = accounts[2];
+      provider3 = accounts[3];
+      provider4 = accounts[4];
+      notRegistered = accounts[5];
       await initNew();
-      await approveBondProvider(...STANDARD_PROVIDER_PARAMETERS, 1, accounts[0]);
+      await tdpos.setNumberOfActiveProviders(2);
+      await approveBondProvider(...STANDARD_PROVIDER_PARAMETERS, 4, provider1);
+      await approveBondProvider(...STANDARD_PROVIDER_PARAMETERS, 3, provider2);
+      await approveBondProvider(...STANDARD_PROVIDER_PARAMETERS, 2, provider3);
+      await approveBondProvider(...STANDARD_PROVIDER_PARAMETERS, 1, provider4);
     });
 
     it('should return Unregistered if address is not a Provider', async () => {
-      assert.equal(PROVIDER_UNREGISTERED, await tdpos.providerStatus.call(accounts[1]));
+      assert.equal(PROVIDER_UNREGISTERED, await tdpos.providerStatus.call(notRegistered));
     });
 
-    it('should return Registered if address has called provider()', async () => {
-      assert.equal(PROVIDER_REGISTERED, await tdpos.providerStatus.call(accounts[0]));
+    describe('during the current round', () => {
+      it('should return Registered for Providers in the top of the Provider Pool', async () => {
+        assert.equal(PROVIDER_REGISTERED, await tdpos.providerStatus.call(provider1));
+        assert.equal(PROVIDER_REGISTERED, await tdpos.providerStatus.call(provider2));
+      });
+
+      it('should return Registered for Providers in the bottom of the Provider Pool', async () => {
+        assert.equal(PROVIDER_REGISTERED, await tdpos.providerStatus.call(provider3));
+        assert.equal(PROVIDER_REGISTERED, await tdpos.providerStatus.call(provider4));
+      });
     });
 
-    it('should return Unregistered if Provider has resigned', async () => {
-      await tdpos.unbond({from: accounts[0]});
-      assert.equal(PROVIDER_UNREGISTERED, await tdpos.providerStatus.call(accounts[0]));
+    describe('during the next round', () => {
+      before(async () => {
+        const electionPeriodEndBlock = await roundManagerHelper.getElectionPeriodEndBlock(tdpos);
+        await blockMiner.mineUntilBlock(electionPeriodEndBlock);
+        await tdpos.initializeRound();
+      });
+
+      it('should return RegisteredAndActive for Providers in the top of the Provider Pool', async () => {
+        assert.equal(PROVIDER_REGISTERED_AND_ACTIVE, await tdpos.providerStatus.call(provider1));
+        assert.equal(PROVIDER_REGISTERED_AND_ACTIVE, await tdpos.providerStatus.call(provider2));
+      });
+
+      it('should return Registered for Providers in the bottom of the Provider Pool', async () => {
+        assert.equal(PROVIDER_REGISTERED, await tdpos.providerStatus.call(provider3));
+        assert.equal(PROVIDER_REGISTERED, await tdpos.providerStatus.call(provider4));
+      });
+    });
+
+    describe('when a Provider resigns', () => {
+      it('should return Unregistered if a RegisteredAndActive Provider resigns', async () => {
+        await tdpos.unbond({from: provider1});
+        console.log(await tdpos.containsProvider(provider1));
+        assert.equal(PROVIDER_UNREGISTERED, await tdpos.providerStatus.call(provider1));
+      });
+
+      it('should return Unregistered if a Registered Provider resigns', async () => {
+        await tdpos.unbond({from: provider3});
+        assert.equal(PROVIDER_UNREGISTERED, await tdpos.providerStatus.call(provider3));
+      });
     });
   });
 
@@ -530,12 +578,6 @@ contract('TransmuteDPOS', (accounts) => {
   });
 
   describe('rebond', () => {
-    let provider1;
-    let provider2;
-    let delegator1;
-    let delegator2;
-    let notRegistered;
-
     before(async () => {
       provider1 = accounts[0];
       provider2 = accounts[1];

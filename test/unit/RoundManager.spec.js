@@ -132,7 +132,7 @@ contract('RoundManager', (accounts) => {
     before(async () => {
       // Here we use the TransmuteDPOS contract instead of RoundManager contract
       // even though we want to test a method from the RoundManager contract
-      // because we need to fill the providerPool with methods from TransmuteDPOS
+      // because we need to fill the providerPool using methods from TransmuteDPOS
       tdpos = await TransmuteDPOS.deployed();
       contractAddress = tdpos.address;
       for (let i = 0; i < 10; i++) {
@@ -212,6 +212,73 @@ contract('RoundManager', (accounts) => {
       assert.equal(0, pricePerComputeMineral);
       assert.equal(0, blockRewardCut);
       assert.equal(0, feeShare);
+    });
+  });
+
+  describe('removeActiveProvider', () => {
+    let tdpos;
+
+    let provider1 = accounts[1];
+    let provider2 = accounts[2];
+
+    before(async () => {
+      // As a reminder, provider1 is Registered but not active
+      // and provider2 and provider3 are RegisteredAndActive
+      tdpos = await TransmuteDPOS.deployed();
+    });
+
+    it('should fail if not called by an active Provider', async () => {
+      await assertFail( tdpos.publicRemoveActiveProvider(provider1) );
+    });
+
+    describe('Provider is removed as active Provider', () => {
+      let roundNumber;
+      let providerStake;
+      let totalStake;
+      let provider2Parameters;
+
+      before(async () => {
+        // Assert that everything is set as it should be for provider2
+        const activeProviderAddresses = await tdpos.getActiveProviderAddresses.call();
+        assert.equal(true, activeProviderAddresses.includes(provider2));
+        assert.equal(true, await tdpos.isProviderActive.call(provider2));
+        roundNumber = await tdpos.roundNumber.call();
+        providerStake = await tdpos.getProviderStake(provider2);
+        totalStake = await tdpos.activeProviderSets.call(roundNumber);
+        provider2Parameters = await tdpos.activeProviders.call(provider2);
+        let [pricePerStorageMineral, pricePerComputeMineral,
+          blockRewardCut, feeShare] = provider2Parameters;
+        assert.equal(12, pricePerStorageMineral);
+        assert.equal(22, pricePerComputeMineral);
+        assert.equal(32, blockRewardCut);
+        assert.equal(42, feeShare);
+
+        await tdpos.publicRemoveActiveProvider(provider2);
+      });
+
+      it('should remove Provider from the Active Provider addresses', async () => {
+        const activeProviderAddresses = await tdpos.getActiveProviderAddresses.call();
+        assert.equal(false, activeProviderAddresses.includes(provider2));
+      });
+
+      it('should set Provider as inactive', async () => {
+        assert.equal(false, await tdpos.isProviderActive.call(provider2));
+      });
+
+      it('should decrease the totalStake of the current active set by the stake of the Provider', async () => {
+        const newTotalStake = await tdpos.activeProviderSets.call(roundNumber);
+        assert.deepEqual(totalStake.sub(providerStake), newTotalStake);
+      });
+
+      it('should remove parameters from the activeProviders mapping', async () => {
+        provider2Parameters = await tdpos.activeProviders.call(provider2);
+        let [pricePerStorageMineral, pricePerComputeMineral,
+          blockRewardCut, feeShare] = provider2Parameters;
+        assert.equal(0, pricePerStorageMineral);
+        assert.equal(0, pricePerComputeMineral);
+        assert.equal(0, blockRewardCut);
+        assert.equal(0, feeShare);
+      });
     });
   });
 });

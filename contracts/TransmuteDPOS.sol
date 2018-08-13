@@ -43,10 +43,16 @@ contract TransmuteDPOS is TransmuteToken, RoundManager, DelegatorManager {
   }
 
   function resignAsProvider(address _provider) internal {
-    require(providerStatus(_provider) == ProviderStatus.Registered);
+    ProviderStatus ps = providerStatus(_provider);
+    require(ps == ProviderStatus.Registered || ps == ProviderStatus.RegisteredAndActive);
+    if (ps == ProviderStatus.RegisteredAndActive) {
+      // Remove Provider from the active set
+      removeActiveProvider(_provider);
+    }
+    // Remove Provider from providerPool
     removeProvider(_provider);
+    // Remove Provider parameters
     delete registeredProviders[_provider];
-    delete activeProviders[_provider];
     emit ProviderResigned(_provider);
   }
 
@@ -70,7 +76,8 @@ contract TransmuteDPOS is TransmuteToken, RoundManager, DelegatorManager {
     uint amount = d.amountBonded;
     unbondingInformations[msg.sender] = UnbondingInformation(withdrawBlock, amount);
     if (d.delegateAddress == msg.sender) {
-      if (providerStatus(msg.sender) == ProviderStatus.Registered) {
+      ProviderStatus ps = providerStatus(msg.sender);
+      if (ps == ProviderStatus.Registered || ps == ProviderStatus.RegisteredAndActive) {
         // A Provider has to be a Delegator to himself
         // Therefore if a Provider unbonds he should resign
         resignAsProvider(msg.sender);
@@ -117,14 +124,16 @@ contract TransmuteDPOS is TransmuteToken, RoundManager, DelegatorManager {
       uint newProviderStake = currentProviderStake.add(_amount);
       updateProvider(_provider, newProviderStake);
     }
-    // Emit DelegatorBonded event
     emit DelegatorBonded(msg.sender, _provider, _amount);
   }
 
-  // TODO: Add Active status
   function providerStatus(address _provider) public view returns (ProviderStatus) {
     if (this.containsProvider(_provider)) {
-      return ProviderStatus.Registered;
+      if (activeProviderSets[roundNumber].isActive[_provider]) {
+        return ProviderStatus.RegisteredAndActive;
+      } else {
+        return ProviderStatus.Registered;
+      }
     } else {
       return ProviderStatus.Unregistered;
     }
