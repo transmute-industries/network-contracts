@@ -23,7 +23,12 @@ contract ProviderManager {
     address indexed provider
   );
 
-  enum ProviderStatus { Unregistered, Registered, RegisteredAndActive }
+  enum ProviderStatus {
+    Unregistered,
+    Registered,
+    RegisteredAndActive,
+    RegisteredAndActiveAndUnavailable
+  }
 
   struct Provider {
     uint pricePerStorageMineral;
