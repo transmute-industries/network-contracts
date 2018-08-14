@@ -5,7 +5,14 @@ require('truffle-test-utils').init();
 
 contract('RoundManager', (accounts) => {
   let rm;
+  let tdpos;
+  let contractAddress;
+
   let owner = accounts[0];
+  let provider1 = accounts[1];
+  let provider2 = accounts[2];
+  let provider3 = accounts[3];
+  let provider4 = accounts[4];
   const ELECTION_PERIOD_LENGTH = 20;
   const RATE_LOCK_DEADLINE = 5;
   const UNBONDING_PERIOD = 10;
@@ -112,13 +119,6 @@ contract('RoundManager', (accounts) => {
   });
 
   describe('setActiveProviders', () => {
-    let tdpos;
-    let contractAddress;
-
-    let provider1 = accounts[1];
-    let provider2 = accounts[2];
-    let provider3 = accounts[3];
-    let provider4 = accounts[4];
     let provider1Stake = 100;
     let provider2Stake = 400;
     let provider3Stake = 200;
@@ -216,8 +216,6 @@ contract('RoundManager', (accounts) => {
   });
 
   describe('removeActiveProvider', () => {
-    let tdpos;
-
     let provider1 = accounts[1];
     let provider2 = accounts[2];
 
@@ -279,6 +277,34 @@ contract('RoundManager', (accounts) => {
         assert.equal(0, blockRewardCut);
         assert.equal(0, feeShare);
       });
+    });
+  });
+
+  describe('declareUnavailability', () => {
+    it('should fail if provider is not Active', async () => {
+      assert.equal(false, await tdpos.isProviderActive.call(provider2));
+      await assertFail( tdpos.declareUnavailability({from: provider2}) );
+    });
+
+    it('should set the Provider as Unavailable', async () => {
+      assert.equal(true, await tdpos.isProviderActive.call(provider3));
+      assert.equal(false, await tdpos.isProviderUnavailable.call(provider3));
+      await tdpos.declareUnavailability({from: provider3});
+      assert.equal(true, await tdpos.isProviderUnavailable.call(provider3));
+    });
+  });
+
+  describe('declareAvailability', () => {
+    it('should fail if provider is not Active', async () => {
+      assert.equal(false, await tdpos.isProviderActive.call(provider2));
+      await assertFail( tdpos.declareAvailability({from: provider2}) );
+    });
+
+    it('should set the Provider as Available', async () => {
+      assert.equal(true, await tdpos.isProviderActive.call(provider3));
+      assert.equal(true, await tdpos.isProviderUnavailable.call(provider3));
+      await tdpos.declareAvailability({from: provider3});
+      assert.equal(false, await tdpos.isProviderUnavailable.call(provider3));
     });
   });
 });

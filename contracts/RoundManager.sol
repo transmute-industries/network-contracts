@@ -23,6 +23,7 @@ contract RoundManager is Ownable, ProviderPool, ProviderManager {
   struct ActiveProviderSet {
     address[] providers;
     mapping (address => bool) isActive;
+    mapping (address => bool) isUnavailable;
     uint totalStake;
   }
 
@@ -116,5 +117,21 @@ contract RoundManager is Ownable, ProviderPool, ProviderManager {
 
   function isProviderActive(address _provider) public view returns (bool) {
     return activeProviderSets[roundNumber].isActive[_provider];
+  }
+
+  function declareUnavailability() external {
+    ActiveProviderSet storage aps = activeProviderSets[roundNumber];
+    require(aps.isActive[msg.sender]);
+    aps.isUnavailable[msg.sender] = true;
+  }
+
+  function declareAvailability() external {
+    ActiveProviderSet storage aps = activeProviderSets[roundNumber];
+    require(aps.isActive[msg.sender]);
+    aps.isUnavailable[msg.sender] = false;
+  }
+
+  function isProviderUnavailable(address _provider) public view returns (bool) {
+    return activeProviderSets[roundNumber].isUnavailable[_provider];
   }
 }
