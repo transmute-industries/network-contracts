@@ -199,7 +199,7 @@ contract('TransmuteDPOS', (accounts) => {
     it('should remove the Provider from the provider mapping', async () => {
       let providerStatus = await tdpos.providerStatus.call(accounts[0]);
       assert.equal(PROVIDER_REGISTERED, providerStatus);
-      await tdpos.publicResignAsProvider(accounts[0]);
+      await tdpos.resignAsProvider({from: accounts[0]});
       const resignedProvider = await tdpos.registeredProviders.call(accounts[0]);
       let [pricePerStorageMineral, pricePerComputeMineral,
         blockRewardCut, feeShare] = resignedProvider;
@@ -213,12 +213,12 @@ contract('TransmuteDPOS', (accounts) => {
 
     it('should remove the Provider from the providerPool', async () => {
       assert.equal(true, await tdpos.containsProvider(accounts[1]));
-      await tdpos.publicResignAsProvider(accounts[1]);
+      await tdpos.resignAsProvider({from: accounts[1]});
       assert.equal(false, await tdpos.containsProvider(accounts[1]));
     });
 
     it('should send a ProviderResigned event', async () => {
-      const result = await tdpos.publicResignAsProvider(accounts[2]);
+      const result = await tdpos.resignAsProvider({from: accounts[2]});
       assert.web3Event(result, {
         event: 'ProviderResigned',
         args: {
@@ -228,7 +228,7 @@ contract('TransmuteDPOS', (accounts) => {
     });
 
     it('should fail if the transaction\'s sender is not a Provider', async () => {
-      await assertFail( tdpos.publicResignAsProvider(accounts[3]) );
+      await assertFail( tdpos.resignAsProvider({from: accounts[3]}) );
     });
   });
 
