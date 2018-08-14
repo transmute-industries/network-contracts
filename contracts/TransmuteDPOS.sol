@@ -42,20 +42,6 @@ contract TransmuteDPOS is TransmuteToken, RoundManager, DelegatorManager {
     }
   }
 
-  function resignAsProvider(address _provider) internal {
-    ProviderStatus ps = providerStatus(_provider);
-    require(ps == ProviderStatus.Registered || ps == ProviderStatus.RegisteredAndActive);
-    if (ps == ProviderStatus.RegisteredAndActive) {
-      // Remove Provider from the active set
-      removeActiveProvider(_provider);
-    }
-    // Remove Provider from providerPool
-    removeProvider(_provider);
-    // Remove Provider parameters
-    delete registeredProviders[_provider];
-    emit ProviderResigned(_provider);
-  }
-
   function bond(address _provider, uint _amount) external {
     // Only Unbonded Delegators can call this function
     require(delegatorStatus(msg.sender) == DelegatorStatus.Unbonded);
@@ -76,11 +62,10 @@ contract TransmuteDPOS is TransmuteToken, RoundManager, DelegatorManager {
     uint amount = d.amountBonded;
     unbondingInformations[msg.sender] = UnbondingInformation(withdrawBlock, amount);
     if (d.delegateAddress == msg.sender) {
-      ProviderStatus ps = providerStatus(msg.sender);
-      if (ps == ProviderStatus.Registered || ps == ProviderStatus.RegisteredAndActive) {
+      if (providerIsRegistered(msg.sender)) {
         // A Provider has to be a Delegator to himself
         // Therefore if a Provider unbonds he should resign
-        resignAsProvider(msg.sender);
+        processResigning(msg.sender);
       }
     } else {
       // Otherwise it should update the position of the Provider in the pool
@@ -91,6 +76,24 @@ contract TransmuteDPOS is TransmuteToken, RoundManager, DelegatorManager {
     emit DelegatorUnbonded(msg.sender, d.delegateAddress, amount);
     // Remove delegator from the list. He is now no longer in the the Bonded State
     delete delegators[msg.sender];
+  }
+
+  function resignAsProvider() external {
+    require(providerIsRegistered(msg.sender));
+    processResigning(msg.sender);
+  }
+
+  function processResigning(address _provider) internal {
+    ProviderStatus ps = providerStatus(_provider);
+    if (ps == ProviderStatus.RegisteredAndActive || ps == ProviderStatus.RegisteredAndActiveAndUnavailable) {
+      // Remove Provider from the active set
+      removeActiveProvider(_provider);
+    }
+    // Remove Provider from providerPool
+    removeProvider(_provider);
+    // Remove Provider parameters
+    delete registeredProviders[_provider];
+    emit ProviderResigned(_provider);
   }
 
   function withdraw() external {
@@ -113,13 +116,12 @@ contract TransmuteDPOS is TransmuteToken, RoundManager, DelegatorManager {
   }
 
   function processBonding(address _provider, uint _amount) internal {
-    ProviderStatus pStatus = providerStatus(_provider);
     // A Delegator is only allowed to bond to himself or to a Registered Provider
-    require(_provider == msg.sender || pStatus == ProviderStatus.Registered);
+    require(_provider == msg.sender || providerIsRegistered(_provider));
     // Create the Delegator in the mapping
     delegators[msg.sender] = Delegator(_provider, _amount);
     // Update the bonded amount of the Provider in the pool
-    if (pStatus == ProviderStatus.Registered) {
+    if (providerIsRegistered(_provider)) {
       uint currentProviderStake = getProviderStake(_provider);
       uint newProviderStake = currentProviderStake.add(_amount);
       updateProvider(_provider, newProviderStake);
@@ -142,6 +144,15 @@ contract TransmuteDPOS is TransmuteToken, RoundManager, DelegatorManager {
     } else {
       return ProviderStatus.Unregistered;
     }
+  }
+
+  function providerIsRegistered(address _provider) public view returns (bool) {
+    ProviderStatus ps = providerStatus(_provider);
+    return (
+      ps == ProviderStatus.Registered ||
+      ps == ProviderStatus.RegisteredAndActive ||
+      ps == ProviderStatus.RegisteredAndActiveAndUnavailable
+    );
   }
 
   function delegatorStatus(address _delegator) public view returns (DelegatorStatus) {
