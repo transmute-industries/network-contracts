@@ -129,8 +129,13 @@ contract TransmuteDPOS is TransmuteToken, RoundManager, DelegatorManager {
 
   function providerStatus(address _provider) public view returns (ProviderStatus) {
     if (this.containsProvider(_provider)) {
-      if (activeProviderSets[roundNumber].isActive[_provider]) {
-        return ProviderStatus.RegisteredAndActive;
+      ActiveProviderSet storage aps = activeProviderSets[roundNumber];
+      if (aps.isActive[_provider]) {
+        if (aps.isUnavailable[_provider]) {
+          return ProviderStatus.RegisteredAndActiveAndUnavailable;
+        } else {
+          return ProviderStatus.RegisteredAndActive;
+        }
       } else {
         return ProviderStatus.Registered;
       }
