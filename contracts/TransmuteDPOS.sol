@@ -85,7 +85,7 @@ contract TransmuteDPOS is TransmuteToken, RoundManager, DelegatorManager {
 
   function processResigning(address _provider) internal {
     ProviderStatus ps = providerStatus(_provider);
-    if (ps == ProviderStatus.RegisteredAndActive || ps == ProviderStatus.RegisteredAndActiveAndUnavailable) {
+    if (ps == ProviderStatus.RegisteredAndActive) {
       // Remove Provider from the active set
       removeActiveProvider(_provider);
     }
@@ -131,13 +131,8 @@ contract TransmuteDPOS is TransmuteToken, RoundManager, DelegatorManager {
 
   function providerStatus(address _provider) public view returns (ProviderStatus) {
     if (this.containsProvider(_provider)) {
-      ActiveProviderSet storage aps = activeProviderSets[roundNumber];
-      if (aps.isActive[_provider]) {
-        if (aps.isUnavailable[_provider]) {
-          return ProviderStatus.RegisteredAndActiveAndUnavailable;
-        } else {
-          return ProviderStatus.RegisteredAndActive;
-        }
+      if (activeProviderSets[roundNumber].isActive[_provider]) {
+        return ProviderStatus.RegisteredAndActive;
       } else {
         return ProviderStatus.Registered;
       }
@@ -148,11 +143,7 @@ contract TransmuteDPOS is TransmuteToken, RoundManager, DelegatorManager {
 
   function providerIsRegistered(address _provider) public view returns (bool) {
     ProviderStatus ps = providerStatus(_provider);
-    return (
-      ps == ProviderStatus.Registered ||
-      ps == ProviderStatus.RegisteredAndActive ||
-      ps == ProviderStatus.RegisteredAndActiveAndUnavailable
-    );
+    return ( ps == ProviderStatus.Registered || ps == ProviderStatus.RegisteredAndActive);
   }
 
   function delegatorStatus(address _delegator) public view returns (DelegatorStatus) {

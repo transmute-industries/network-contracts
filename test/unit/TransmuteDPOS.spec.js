@@ -10,7 +10,6 @@ contract('TransmuteDPOS', (accounts) => {
   const PROVIDER_UNREGISTERED = 0;
   const PROVIDER_REGISTERED = 1;
   const PROVIDER_REGISTERED_AND_ACTIVE = 2;
-  const PROVIDER_REGISTERED_AND_ACTIVE_AND_UNAVAILABLE = 3;
 
   // Provider parameters
   const PRICE_PER_STORAGE_MINERAL = 22;
@@ -505,24 +504,6 @@ contract('TransmuteDPOS', (accounts) => {
       it('should return Registered for Providers in the bottom of the Provider Pool', async () => {
         assert.equal(PROVIDER_REGISTERED, await tdpos.providerStatus.call(provider3));
         assert.equal(PROVIDER_REGISTERED, await tdpos.providerStatus.call(provider4));
-      });
-
-      it('should return RegisteredAndActiveAndUnavailable if an Active Provider declares its unavailability', async () => {
-        assert.equal(PROVIDER_REGISTERED_AND_ACTIVE, await tdpos.providerStatus.call(provider1));
-        await tdpos.declareUnavailability({from: provider1});
-        assert.equal(PROVIDER_REGISTERED_AND_ACTIVE_AND_UNAVAILABLE, await tdpos.providerStatus.call(provider1));
-      });
-
-      it('should return RegisteredAndActive if an Unavailable Provider declares its availability', async () => {
-        assert.equal(PROVIDER_REGISTERED_AND_ACTIVE_AND_UNAVAILABLE, await tdpos.providerStatus.call(provider1));
-        await tdpos.declareAvailability({from: provider1});
-        assert.equal(PROVIDER_REGISTERED_AND_ACTIVE, await tdpos.providerStatus.call(provider1));
-      });
-
-      it('should return RegisteredAndActive if an Active Provider declares its availability', async () => {
-        assert.equal(PROVIDER_REGISTERED_AND_ACTIVE, await tdpos.providerStatus.call(provider2));
-        await tdpos.declareAvailability({from: provider2});
-        assert.equal(PROVIDER_REGISTERED_AND_ACTIVE, await tdpos.providerStatus.call(provider2));
       });
     });
 
