@@ -449,7 +449,7 @@ contract('TransmuteDPOS', (accounts) => {
     });
   });
 
-  describe.only('providerStatus', () => {
+  describe('providerStatus', () => {
     before(async () => {
       provider1 = accounts[1];
       provider2 = accounts[2];
