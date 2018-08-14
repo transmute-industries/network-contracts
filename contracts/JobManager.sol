@@ -40,20 +40,13 @@ contract JobManager {
   uint public numberOfJobs;
   mapping(uint => Job) public jobs;
 
-  function submitMineral(string _name, uint _category) external {
+  function submitMineral(string _name, MineralCategory _mineralCategory) external {
     // name should be non null
     require(bytes(_name).length > 0);
     // Mineral has to be one of two categories: Compute or Storage
-    MineralCategory mc;
-    if(_category == uint(MineralCategory.Compute)) {
-      mc = MineralCategory.Compute;
-    } else if (_category == uint(MineralCategory.Storage)) {
-      mc = MineralCategory.Storage;
-    } else {
-      revert();
-    }
-    minerals[numberOfMinerals] = Mineral(_name, msg.sender, mc);
-    emit MineralAdded(numberOfMinerals, _name, msg.sender, mc);
+    require(_mineralCategory == MineralCategory.Compute || _mineralCategory == MineralCategory.Storage);
+    minerals[numberOfMinerals] = Mineral(_name, msg.sender, _mineralCategory);
+    emit MineralAdded(numberOfMinerals, _name, msg.sender, _mineralCategory);
     numberOfMinerals = numberOfMinerals.add(1);
   }
 
