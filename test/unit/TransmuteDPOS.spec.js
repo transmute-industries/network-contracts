@@ -24,9 +24,12 @@ contract('TransmuteDPOS', (accounts) => {
   const DELEGATOR_UNBONDING = 1;
   const DELEGATOR_BONDED = 2;
 
-  let provider1; let provider2; let provider3; let provider4;
+  let provider1 = accounts[1];
+  let provider2 = accounts[2];
+  let provider3 = accounts[3];
+  let provider4 = accounts[4];
   let delegator1; let delegator2;
-  let notRegistered;
+  let notRegistered = accounts[9];
 
   // This is a convenience function for the process of registering a new provider.
   // Step 1: Approve the transfer of amountBonded tokens (ERC20 spec)
@@ -191,19 +194,20 @@ contract('TransmuteDPOS', (accounts) => {
   describe('resignAsProvider', () => {
     before(async () => {
       await initNew();
-      await approveBondProvider(...STANDARD_PROVIDER_PARAMETERS, 1, accounts[0]);
-      await approveBondProvider(...STANDARD_PROVIDER_PARAMETERS, 1, accounts[1]);
-      await approveBondProvider(...STANDARD_PROVIDER_PARAMETERS, 1, accounts[2]);
+      await approveBondProvider(...STANDARD_PROVIDER_PARAMETERS, 1, provider1);
+      await approveBondProvider(...STANDARD_PROVIDER_PARAMETERS, 2, provider2);
+      await approveBondProvider(...STANDARD_PROVIDER_PARAMETERS, 3, provider3);
+      await approveBondProvider(...STANDARD_PROVIDER_PARAMETERS, 4, provider4);
     });
 
-    it('should remove the Provider from the provider mapping', async () => {
-      let providerStatus = await tdpos.providerStatus.call(accounts[0]);
+    it('should remove the Provider from the registeredProviders mapping', async () => {
+      let providerStatus = await tdpos.providerStatus.call(provider1);
       assert.equal(PROVIDER_REGISTERED, providerStatus);
-      await tdpos.resignAsProvider({from: accounts[0]});
-      const resignedProvider = await tdpos.registeredProviders.call(accounts[0]);
+      await tdpos.resignAsProvider({from: provider1});
+      const resignedProvider = await tdpos.registeredProviders.call(provider1);
       let [pricePerStorageMineral, pricePerComputeMineral,
         blockRewardCut, feeShare] = resignedProvider;
-      providerStatus = await tdpos.providerStatus.call(accounts[0]);
+      providerStatus = await tdpos.providerStatus.call(provider1);
       assert.equal(PROVIDER_UNREGISTERED, providerStatus);
       assert.equal(0, pricePerStorageMineral);
       assert.equal(0, pricePerComputeMineral);
@@ -212,23 +216,33 @@ contract('TransmuteDPOS', (accounts) => {
     });
 
     it('should remove the Provider from the providerPool', async () => {
-      assert.equal(true, await tdpos.containsProvider(accounts[1]));
-      await tdpos.resignAsProvider({from: accounts[1]});
-      assert.equal(false, await tdpos.containsProvider(accounts[1]));
+      assert.equal(true, await tdpos.containsProvider(provider2));
+      await tdpos.resignAsProvider({from: provider2});
+      assert.equal(false, await tdpos.containsProvider(provider2));
     });
 
     it('should send a ProviderResigned event', async () => {
-      const result = await tdpos.resignAsProvider({from: accounts[2]});
+      const result = await tdpos.resignAsProvider({from: provider3});
       assert.web3Event(result, {
         event: 'ProviderResigned',
         args: {
-          provider: accounts[2],
+          provider: provider3,
         },
       });
     });
 
     it('should fail if the transaction\'s sender is not a Provider', async () => {
-      await assertFail( tdpos.resignAsProvider({from: accounts[3]}) );
+      await assertFail( tdpos.resignAsProvider({from: notRegistered}) );
+    });
+
+    it('should remove an Active Provider from the ActiveProviderSet', async () => {
+      // initializeRound() to make provider4 an Active Provider
+      const newRoundBlock = await roundManagerHelper.getElectionPeriodEndBlock(tdpos);
+      await blockMiner.mineUntilBlock(newRoundBlock);
+      await tdpos.initializeRound();
+      assert.equal(true, await tdpos.isProviderActive(provider4));
+      await tdpos.resignAsProvider({from: provider4});
+      assert.equal(false, await tdpos.isProviderActive(provider4));
     });
   });
 
