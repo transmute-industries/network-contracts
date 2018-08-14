@@ -28,7 +28,8 @@ contract('TransmuteDPOS', (accounts) => {
   let provider2 = accounts[2];
   let provider3 = accounts[3];
   let provider4 = accounts[4];
-  let delegator1; let delegator2;
+  let delegator1 = accounts[5];
+  let delegator2 = accounts[6];
   let notRegistered = accounts[9];
 
   // This is a convenience function for the process of registering a new provider.
@@ -465,11 +466,6 @@ contract('TransmuteDPOS', (accounts) => {
 
   describe('providerStatus', () => {
     before(async () => {
-      provider1 = accounts[1];
-      provider2 = accounts[2];
-      provider3 = accounts[3];
-      provider4 = accounts[4];
-      notRegistered = accounts[5];
       await initNew();
       await tdpos.setNumberOfActiveProviders(2);
       await approveBondProvider(...STANDARD_PROVIDER_PARAMETERS, 4, provider1);
@@ -612,11 +608,6 @@ contract('TransmuteDPOS', (accounts) => {
 
   describe('rebond', () => {
     before(async () => {
-      provider1 = accounts[0];
-      provider2 = accounts[1];
-      delegator1 = accounts[2];
-      delegator2 = accounts[3];
-      notRegistered = accounts[4];
       await initNew();
       await approveBondProvider(...STANDARD_PROVIDER_PARAMETERS, 1, provider1);
       await approveBondProvider(...STANDARD_PROVIDER_PARAMETERS, 1, provider2);
