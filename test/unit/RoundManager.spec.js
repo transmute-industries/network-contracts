@@ -85,6 +85,9 @@ contract('RoundManager', (accounts) => {
   describe('initializeRound', () => {
     before(async () => {
       await rm.setProviderPoolMaxSize(PROVIDER_POOL_SIZE);
+      // Make sure that block.number > electionPeriodLength otherwise some tests containing initializeRound might fail
+      // it is ok to do this because in the main network block.number >> 100
+      await blockMiner.mine(100);
     });
 
     it('should fail if numberOfActiveProviders is not set', async () => {
