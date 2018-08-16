@@ -1,6 +1,9 @@
 const Web3 = require('web3');
 
 module.exports = {
+  mocha: {
+    enableTimeouts: false,
+  },
   migrations_directory: './migrations',
   networks: {
     development: {
