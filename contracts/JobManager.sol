@@ -82,20 +82,18 @@ contract JobManager is TransmuteDPOS {
     // are hard / impossible to all manipulate at the same time
     // by a single actor
 
-    // block.timestamp is hard to manipulate because a user
-    // has to guess exactly the second when the block will be mined
-    // however it can be easily manipulated by a miner
-    bytes32 a = keccak256(abi.encode(block.timestamp));
-    // blockhash is hard to manipulate because a user will have a short
-    // timeframe to send the transaction hoping it gets mined in the
-    // very next block
+    // msg.sender can be manipulated for a user because he can
+    // create new addresses very easily but it's impossible to
+    // manipulate for a miner because he has no control over it
+    bytes32 a = keccak256(abi.encode(msg.sender));
+    // blockhash is hard to manipulate for a user because he will
+    // have a short timeframe to send the transaction hoping it
+    // gets mined in the very next block, but it is easy to manipulate
+    // for a miner because they can wait for more blocks before adding
+    // the transaction
     bytes32 b = keccak256(abi.encode(blockhash(block.number - 1)));
     // Note: we can add more entropy by xoring the keccak256 hashes
-    // of more globally available properties like:
-    // - block.coinbase: current block miner’s address, can only be
-    // manipulated by the miner
-    // - tx.origin: hash of the transaction, can only be manipulated
-    // by the user
+    // of local variables in the state of the contract
     return uint(a) ^ uint(b);
   }
 

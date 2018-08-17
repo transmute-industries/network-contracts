@@ -112,9 +112,31 @@ contract('JobManager', (accounts) => {
     });
   });
 
-  describe.only('getPseudoRandomNumber', () => {
+  describe('getPseudoRandomNumber', () => {
+    let initialValue;
+    const person1 = accounts[1];
+    const person2 = accounts[2];
+
     before(async () => {
       jm = await JobManager.deployed();
+      initialValue = await jm.publicGetPseudoRandomNumber.call({from: person1});
+    });
+
+    it('should return the same value for two calls with the same sender and block number', async () => {
+      const consecutiveValue = await jm.publicGetPseudoRandomNumber.call({from: person1});
+      assert.deepEqual(initialValue, consecutiveValue);
+    });
+
+    it('should return a different value with a different sender', async () => {
+      const consecutiveValue = await jm.publicGetPseudoRandomNumber.call({from: person2});
+      assert.notDeepEqual(initialValue, consecutiveValue);
+    });
+
+
+    it('should return a different value after one block is mined', async () => {
+      await blockMiner.mine(1);
+      const valueAfterOneBlock = await jm.publicGetPseudoRandomNumber.call({from: person1});
+      assert.notDeepEqual(initialValue, valueAfterOneBlock);
     });
 
     // Note: Those tests are statistical, in some rare cases they may fail
