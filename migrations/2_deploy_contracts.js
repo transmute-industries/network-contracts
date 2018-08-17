@@ -14,5 +14,6 @@ module.exports = (deployer) => {
   deployer.deploy(RoundManager);
   deployer.link(SortedDoublyLL, TestTransmuteDPOS);
   deployer.deploy(TestTransmuteDPOS);
+  deployer.link(SortedDoublyLL, JobManager);
   deployer.deploy(JobManager);
 };
