@@ -76,12 +76,8 @@ contract JobManager is TransmuteDPOS {
     numberOfJobs = numberOfJobs.add(1);
   }
 
-  //function getCompatibleProviders(uint _minPricePerMineral) public {
-
-  //}
-
   // TODO: move into library
-  function getPseudoRandomNumber() public view returns (uint) {
+  function getPseudoRandomNumber() internal view returns (uint) {
     // Here we generate entropy by xoring together properties that
     // are hard / impossible to all manipulate at the same time
     // by a single actor
@@ -125,7 +121,8 @@ contract JobManager is TransmuteDPOS {
     if (numberOfCompatibleProviders == 0) {
       return address(0);
     } else {
-      // Pseudorandomly pick an available Provider weighted by its stake relative to the total stake of all compatible Providers
+      // Pseudorandomly pick a compatible Provider weighted by its stake
+      // relative to the total stake of all compatible Providers
       uint r = randomSeed % compatibleProvidersTotalStake;
       uint s = 0;
       uint j = 0;

@@ -3,7 +3,7 @@ const TestTransmuteDPOS = artifacts.require('./TestTransmuteDPOS.sol');
 const RoundManager = artifacts.require('./RoundManager.sol');
 const SortedDoublyLL = artifacts.require('./SortedDoublyLL.sol');
 const TestProviderPool = artifacts.require('./TestProviderPool.sol');
-const JobManager = artifacts.require('./JobManager.sol');
+const TestJobManager = artifacts.require('./TestJobManager.sol');
 
 module.exports = (deployer) => {
   deployer.deploy(TST);
@@ -14,6 +14,6 @@ module.exports = (deployer) => {
   deployer.deploy(RoundManager);
   deployer.link(SortedDoublyLL, TestTransmuteDPOS);
   deployer.deploy(TestTransmuteDPOS);
-  deployer.link(SortedDoublyLL, JobManager);
-  deployer.deploy(JobManager);
+  deployer.link(SortedDoublyLL, TestJobManager);
+  deployer.deploy(TestJobManager);
 };
