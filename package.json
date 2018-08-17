@@ -7,7 +7,6 @@
     "test:unit": "truffle migrate --reset && truffle test test/unit/*",
     "test:integration": "truffle migrate --reset && truffle test test/integration/*",
     "test": "truffle migrate --reset && truffle test test/unit/* test/integration/*; ",
-    "test:printGasUsed": "truffle migrate --reset && truffle test test/startCountingGas.js test/unit/* test/integration/*; ",
     "coverage": "./node_modules/.bin/solidity-coverage",
     "linter:js": "./node_modules/.bin/eslint test/*",
     "linter:js:fix":  "./node_modules/.bin/eslint test/* --fix"
