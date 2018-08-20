@@ -4,6 +4,7 @@ const RoundManager = artifacts.require('./RoundManager.sol');
 const SortedDoublyLL = artifacts.require('./SortedDoublyLL.sol');
 const TestProviderPool = artifacts.require('./TestProviderPool.sol');
 const TestJobManager = artifacts.require('./TestJobManager.sol');
+const PseudoRandomNumberGenerator = artifacts.require('./PseudoRandomNumberGenerator.sol');
 
 module.exports = (deployer) => {
   deployer.deploy(TST);
@@ -16,4 +17,5 @@ module.exports = (deployer) => {
   deployer.deploy(TestTransmuteDPOS);
   deployer.link(SortedDoublyLL, TestJobManager);
   deployer.deploy(TestJobManager);
+  deployer.deploy(PseudoRandomNumberGenerator);
 };

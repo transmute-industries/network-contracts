@@ -2,8 +2,9 @@ pragma solidity ^0.4.24;
 
 import "zeppelin-solidity/contracts/math/SafeMath.sol";
 import "./TransmuteDPOS.sol";
+import "./PseudoRandomNumberGenerator.sol";
 
-contract JobManager is TransmuteDPOS {
+contract JobManager is TransmuteDPOS, PseudoRandomNumberGenerator {
   using SafeMath for uint;
 
   enum MineralCategory { Compute, Storage }
@@ -74,27 +75,6 @@ contract JobManager is TransmuteDPOS {
     j.providerAddress = electedProvider;
     emit JobAdded(numberOfJobs, _mineralId, _maxPricePerMineral, _expirationBlock, msg.sender, electedProvider);
     numberOfJobs = numberOfJobs.add(1);
-  }
-
-  // TODO: move into library
-  function getPseudoRandomNumber() internal view returns (uint) {
-    // Here we generate entropy by xoring together properties that
-    // are hard / impossible to all manipulate at the same time
-    // by a single actor
-
-    // msg.sender can be manipulated for a user because he can
-    // create new addresses very easily but it's impossible to
-    // manipulate for a miner because he has no control over it
-    bytes32 a = keccak256(abi.encode(msg.sender));
-    // blockhash is hard to manipulate for a user because he will
-    // have a short timeframe to send the transaction hoping it
-    // gets mined in the very next block, but it is easy to manipulate
-    // for a miner because they can wait for more blocks before adding
-    // the transaction
-    bytes32 b = keccak256(abi.encode(blockhash(block.number - 1)));
-    // Note: we can add more entropy by xoring the keccak256 hashes
-    // of local variables in the state of the contract
-    return uint(a) ^ uint(b);
   }
 
   function selectProvider(uint _maxPricePerMineral, MineralCategory _mineralCategory) internal view returns (address) {
