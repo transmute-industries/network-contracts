@@ -4,8 +4,54 @@ require('truffle-test-utils').init();
 
 contract('JobManager', (accounts) => {
   let jm;
+  let contractAddress;
+
   const MINERAL_COMPUTE = 0;
   const MINERAL_STORAGE = 1;
+
+  const provider1 = accounts[1];
+  const provider2 = accounts[2];
+  const provider3 = accounts[3];
+  const nullAddress = 0;
+  const provider1Stake = 1;
+  const provider2Stake = 10;
+  const provider3Stake = 30;
+
+  async function approveBondProvider(pricePerStorageMineral, pricePerComputeMineral, blockRewardCut, feeShare, amountBonded, provider) {
+    await jm.approve(contractAddress, amountBonded, {from: provider});
+    await jm.bond(provider, amountBonded, {from: provider});
+    await jm.provider(pricePerStorageMineral, pricePerComputeMineral, blockRewardCut, feeShare, {from: provider});
+  }
+
+  async function initNew() {
+    jm = await JobManager.new();
+    contractAddress = jm.address;
+    for (let i = 0; i < 10; i++) {
+      await jm.mint(accounts[i], 10000, {from: accounts[0]});
+    }
+    const electionPeriodEndBlock = await roundManagerHelper.getElectionPeriodEndBlock(jm);
+    await blockMiner.mineUntilBlock(electionPeriodEndBlock);
+    await jm.initializeRound();
+    await jm.setNumberOfActiveProviders(4);
+    const pricePerStorageMineral = 22;
+    const provider1PricePerComputeMineral = 10;
+    const provider2PricePerComputeMineral = 12;
+    const provider3PricePerComputeMineral = 14;
+    const blockRewardCut = 1;
+    const feeShare = 25;
+    await approveBondProvider(pricePerStorageMineral, provider1PricePerComputeMineral,
+      blockRewardCut, feeShare, provider1Stake, provider1);
+    await approveBondProvider(pricePerStorageMineral, provider2PricePerComputeMineral,
+      blockRewardCut, feeShare, provider2Stake, provider2);
+    await approveBondProvider(pricePerStorageMineral, provider3PricePerComputeMineral,
+      blockRewardCut, feeShare, provider3Stake, provider3);
+  }
+
+  async function initializeNewRound() {
+    const newRoundBlock = await roundManagerHelper.getElectionPeriodEndBlock(jm);
+    await blockMiner.mineUntilBlock(newRoundBlock);
+    await jm.initializeRound();
+  }
 
   describe('submitMineral', () => {
     before(async () => {
@@ -62,7 +108,8 @@ contract('JobManager', (accounts) => {
     let expirationBlock = web3.eth.blockNumber + 1000;
 
     before(async () => {
-      jm = await JobManager.new();
+      await initNew();
+      await initializeNewRound();
       await jm.submitMineral('multiplication', MINERAL_COMPUTE);
       await jm.submitMineral('addition', MINERAL_COMPUTE);
     });
@@ -79,6 +126,14 @@ contract('JobManager', (accounts) => {
       await assertFail( jm.submitJob(0, 10, presentBlock) );
       const blockInTheFuture = web3.eth.blockNumber + 2;
       await jm.submitJob(0, 10, blockInTheFuture);
+    });
+
+    it('should elect a Provider to do the job', async () => {
+      const jobId = await jm.numberOfJobs.call();
+      await jm.submitJob(1, 10, expirationBlock);
+      const job = await jm.jobs.call(jobId);
+      const electedProvider = job[3];
+      assert.equal(provider1, electedProvider);
     });
 
     it('should store the Job parameters in the jobs mapping', async () => {
@@ -188,45 +243,10 @@ contract('JobManager', (accounts) => {
   });
 
   describe('selectProvider', () => {
-    let jm;
-    let contractAddress;
-    const provider1 = accounts[1];
-    const provider2 = accounts[2];
-    const provider3 = accounts[3];
-    const nullAddress = 0;
-    const provider1Stake = 1;
-    const provider2Stake = 10;
-    const provider3Stake = 30;
     const aFewTimes = 3;
 
-    async function approveBondProvider(pricePerStorageMineral, pricePerComputeMineral, blockRewardCut, feeShare, amountBonded, provider) {
-      await jm.approve(contractAddress, amountBonded, {from: provider});
-      await jm.bond(provider, amountBonded, {from: provider});
-      await jm.provider(pricePerStorageMineral, pricePerComputeMineral, blockRewardCut, feeShare, {from: provider});
-    }
-
     before(async () => {
-      jm = await JobManager.new();
-      contractAddress = jm.address;
-      for (let i = 0; i < 10; i++) {
-        await jm.mint(accounts[i], 10000, {from: accounts[0]});
-      }
-      const electionPeriodEndBlock = await roundManagerHelper.getElectionPeriodEndBlock(jm);
-      await blockMiner.mineUntilBlock(electionPeriodEndBlock);
-      await jm.initializeRound();
-      await jm.setNumberOfActiveProviders(4);
-      const pricePerStorageMineral = 22;
-      const provider1PricePerComputeMineral = 10;
-      const provider2PricePerComputeMineral = 12;
-      const provider3PricePerComputeMineral = 14;
-      const blockRewardCut = 1;
-      const feeShare = 25;
-      await approveBondProvider(pricePerStorageMineral, provider1PricePerComputeMineral,
-        blockRewardCut, feeShare, provider1Stake, provider1);
-      await approveBondProvider(pricePerStorageMineral, provider2PricePerComputeMineral,
-        blockRewardCut, feeShare, provider2Stake, provider2);
-      await approveBondProvider(pricePerStorageMineral, provider3PricePerComputeMineral,
-        blockRewardCut, feeShare, provider3Stake, provider3);
+      await initNew();
     });
 
     it('should return null address if there is no active Providers in the pool', async () => {
@@ -240,9 +260,7 @@ contract('JobManager', (accounts) => {
 
     it('should select Providers proportionally to their relative stake', async () => {
       // Initialize the active provider set
-      const newRoundBlock = await roundManagerHelper.getElectionPeriodEndBlock(jm);
-      await blockMiner.mineUntilBlock(newRoundBlock);
-      await jm.initializeRound();
+      await initializeNewRound();
 
       const maxPricePerMineral = 17;
       const aLotOfTimes = 50;
