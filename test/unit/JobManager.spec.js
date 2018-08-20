@@ -13,6 +13,8 @@ contract('JobManager', (accounts) => {
   const provider2 = accounts[2];
   const provider3 = accounts[3];
   const nullAddress = 0;
+  const consumer = accounts[9];
+
   const provider1Stake = 1;
   const provider2Stake = 10;
   const provider3Stake = 30;
@@ -115,30 +117,38 @@ contract('JobManager', (accounts) => {
     });
 
     it('should fail if mineralId is not the id of a valid Mineral', async () => {
-      await assertFail( jm.submitJob(2, 10, expirationBlock) );
-      await jm.submitJob(0, 10, expirationBlock);
+      await assertFail( jm.submitJob(2, 10, expirationBlock, {from: consumer}) );
+      await jm.submitJob(0, 10, expirationBlock, {from: consumer});
     });
 
     it('should fail if expiration block is not in the future', async () => {
       const blockInThePast = web3.eth.blockNumber;
-      await assertFail( jm.submitJob(0, 10, blockInThePast) );
+      await assertFail( jm.submitJob(0, 10, blockInThePast, {from: consumer}) );
       const presentBlock = web3.eth.blockNumber + 1;
-      await assertFail( jm.submitJob(0, 10, presentBlock) );
+      await assertFail( jm.submitJob(0, 10, presentBlock, {from: consumer}) );
       const blockInTheFuture = web3.eth.blockNumber + 2;
-      await jm.submitJob(0, 10, blockInTheFuture);
+      await jm.submitJob(0, 10, blockInTheFuture, {from: consumer});
+    });
+
+    it('should store the address of the consumer who submitted the job', async () => {
+      const jobId = await jm.numberOfJobs.call();
+      await jm.submitJob(1, 10, expirationBlock, {from: consumer});
+      const job = await jm.jobs.call(jobId);
+      const consumerAddress = job[3];
+      assert.equal(consumer, consumerAddress);
     });
 
     it('should elect a Provider to do the job', async () => {
       const jobId = await jm.numberOfJobs.call();
-      await jm.submitJob(1, 10, expirationBlock);
+      await jm.submitJob(1, 10, expirationBlock, {from: consumer});
       const job = await jm.jobs.call(jobId);
-      const electedProvider = job[3];
+      const electedProvider = job[4];
       assert.equal(provider1, electedProvider);
     });
 
     it('should store the Job parameters in the jobs mapping', async () => {
       const jobId = await jm.numberOfJobs.call();
-      await jm.submitJob(1, 11, expirationBlock + 42);
+      await jm.submitJob(1, 11, expirationBlock + 42, {from: consumer});
       const job = await jm.jobs.call(jobId);
       const [mineralId, maxPricePerMineral, expBlock] = job;
       assert.equal(1, mineralId);
@@ -148,7 +158,7 @@ contract('JobManager', (accounts) => {
 
     it('should emit a JobAdded event', async () => {
       const jobId = await jm.numberOfJobs.call();
-      let result = await jm.submitJob(1, 10, expirationBlock);
+      let result = await jm.submitJob(1, 10, expirationBlock, {from: consumer});
       assert.web3Event(result, {
         event: 'JobAdded',
         args: {
@@ -156,6 +166,7 @@ contract('JobManager', (accounts) => {
           mineralId: 1,
           maxPricePerMineral: 10,
           expirationBlock: expirationBlock,
+          consumerAddress: consumer,
           electedProvider: provider1,
         },
       });
@@ -163,7 +174,7 @@ contract('JobManager', (accounts) => {
 
     it('should increment numberOfJobs', async () => {
       const numberOfJobs = await jm.numberOfJobs.call();
-      await jm.submitJob(1, 12, expirationBlock);
+      await jm.submitJob(1, 12, expirationBlock, {from: consumer});
       assert.deepEqual(numberOfJobs.add(1), await jm.numberOfJobs.call());
     });
   });

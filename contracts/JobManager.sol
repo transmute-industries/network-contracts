@@ -20,6 +20,7 @@ contract JobManager is TransmuteDPOS {
     uint mineralId,
     uint maxPricePerMineral,
     uint expirationBlock,
+    address consumerAddress,
     address electedProvider
   );
 
@@ -32,9 +33,9 @@ contract JobManager is TransmuteDPOS {
   struct Job {
     uint mineralId;
     uint maxPricePerMineral;
-    // TODO: Add consumer address
     uint expirationBlock;
-    address providerAddress;
+    address consumerAddress; // address of the Consumer who submitted the job
+    address providerAddress; // address of the Provider who was elected to do the job
   }
 
   uint public numberOfMinerals;
@@ -69,8 +70,9 @@ contract JobManager is TransmuteDPOS {
     j.mineralId = _mineralId;
     j.maxPricePerMineral = _maxPricePerMineral;
     j.expirationBlock = _expirationBlock;
+    j.consumerAddress = msg.sender;
     j.providerAddress = electedProvider;
-    emit JobAdded(numberOfJobs, _mineralId, _maxPricePerMineral, _expirationBlock, electedProvider);
+    emit JobAdded(numberOfJobs, _mineralId, _maxPricePerMineral, _expirationBlock, msg.sender, electedProvider);
     numberOfJobs = numberOfJobs.add(1);
   }
 
