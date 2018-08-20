@@ -24,7 +24,6 @@ contract RoundManager is Ownable, ProviderPool, ProviderManager {
     address[] providers;
     mapping (address => uint) stakes;
     mapping (address => bool) isActive;
-    // TODO: decrease total stake when not active or not available
     uint totalStake;
   }
 
@@ -112,9 +111,6 @@ contract RoundManager is Ownable, ProviderPool, ProviderManager {
     // Remove from activeProviders
     delete activeProviders[_provider];
   }
-
-  // TODO: refactor all function relative to Active Provider set
-  // into its own library
 
   // Getter functions for ActiveProviderSet
   function getActiveProviderAddresses() public view returns (address[]) {
