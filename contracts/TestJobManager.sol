@@ -8,7 +8,7 @@ contract TestJobManager is JobManager {
     return getPseudoRandomNumber();
   }
 
-  function publicSelectProvider(uint _minPricePerMineral) public returns (address) {
+  function publicSelectProvider(uint _minPricePerMineral) public view returns (address) {
     return selectProvider(_minPricePerMineral);
   }
 }

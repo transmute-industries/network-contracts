@@ -97,7 +97,7 @@ contract JobManager is TransmuteDPOS {
     return uint(a) ^ uint(b);
   }
 
-  function selectProvider(uint _minPricePerMineral) internal returns (address) {
+  function selectProvider(uint _minPricePerMineral) internal view returns (address) {
     // Select compatible providers from ActiveProviderSet
     ActiveProviderSet memory aps = activeProviderSets[roundNumber];
     uint numberOfCompatibleProviders = 0;
