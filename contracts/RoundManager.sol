@@ -107,7 +107,6 @@ contract RoundManager is Ownable, ProviderPool, ProviderManager {
     aps.isActive[_provider] = false;
     // Update totalStake
     uint stake = getProviderStake(_provider);
-    // TODO: test
     delete aps.stakes[_provider];
     aps.totalStake = aps.totalStake.sub(stake);
     // Remove from activeProviders
