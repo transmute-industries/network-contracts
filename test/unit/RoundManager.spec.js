@@ -166,6 +166,13 @@ contract('RoundManager', (accounts) => {
       assert.equal(provider2Stake + provider3Stake, totalStake);
     });
 
+    it('should contain the stakes of active providers', async () => {
+      // provider1 is not an active Provider
+      assert.equal(0, await tdpos.getActiveProviderStake.call(provider1));
+      assert.equal(provider2Stake, await tdpos.getActiveProviderStake.call(provider2));
+      assert.equal(provider3Stake, await tdpos.getActiveProviderStake.call(provider3));
+    });
+
     it('should contain the addresses of active providers', async () => {
       const activeProviderAddresses = await tdpos.getActiveProviderAddresses.call();
       assert.equal(2, activeProviderAddresses.length);

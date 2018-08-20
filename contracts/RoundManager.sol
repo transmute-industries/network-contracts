@@ -71,7 +71,6 @@ contract RoundManager is Ownable, ProviderPool, ProviderManager {
       aps.isActive[currentProvider] = true;
 
       uint stake = getProviderStake(currentProvider);
-      // TODO: test
       aps.stakes[currentProvider] = stake;
       aps.totalStake = aps.totalStake.add(stake);
 
