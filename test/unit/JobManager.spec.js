@@ -85,9 +85,9 @@ contract('JobManager', (accounts) => {
       const jobId = await jm.numberOfJobs.call();
       await jm.submitJob(1, 11, expirationBlock + 42);
       const job = await jm.jobs.call(jobId);
-      const [mineralId, minPricePerMineral, expBlock] = job;
+      const [mineralId, maxPricePerMineral, expBlock] = job;
       assert.equal(1, mineralId);
-      assert.equal(11, minPricePerMineral);
+      assert.equal(11, maxPricePerMineral);
       assert.equal(expirationBlock + 42, expBlock);
     });
 
@@ -99,7 +99,7 @@ contract('JobManager', (accounts) => {
         args: {
           id: jobId.toNumber(),
           mineralId: 1,
-          minPricePerMineral: 12,
+          maxPricePerMineral: 12,
           expirationBlock: expirationBlock,
         },
       });
@@ -233,8 +233,8 @@ contract('JobManager', (accounts) => {
       // New round is not initialized, so there are no active Providers yet
       const activeProviderAddresses = await jm.getActiveProviderAddresses.call();
       assert.equal(0, activeProviderAddresses.length);
-      const minPricePerMineral = 11;
-      const provider = await jm.publicSelectProvider.call(minPricePerMineral);
+      const maxPricePerMineral = 11;
+      const provider = await jm.publicSelectProvider.call(maxPricePerMineral);
       assert.equal(nullAddress, provider);
     });
 
@@ -244,7 +244,7 @@ contract('JobManager', (accounts) => {
       await blockMiner.mineUntilBlock(newRoundBlock);
       await jm.initializeRound();
 
-      const minPricePerMineral = 17;
+      const maxPricePerMineral = 17;
       const aLotOfTimes = 50;
       const electedProvidersCount = {};
       electedProvidersCount[provider1] = 0;
@@ -252,7 +252,7 @@ contract('JobManager', (accounts) => {
       electedProvidersCount[provider3] = 0;
       let i = 0;
       while (i < aLotOfTimes) {
-        const provider = await jm.publicSelectProvider.call(minPricePerMineral);
+        const provider = await jm.publicSelectProvider.call(maxPricePerMineral);
         electedProvidersCount[provider] += 1;
         await blockMiner.mine(1);
         i++;
@@ -270,25 +270,25 @@ contract('JobManager', (accounts) => {
       assert.isAbove(threshold, Math.abs(provider3RelativeStake - provider3ElectedRate));
     });
 
-    it('should not select Providers who have a pricePerMineral > minPricePerMineral', async () => {
-      const minPricePerMineral = 11;
+    it('should not select Providers who have a pricePerMineral > maxPricePerMineral', async () => {
+      const maxPricePerMineral = 11;
       // Even though provider1 has a tiny relative stake in the active Provider pool
       // he will be selected every time because he is the only one who meets the
       // price requirements
       Array(aFewTimes).fill().forEach(async () => {
-        const provider = await jm.publicSelectProvider.call(minPricePerMineral);
+        const provider = await jm.publicSelectProvider.call(maxPricePerMineral);
         assert.equal(provider1, provider);
         await blockMiner.mine(1);
       });
     });
 
-    it('should select Providers who have a pricePerMineral == minPricePerMineral', async () => {
-      const minPricePerMineral = 12;
+    it('should select Providers who have a pricePerMineral == maxPricePerMineral', async () => {
+      const maxPricePerMineral = 12;
       const electedProviders = [];
       let i = 0;
       // Try a few times to elect a new Provider
       while (i < aFewTimes) {
-        const provider = await jm.publicSelectProvider.call(minPricePerMineral);
+        const provider = await jm.publicSelectProvider.call(maxPricePerMineral);
         electedProviders.push(provider);
         await blockMiner.mine(1);
         i++;
@@ -301,10 +301,10 @@ contract('JobManager', (accounts) => {
       assert.ok(provider2WasSelectedAtLeastOnce);
     });
 
-    it('should return a null address if all Providers have pricePerMineral > minPricePerMineral', async () => {
-      const minPricePerMineral = 9;
+    it('should return a null address if all Providers have pricePerMineral > maxPricePerMineral', async () => {
+      const maxPricePerMineral = 9;
       Array(aFewTimes).fill().forEach(async () => {
-        const provider = await jm.publicSelectProvider.call(minPricePerMineral);
+        const provider = await jm.publicSelectProvider.call(maxPricePerMineral);
         assert.equal(nullAddress, provider);
         await blockMiner.mine(1);
       });

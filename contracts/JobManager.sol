@@ -18,7 +18,7 @@ contract JobManager is TransmuteDPOS {
   event JobAdded (
     uint id,
     uint mineralId,
-    uint minPricePerMineral,
+    uint maxPricePerMineral,
     uint expirationBlock
   );
 
@@ -30,7 +30,7 @@ contract JobManager is TransmuteDPOS {
 
   struct Job {
     uint mineralId;
-    uint minPricePerMineral;
+    uint maxPricePerMineral;
     // TODO: Add consumer address
     uint expirationBlock;
     address providerAddress;
@@ -57,8 +57,7 @@ contract JobManager is TransmuteDPOS {
     return m.producer != address(0);
   }
 
-  // TODO min -> max
-  function submitJob(uint _mineralId, uint _minPricePerMineral, uint _expirationBlock) external {
+  function submitJob(uint _mineralId, uint _maxPricePerMineral, uint _expirationBlock) external {
     // For now we limit the category of job to be only Compute
     // TODO: remove
     require(minerals[_mineralId].category == MineralCategory.Compute);
@@ -69,10 +68,10 @@ contract JobManager is TransmuteDPOS {
 
     Job storage j = jobs[numberOfJobs];
     j.mineralId = _mineralId;
-    j.minPricePerMineral = _minPricePerMineral;
+    j.maxPricePerMineral = _maxPricePerMineral;
     j.expirationBlock = _expirationBlock;
-    j.providerAddress = selectProvider(_minPricePerMineral);
-    emit JobAdded(numberOfJobs, _mineralId, _minPricePerMineral, _expirationBlock);
+    j.providerAddress = selectProvider(_maxPricePerMineral);
+    emit JobAdded(numberOfJobs, _mineralId, _maxPricePerMineral, _expirationBlock);
     numberOfJobs = numberOfJobs.add(1);
   }
 
@@ -97,7 +96,7 @@ contract JobManager is TransmuteDPOS {
     return uint(a) ^ uint(b);
   }
 
-  function selectProvider(uint _minPricePerMineral) internal view returns (address) {
+  function selectProvider(uint _maxPricePerMineral) internal view returns (address) {
     // Select compatible providers from ActiveProviderSet
     ActiveProviderSet memory aps = activeProviderSets[roundNumber];
     uint numberOfCompatibleProviders = 0;
@@ -108,7 +107,7 @@ contract JobManager is TransmuteDPOS {
     for (uint i = 0; i < aps.providers.length; i++) {
       p = aps.providers[i];
       // If a Provider charges less than asked pric, add it in the array
-      if (activeProviders[p].pricePerComputeMineral <= _minPricePerMineral) {
+      if (activeProviders[p].pricePerComputeMineral <= _maxPricePerMineral) {
         compatibleProviders[numberOfCompatibleProviders] = p;
         numberOfCompatibleProviders = numberOfCompatibleProviders.add(1);
         compatibleProvidersTotalStake = compatibleProvidersTotalStake.add(getActiveProviderStake(p));
