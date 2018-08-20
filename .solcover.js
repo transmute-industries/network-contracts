@@ -1,6 +1,6 @@
 module.exports = {
     testCommand: 'npm run test',
     norpc: false,
-    copyPackages: ['zeppelin-solidity'],
+    copyPackages: ['zeppelin-solidity', 'protocol'],
     skipFiles: []
 };
