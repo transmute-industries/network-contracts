@@ -58,9 +58,6 @@ contract JobManager is TransmuteDPOS {
   }
 
   function submitJob(uint _mineralId, uint _maxPricePerMineral, uint _expirationBlock) external {
-    // For now we limit the category of job to be only Compute
-    // TODO: remove
-    require(minerals[_mineralId].category == MineralCategory.Compute);
     // mineralId must correspond to an existing mineral
     require(mineralIsValid(_mineralId));
     // expirationBlock must be in the future
@@ -70,7 +67,7 @@ contract JobManager is TransmuteDPOS {
     j.mineralId = _mineralId;
     j.maxPricePerMineral = _maxPricePerMineral;
     j.expirationBlock = _expirationBlock;
-    j.providerAddress = selectProvider(_maxPricePerMineral);
+    j.providerAddress = selectProvider(_maxPricePerMineral, minerals[_mineralId].category);
     emit JobAdded(numberOfJobs, _mineralId, _maxPricePerMineral, _expirationBlock);
     numberOfJobs = numberOfJobs.add(1);
   }
@@ -96,18 +93,21 @@ contract JobManager is TransmuteDPOS {
     return uint(a) ^ uint(b);
   }
 
-  function selectProvider(uint _maxPricePerMineral) internal view returns (address) {
+  function selectProvider(uint _maxPricePerMineral, MineralCategory _mineralCategory) internal view returns (address) {
     // Select compatible providers from ActiveProviderSet
     ActiveProviderSet memory aps = activeProviderSets[roundNumber];
     uint numberOfCompatibleProviders = 0;
     uint compatibleProvidersTotalStake = 0;
-    // addresses of active providers who meet the price requirements
+    // addresses of active providers who are compatible with the price requirements
     address[] memory compatibleProviders = new address[](aps.providers.length);
     address p;
     for (uint i = 0; i < aps.providers.length; i++) {
       p = aps.providers[i];
-      // If a Provider charges less than asked pric, add it in the array
-      if (activeProviders[p].pricePerComputeMineral <= _maxPricePerMineral) {
+      // If a Provider charges less than asked price in the right MineralCategory, add it in the array
+      if (
+        (_mineralCategory == MineralCategory.Compute && activeProviders[p].pricePerComputeMineral <= _maxPricePerMineral) ||
+        (_mineralCategory == MineralCategory.Storage && activeProviders[p].pricePerStorageMineral <= _maxPricePerMineral)
+      ) {
         compatibleProviders[numberOfCompatibleProviders] = p;
         numberOfCompatibleProviders = numberOfCompatibleProviders.add(1);
         compatibleProvidersTotalStake = compatibleProvidersTotalStake.add(getActiveProviderStake(p));
