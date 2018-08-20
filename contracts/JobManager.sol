@@ -19,7 +19,8 @@ contract JobManager is TransmuteDPOS {
     uint id,
     uint mineralId,
     uint maxPricePerMineral,
-    uint expirationBlock
+    uint expirationBlock,
+    address electedProvider
   );
 
   struct Mineral {
@@ -63,12 +64,13 @@ contract JobManager is TransmuteDPOS {
     // expirationBlock must be in the future
     require(_expirationBlock > block.number);
 
+    address electedProvider = selectProvider(_maxPricePerMineral, minerals[_mineralId].category);
     Job storage j = jobs[numberOfJobs];
     j.mineralId = _mineralId;
     j.maxPricePerMineral = _maxPricePerMineral;
     j.expirationBlock = _expirationBlock;
-    j.providerAddress = selectProvider(_maxPricePerMineral, minerals[_mineralId].category);
-    emit JobAdded(numberOfJobs, _mineralId, _maxPricePerMineral, _expirationBlock);
+    j.providerAddress = electedProvider;
+    emit JobAdded(numberOfJobs, _mineralId, _maxPricePerMineral, _expirationBlock, electedProvider);
     numberOfJobs = numberOfJobs.add(1);
   }
 

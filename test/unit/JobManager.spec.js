@@ -148,14 +148,15 @@ contract('JobManager', (accounts) => {
 
     it('should emit a JobAdded event', async () => {
       const jobId = await jm.numberOfJobs.call();
-      let result = await jm.submitJob(1, 12, expirationBlock);
+      let result = await jm.submitJob(1, 10, expirationBlock);
       assert.web3Event(result, {
         event: 'JobAdded',
         args: {
           id: jobId.toNumber(),
           mineralId: 1,
-          maxPricePerMineral: 12,
+          maxPricePerMineral: 10,
           expirationBlock: expirationBlock,
+          electedProvider: provider1,
         },
       });
     });
