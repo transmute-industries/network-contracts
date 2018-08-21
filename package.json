@@ -1,5 +1,5 @@
 {
-  "name": "framework-example",
+  "name": "transmute-network-contracts",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -9,7 +9,7 @@
     "test": "truffle migrate --reset && truffle test test/unit/* test/integration/*; ",
     "coverage": "./node_modules/.bin/solidity-coverage",
     "linter:js": "./node_modules/.bin/eslint test/*",
-    "linter:js:fix":  "./node_modules/.bin/eslint test/* --fix"
+    "linter:js:fix": "./node_modules/.bin/eslint test/* --fix"
   },
   "author": "",
   "license": "ISC",
