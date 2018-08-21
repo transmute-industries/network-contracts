@@ -22,6 +22,7 @@ contract RoundManager is Ownable, ProviderPool, ProviderManager {
   // The set of active Providers for a given round
   struct ActiveProviderSet {
     address[] providers;
+    mapping (address => uint) stakes;
     mapping (address => bool) isActive;
     uint totalStake;
   }
@@ -69,6 +70,7 @@ contract RoundManager is Ownable, ProviderPool, ProviderManager {
       aps.isActive[currentProvider] = true;
 
       uint stake = getProviderStake(currentProvider);
+      aps.stakes[currentProvider] = stake;
       aps.totalStake = aps.totalStake.add(stake);
 
       // Set pending rates as current rates
@@ -104,6 +106,7 @@ contract RoundManager is Ownable, ProviderPool, ProviderManager {
     aps.isActive[_provider] = false;
     // Update totalStake
     uint stake = getProviderStake(_provider);
+    delete aps.stakes[_provider];
     aps.totalStake = aps.totalStake.sub(stake);
     // Remove from activeProviders
     delete activeProviders[_provider];
@@ -116,5 +119,9 @@ contract RoundManager is Ownable, ProviderPool, ProviderManager {
 
   function isProviderActive(address _provider) public view returns (bool) {
     return activeProviderSets[roundNumber].isActive[_provider];
+  }
+
+  function getActiveProviderStake(address _provider) public view returns (uint) {
+    return activeProviderSets[roundNumber].stakes[_provider];
   }
 }

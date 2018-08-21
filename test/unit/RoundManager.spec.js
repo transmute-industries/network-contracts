@@ -12,6 +12,14 @@ contract('RoundManager', (accounts) => {
   const PROVIDER_POOL_SIZE = 20;
   const NUMBER_OF_ACTIVE_PROVIDERS = 10;
 
+  const provider1 = accounts[1];
+  const provider2 = accounts[2];
+  const provider3 = accounts[3];
+  const provider4 = accounts[4];
+  const provider1Stake = 100;
+  const provider2Stake = 400;
+  const provider3Stake = 200;
+
   describe('setElectionPeriodLength', () => {
     let result;
 
@@ -118,14 +126,6 @@ contract('RoundManager', (accounts) => {
     let tdpos;
     let contractAddress;
 
-    let provider1 = accounts[1];
-    let provider2 = accounts[2];
-    let provider3 = accounts[3];
-    let provider4 = accounts[4];
-    let provider1Stake = 100;
-    let provider2Stake = 400;
-    let provider3Stake = 200;
-
     async function approveBondProvider(pricePerStorageMineral, pricePerComputeMineral, blockRewardCut, feeShare, amountBonded, provider) {
       await tdpos.approve(contractAddress, amountBonded, {from: provider});
       await tdpos.bond(provider, amountBonded, {from: provider});
@@ -164,6 +164,13 @@ contract('RoundManager', (accounts) => {
       // not the array of provider addresses nor the isActive mapping
       const totalStake = await tdpos.activeProviderSets.call(roundNumber);
       assert.equal(provider2Stake + provider3Stake, totalStake);
+    });
+
+    it('should contain the stakes of active providers', async () => {
+      // provider1 is not an active Provider
+      assert.equal(0, await tdpos.getActiveProviderStake.call(provider1));
+      assert.equal(provider2Stake, await tdpos.getActiveProviderStake.call(provider2));
+      assert.equal(provider3Stake, await tdpos.getActiveProviderStake.call(provider3));
     });
 
     it('should contain the addresses of active providers', async () => {
@@ -255,6 +262,7 @@ contract('RoundManager', (accounts) => {
         assert.equal(22, pricePerComputeMineral);
         assert.equal(32, blockRewardCut);
         assert.equal(42, feeShare);
+        assert.equal(provider2Stake, await tdpos.getActiveProviderStake.call(provider2));
 
         await tdpos.publicRemoveActiveProvider(provider2);
       });
@@ -271,6 +279,10 @@ contract('RoundManager', (accounts) => {
       it('should decrease the totalStake of the current active set by the stake of the Provider', async () => {
         const newTotalStake = await tdpos.activeProviderSets.call(roundNumber);
         assert.deepEqual(totalStake.sub(providerStake), newTotalStake);
+      });
+
+      it('should remove the stake of provider in the current active set', async () => {
+        assert.equal(0, await tdpos.getActiveProviderStake.call(provider2));
       });
 
       it('should remove parameters from the activeProviders mapping', async () => {
