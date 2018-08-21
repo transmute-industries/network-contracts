@@ -1,8 +1,8 @@
 pragma solidity ^0.4.24;
 
-import "./SortedDoublyLL.sol";
-import "./ParameterManager.sol";
 import "zeppelin-solidity/contracts/ownership/Ownable.sol";
+import "./ParameterManager.sol";
+import "protocol/contracts/libraries/SortedDoublyLL.sol";
 
 contract ProviderPool is Ownable, ParameterManager {
 
