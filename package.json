@@ -9,11 +9,13 @@
     "test": "truffle migrate --reset && truffle test test/unit/* test/integration/*; ",
     "coverage": "./node_modules/.bin/solidity-coverage",
     "linter:js": "./node_modules/.bin/eslint test/*",
-    "linter:js:fix": "./node_modules/.bin/eslint test/* --fix"
+    "linter:js:fix": "./node_modules/.bin/eslint test/* --fix",
+    "ganache": "ganache-cli"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "ganache-cli": "^6.1.8",
     "truffle": "^4.1.13",
     "truffle-contract": "^3.0.6",
     "truffle-test-utils": "^0.1.0",
