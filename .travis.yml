@@ -10,14 +10,10 @@ cache:
 before_install:
   - sudo apt-get update -qq
   - sudo apt-get install software-properties-common -y -qq
-  - npm i -g ganache-cli truffle
-  - ganache-cli &>/dev/null &
 
 install:
   - npm install
+  - npm run ganache >/dev/null &
 
 script:
-  - NODE_ENV='test' npm run test
-
-after_script:
   - npm run coverage && cat coverage/lcov.info | coveralls
