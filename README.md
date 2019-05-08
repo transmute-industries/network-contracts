@@ -1,6 +1,6 @@
 # Transmute Network Contracts [![Build Status](https://travis-ci.org/transmute-industries/network-contracts.svg?branch=master)](https://travis-ci.org/transmute-industries/network-contracts) [![Coverage Status](https://coveralls.io/repos/github/transmute-industries/network-contracts/badge.svg?branch=master)](https://coveralls.io/github/transmute-industries/network-contracts?branch=master)
 
-This repo contains smart contracts that are under development for Network part of the Transmute Platform: A marketplace for decentralized storage. For more information information, check out our ![Whitepaper](https://www.transmute.industries/whitepaper.pdf)
+This repo contains smart contracts that are under development for Network part of the Transmute Platform: A marketplace for decentralized storage. For more information information, check out our [Whitepaper](https://www.transmute.industries/whitepaper.pdf)
 
 ![Transmute Network Diagram](./transmute_network_diagram.png)
 
